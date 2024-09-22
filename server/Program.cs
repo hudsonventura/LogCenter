@@ -1,17 +1,28 @@
+using Microsoft.OpenApi.Models;
+using System.Reflection;
+
 using DotNetEnv;
 using Npgsql;
+
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 Env.Load();
 
 
-string dbHost = Environment.GetEnvironmentVariable("DB_HOST");
-string dbUser = Environment.GetEnvironmentVariable("DB_USER");
-string dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
-string dbName = Environment.GetEnvironmentVariable("DB_NAME");
+string dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? string.Empty;
+string dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? string.Empty;
+string dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? string.Empty;
+string dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? string.Empty;
+
+if(dbHost == string.Empty){
+    Console.WriteLine("The environment variables is null or not present. Check the .env file.");
+    Environment.Exit(1);  // 0 indica saída bem-sucedida
+}
 
 string connectionString = $"Host={dbHost};Username={dbUser};Password={dbPassword};Database={dbName}";
-//Console.WriteLine($"connectionString -> {connectionString}");
+Console.WriteLine($"connectionString -> {connectionString}");
 
 
 builder.Services.AddTransient<NpgsqlConnection>(sp =>
@@ -23,7 +34,16 @@ builder.Services.AddTransient<NpgsqlConnection>(sp =>
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "LogCenter", Version = "1.0" });
+
+    // Inclua o caminho para o arquivo XML gerado
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
+});
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -37,6 +57,7 @@ var app = builder.Build();
 app.UseHttpsRedirection();
 
 
+app.MapControllers();
 
 app.Run();
 
