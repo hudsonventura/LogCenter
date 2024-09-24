@@ -6,8 +6,9 @@ services:
     restart: always
     environment:
       POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_HOST}
+      POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PORT: ${DB_PORT}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ./db/:/var/lib/postgresql/data/

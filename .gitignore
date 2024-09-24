@@ -1,2 +1,4 @@
 server/bin/*
 server/obj/*
+fake/bin/*
+fake/obj/*

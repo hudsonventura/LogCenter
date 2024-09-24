@@ -12,17 +12,20 @@ Env.Load();
 
 
 string dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? string.Empty;
+string dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? string.Empty;
+string dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? string.Empty;
 string dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? string.Empty;
 string dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? string.Empty;
-string dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? string.Empty;
+
+string connectionString = $"Host={dbHost};Port={dbPort};Username={dbUser};Password={dbPassword};Database={dbName}";
+Console.WriteLine($"connectionString -> {connectionString}");
 
 if(dbHost == string.Empty){
     Console.WriteLine("The environment variables is null or not present. Check the .env file.");
     Environment.Exit(1);  // 0 indica saída bem-sucedida
 }
 
-string connectionString = $"Host={dbHost};Username={dbUser};Password={dbPassword};Database={dbName}";
-Console.WriteLine($"connectionString -> {connectionString}");
+
 
 
 builder.Services.AddTransient<NpgsqlConnection>(sp =>
