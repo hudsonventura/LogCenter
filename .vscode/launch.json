@@ -5,6 +5,25 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Run Faker",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "dotnet: build",
+            "program": "${workspaceFolder}/fake/bin/Debug/net8.0/fake.dll",
+            "args": [],
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "DB_NAME": "logcenter",
+                "DB_HOST": "localhost",
+                "DB_PORT": "5435",
+                "DB_USER": "logcenter",
+                "DB_PASSWORD": "MyS3cr3tP@ssw0rd"
+            },
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        },
+        {
             "name": ".NET Core Launch (web)",
             "type": "coreclr",
             "request": "launch",
