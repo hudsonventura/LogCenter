@@ -15,6 +15,10 @@ public class DBRepository
 
     NpgsqlConnection _conn;
 
+    /// <summary>
+    /// List tables for frontend use
+    /// </summary>
+    /// <returns></returns>
     public List<string> ListTabels()
     {
         var tables = new List<string>();
