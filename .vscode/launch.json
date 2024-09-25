@@ -24,7 +24,7 @@
             "console": "internalConsole"
         },
         {
-            "name": ".NET Core Launch (web)",
+            "name": "Run server API",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet: build",

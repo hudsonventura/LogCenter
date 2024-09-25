@@ -16,7 +16,9 @@ services:
       - centerlog
     ports:
       - "5435:5432"
-    mem_limit: 512m
+    mem_limit: 256m
+    cpus: 1           # Limita o uso a 2 CPUs
+
     
 
   server:
