@@ -3,6 +3,7 @@ using System.Reflection;
 
 using DotNetEnv;
 using Npgsql;
+using server.Repositories;
 
 
 
@@ -32,6 +33,8 @@ builder.Services.AddTransient<NpgsqlConnection>(sp =>
 {
     return new NpgsqlConnection(connectionString);
 });
+
+builder.Services.AddScoped<DBRepository>();
 
 
 // Add services to the container.
