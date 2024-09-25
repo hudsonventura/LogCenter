@@ -1,7 +1,8 @@
 ﻿using DotNetEnv;
 using Npgsql;
 using Bogus;
-using Newtonsoft.Json; 
+using Newtonsoft.Json;
+using server.Repositories;
 
 
 string dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? string.Empty;
@@ -18,58 +19,59 @@ if(dbHost == string.Empty){
     Environment.Exit(1);  // 0 indica saída bem-sucedida
 }
 
+var conn = new NpgsqlConnection(connectionString);
+DBRepository _db = new DBRepository(conn);
 
-// Gera um texto aleatório usando Bogus (Lorem Ipsum)
-        
-        
-        using (var conn = new NpgsqlConnection(connectionString))
-        {
-            conn.Open();
-            
-            // Usamos um comando de INSERT com parâmetros
-            using (var cmd = new NpgsqlCommand())
-            {
-                cmd.Connection = conn;
-                cmd.CommandText = "INSERT INTO teste (content) VALUES (to_jsonb(@value));";
+int contador = 0;
 
-                
-                cmd.Parameters.Add(new NpgsqlParameter("@value", NpgsqlTypes.NpgsqlDbType.Text));
+//loop para criar os registros
+List<string> list = new List<string>();
+for (int i = 0; i < 1_000_000; i++){
+    var faker = new Faker<MyObjectExample>()
+        .RuleFor(o => o.Name, f => f.Person.FullName)
+        .RuleFor(o => o.Email, f => f.Person.Email)
+        .RuleFor(o => o.Age, f => f.Random.Int(18, 65));
 
-                // Loop para inserir 1 milhão de registros
-                for (int i = 0; i < 1_000_000; i++)
-                {
+    // Gerando o objeto
+    var objetoFicticio = faker.Generate();
 
-                    // Definindo o objeto com o Bogus
-                    var faker = new Faker<MyObjectExample>()
-                        .RuleFor(o => o.Name, f => f.Person.FullName)
-                        .RuleFor(o => o.Email, f => f.Person.Email)
-                        .RuleFor(o => o.Age, f => f.Random.Int(18, 65));
+    string gerado = JsonConvert.SerializeObject(objetoFicticio);
 
-                    // Gerando o objeto
-                    var objetoFicticio = faker.Generate();
+    // Gera um texto Lorem Ipsum
+    //var faker = new Faker();
+    //string gerado = faker.Lorem.Paragraphs(1); // Gera 1 parágrafo
 
-                    string gerado = JsonConvert.SerializeObject(objetoFicticio);
 
-                    // Gera um texto Lorem Ipsum
-                    //var faker = new Faker();
-                    //string gerado = faker.Lorem.Paragraphs(1); // Gera 1 parágrafo
+    list.Add(gerado);
 
-                    // Define o valor do parâmetro
-                    cmd.Parameters["@value"].Value = gerado;
+    
+    // Opcional: Log para cada 100.000 inserções
+    if (contador % 100 == 0)
+    {
+        Console.WriteLine($"{contador} registros gerados ...");
+    }
+    contador++;
+}
 
-                    // Executa o INSERT
-                    cmd.ExecuteNonQuery();
+contador = 0;
 
-                    // Opcional: Log para cada 100.000 inserções
-                    if (i % 100 == 0)
-                    {
-                        Console.WriteLine($"{i} registros inseridos...");
-                    }
-                }
+// Loop para inserir os registros
+foreach (var item in list)
+{
 
-                Console.WriteLine("Inserção concluída.");
-            }
-        }
+    _db.Insert("teste", item);
+    
+    // Opcional: Log para cada 100.000 inserções
+    if (contador % 100 == 0)
+    {
+        Console.WriteLine($"{contador} registros inseridos...");
+    }
+    contador++;
+}
+
+
+Console.WriteLine("Inserção concluída.");
+
 
 class MyObjectExample{
     public int Id { get; set;} = 0;
