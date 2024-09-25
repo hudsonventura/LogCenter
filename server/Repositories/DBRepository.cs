@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Npgsql;
+using server.Domain;
 using SnowflakeID;
 
 namespace server.Repositories;
@@ -17,7 +18,7 @@ public class DBRepository
     public void CreateIndexTable(string index){
         string txt_command = @$"CREATE TABLE {index} (
                                 id BIGINT PRIMARY KEY,
-                                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                 content jsonb
                             );";
         using var command = new NpgsqlCommand(txt_command, _conn);
@@ -81,4 +82,56 @@ public class DBRepository
         // Retorna o ID gerado
         return id;
     }
+
+    internal List<dynamic> Search(string table, SearchObject query)
+    {
+    // Cria o comando de consulta com um intervalo de datas
+    using var command = new NpgsqlCommand(@$"
+        SELECT id, created_at, content 
+        FROM {table} 
+        WHERE 1=1 
+        and created_at BETWEEN @datetime1 AND @datetime2
+        and content::text ILIKE @search
+        --
+        ORDER BY id
+        LIMIT @take -- Toma 20 registros
+        OFFSET @skip
+        ", _conn);
+
+    // Define os parâmetros para datetime1 e datetime2
+    DateTime datetime1 = DateTime.SpecifyKind(query.datetime1, DateTimeKind.Utc);
+    DateTime datetime2 = DateTime.SpecifyKind(query.datetime2, DateTimeKind.Utc);
+    command.Parameters.Add(new NpgsqlParameter("datetime1", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime1 });
+    command.Parameters.Add(new NpgsqlParameter("datetime2", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime2 });
+
+    command.Parameters.Add(new NpgsqlParameter("take", NpgsqlTypes.NpgsqlDbType.Integer) { Value = query.take });
+    command.Parameters.Add(new NpgsqlParameter("skip", NpgsqlTypes.NpgsqlDbType.Integer) { Value = query.skip });
+
+    command.Parameters.Add(new NpgsqlParameter("search", NpgsqlTypes.NpgsqlDbType.Text) { Value = $"%{query.search}%" });
+
+
+    // Executa o comando e obtém o resultado
+    using var reader = command.ExecuteReader();
+
+    // Cria uma lista para armazenar os resultados
+    var results = new List<dynamic>();
+
+    // Percorre todos os registros retornados
+    while (reader.Read())
+    {
+        // Cria um objeto dinâmico para armazenar os valores da linha
+        var record = new
+        {
+            Id = reader.GetInt64(reader.GetOrdinal("id")),
+            CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at")),
+            Content = reader["content"].ToString()
+        };
+
+        // Adiciona o objeto dinâmico à lista de resultados
+        results.Add(record);
+    }
+
+    // Retorna a lista de resultados
+    return results;
+}
 }

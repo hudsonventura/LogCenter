@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using server.Repositories;
 using System.Text.Json.Nodes;
+using server.Domain;
 
 namespace server.Controllers;
 
@@ -112,6 +113,18 @@ public class API : ControllerBase
         _db.DeleteIndexTable(table);
 
         return NoContent();
+    }
+
+
+
+    [HttpGet("/Search/{table}")]
+    public ActionResult Search(string table, [FromQuery] SearchObject query){
+        var response = _db.Search(table, query);
+        if(response.Count() == 0){
+            return NoContent();
+        }
+        return Ok(response);
+        
     }
 
 }
