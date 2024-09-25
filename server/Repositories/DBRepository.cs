@@ -24,6 +24,15 @@ public class DBRepository
         command.ExecuteNonQuery();
     }
 
+    public void DeleteIndexTable(string index)
+    {
+        string txt_command = $"DROP TABLE IF EXISTS {index};";
+        using var command = new NpgsqlCommand(txt_command, _conn);
+        command.ExecuteNonQuery();
+    }
+
+
+
 
     public void CreateJsonbIndex(string index){
         string txt_command = 
@@ -31,6 +40,17 @@ public class DBRepository
         using var command = new NpgsqlCommand(txt_command, _conn);
         command.ExecuteNonQuery();
     }
+
+    //Not necessary
+    // public void DeleteJsonbIndex(string index)
+    // {
+    //     string txt_command = $"DROP INDEX IF EXISTS idx_{index};";
+    //     using var command = new NpgsqlCommand(txt_command, _conn);
+    //     command.ExecuteNonQuery();
+    // }
+
+
+
 
     public void ValidateIndex(string index)
     {

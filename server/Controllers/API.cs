@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using server.Repositories;
+using System.Text.Json.Nodes;
 
 namespace server.Controllers;
 
@@ -30,6 +31,7 @@ public class API : ControllerBase
     {
         return Index(index, obj);
     }
+
     /// <summary>
     /// Save a message to index log
     /// </summary>
@@ -38,8 +40,19 @@ public class API : ControllerBase
     public ActionResult Index(string index, [FromBody] dynamic obj)
     {
         _db.ValidateIndex(index);
-        var body = Utils.Base64Replacer.ReplaceBase64Content(obj);
-        var json = JsonSerializer.Serialize(body);
+        index = index.Replace(" ", "_");
+        
+        var json = string.Empty;
+        try
+        {
+            dynamic body = Utils.Base64Replacer.ReplaceBase64Content(obj);
+            json = JsonSerializer.Serialize(body);
+        }
+        catch (System.Exception)
+        {
+            json = JsonSerializer.Serialize(obj);
+        }
+        
 
 
         try
@@ -77,6 +90,28 @@ public class API : ControllerBase
 
     
 
-    
+    /// <summary>
+    /// Save a message to index log
+    /// </summary>
+    /// <returns></returns>
+    [HttpDelete("/{index}/_doc")]
+    public ActionResult Delete_Doc(string index)
+    {
+        return Delete(index);
+    }
+
+    /// <summary>
+    /// Save a message to index log
+    /// </summary>
+    /// <returns></returns>
+    [HttpDelete("/{index}")]
+    public ActionResult Delete(string index)
+    {
+        _db.ValidateIndex(index);
+        index = index.Replace(" ", "_");
+        _db.DeleteIndexTable(index);
+
+        return NoContent();
+    }
 
 }
