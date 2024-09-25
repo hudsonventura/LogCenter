@@ -23,24 +23,24 @@ public class API : ControllerBase
 
 
     /// <summary>
-    /// Save a message to index log
+    /// Save a message to table log
     /// </summary>
     /// <returns></returns>
-    [HttpPost("/{index}/_doc")]
-    public ActionResult Index_Doc(string index, [FromBody] dynamic obj)
+    [HttpPost("/{table}/_doc")]
+    public ActionResult Index_Doc(string table, [FromBody] dynamic obj)
     {
-        return Index(index, obj);
+        return Index(table, obj);
     }
 
     /// <summary>
-    /// Save a message to index log
+    /// Save a message to table log
     /// </summary>
     /// <returns></returns>
-    [HttpPost("/{index}")]
-    public ActionResult Index(string index, [FromBody] dynamic obj)
+    [HttpPost("/{table}")]
+    public ActionResult Index(string table, [FromBody] dynamic obj)
     {
-        _db.ValidateIndex(index);
-        index = index.Replace(" ", "_");
+        _db.ValidateIndex(table);
+        table = table.Replace(" ", "_");
         
         var json = string.Empty;
         try
@@ -59,7 +59,7 @@ public class API : ControllerBase
         {
             //tenta salvar na tabela do meu index.
             //se der certo, 200
-            var id = _db.Insert(index, json);
+            var id = _db.Insert(table, json);
             return Created("teste", id);
         }
         catch (System.Exception error1)
@@ -68,15 +68,15 @@ public class API : ControllerBase
             //se a tabela nào existir, entao cria.
             try
             {
-                Console.Write($"Creating new table ({index}) ... ");
-                _db.CreateIndexTable(index);
+                Console.Write($"Creating new table ({table}) ... ");
+                _db.CreateIndexTable(table);
                 Console.Write("OK! ... ");
 
-                Console.Write($"Creating new JSONB index ({index}) ... ");
-                _db.CreateJsonbIndex(index);
+                Console.Write($"Creating new JSONB index ({table}) ... ");
+                _db.CreateJsonbIndex(table);
                 Console.Write("OK! ... ");
 
-                var id = _db.Insert(index, json);
+                var id = _db.Insert(table, json);
                 return Created("teste", id);
             }
             catch (System.Exception error2)
@@ -91,25 +91,25 @@ public class API : ControllerBase
     
 
     /// <summary>
-    /// Save a message to index log
+    /// Delete table log
     /// </summary>
     /// <returns></returns>
-    [HttpDelete("/{index}/_doc")]
-    public ActionResult Delete_Doc(string index)
+    [HttpDelete("/{table}/_doc")]
+    public ActionResult Delete_Doc(string table)
     {
-        return Delete(index);
+        return Delete(table);
     }
 
     /// <summary>
-    /// Save a message to index log
+    /// Delete table log
     /// </summary>
     /// <returns></returns>
-    [HttpDelete("/{index}")]
-    public ActionResult Delete(string index)
+    [HttpDelete("/{table}")]
+    public ActionResult Delete(string table)
     {
-        _db.ValidateIndex(index);
-        index = index.Replace(" ", "_");
-        _db.DeleteIndexTable(index);
+        _db.ValidateIndex(table);
+        table = table.Replace(" ", "_");
+        _db.DeleteIndexTable(table);
 
         return NoContent();
     }
