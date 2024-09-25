@@ -50,7 +50,7 @@ public class DBRepository
         command.ExecuteNonQuery();
     }
 
-    public void DeleteIndexTable(string index)
+    public void DropTable(string index)
     {
         string txt_command = $"DROP TABLE IF EXISTS {index};";
         using var command = new NpgsqlCommand(txt_command, _conn);
@@ -159,4 +159,22 @@ public class DBRepository
     // Retorna a lista de resultados
     return results;
 }
+
+
+    public void DeleteRecords(string table, DateTime cutdate)
+    {
+        // Prepara o comando de deletar
+        using var command = new NpgsqlCommand(@$"
+            DELETE FROM {table} 
+            WHERE created_at < @cutdate;", _conn);
+
+        // Define o parâmetro 'cutdate' como 'TIMESTAMP WITH TIME ZONE'
+        command.Parameters.Add(new NpgsqlParameter("cutdate", NpgsqlTypes.NpgsqlDbType.TimestampTz)
+        {
+            Value = DateTime.SpecifyKind(cutdate, DateTimeKind.Utc) // Certifique-se que a data é UTC
+        });
+
+        // Executa o comando de exclusão
+        command.ExecuteNonQuery();
+    }
 }

@@ -101,26 +101,31 @@ public class API : ControllerBase
 
     
 
-    /// <summary>
-    /// Delete table log
-    /// </summary>
-    /// <returns></returns>
-    [HttpDelete("/{table}/_doc")]
-    public ActionResult Delete_Doc(string table)
-    {
-        return Delete(table);
-    }
 
     /// <summary>
-    /// Delete table log
+    /// Drop the table log
     /// </summary>
     /// <returns></returns>
-    [HttpDelete("/{table}")]
-    public ActionResult Delete(string table)
+    [HttpDelete("/Drop/{table}")]
+    public ActionResult DropTable(string table)
     {
         _db.ValidateIndex(table);
         table = table.Replace(" ", "_");
-        _db.DeleteIndexTable(table);
+        _db.DropTable(table);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Delete records from table log
+    /// </summary>
+    /// <returns></returns>
+    [HttpDelete("/{table}")]
+    public ActionResult Delete(string table, [FromQuery] DateTime datecut)
+    {
+        _db.ValidateIndex(table);
+        table = table.Replace(" ", "_");
+        _db.DeleteRecords(table, datecut);
 
         return NoContent();
     }
