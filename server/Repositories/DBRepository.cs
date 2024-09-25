@@ -15,6 +15,27 @@ public class DBRepository
 
     NpgsqlConnection _conn;
 
+    public List<string> ListTabels()
+    {
+        var tables = new List<string>();
+
+        using var command = new NpgsqlCommand(@"
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public'
+            AND table_type = 'BASE TABLE';", _conn);
+
+        using var reader = command.ExecuteReader();
+
+        while (reader.Read())
+        {
+            // Adiciona o nome da tabela à lista
+            tables.Add(reader.GetString(0));
+        }
+
+        return tables;
+    }
+
     public void CreateIndexTable(string index){
         string txt_command = @$"CREATE TABLE {index} (
                                 id BIGINT PRIMARY KEY,

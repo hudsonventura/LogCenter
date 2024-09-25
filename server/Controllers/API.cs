@@ -23,6 +23,16 @@ public class API : ControllerBase
     }
 
 
+    [HttpGet("/ListTables")]
+    public ActionResult ListTabels(){
+        var tables = _db.ListTabels();
+        if(tables.Count() == 0){
+            return NoContent();
+        }
+        return Ok(tables);
+    }
+
+
     /// <summary>
     /// Save a message to table log
     /// </summary>
