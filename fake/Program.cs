@@ -1,6 +1,7 @@
 ﻿using DotNetEnv;
 using Npgsql;
 using Bogus;
+using Newtonsoft.Json; 
 
 
 string dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? string.Empty;
@@ -19,7 +20,7 @@ if(dbHost == string.Empty){
 
 
 // Gera um texto aleatório usando Bogus (Lorem Ipsum)
-        var faker = new Faker();
+        
         
         using (var conn = new NpgsqlConnection(connectionString))
         {
@@ -29,25 +30,38 @@ if(dbHost == string.Empty){
             using (var cmd = new NpgsqlCommand())
             {
                 cmd.Connection = conn;
-                cmd.CommandText = "INSERT INTO teste (content) VALUES (@texto)";
+                cmd.CommandText = "INSERT INTO teste (content) VALUES (to_jsonb(@value));";
 
                 
-                cmd.Parameters.Add(new NpgsqlParameter("@texto", NpgsqlTypes.NpgsqlDbType.Text));
+                cmd.Parameters.Add(new NpgsqlParameter("@value", NpgsqlTypes.NpgsqlDbType.Text));
 
                 // Loop para inserir 1 milhão de registros
                 for (int i = 0; i < 1_000_000; i++)
                 {
+
+                    // Definindo o objeto com o Bogus
+                    var faker = new Faker<MyObjectExample>()
+                        .RuleFor(o => o.Name, f => f.Person.FullName)
+                        .RuleFor(o => o.Email, f => f.Person.Email)
+                        .RuleFor(o => o.Age, f => f.Random.Int(18, 65));
+
+                    // Gerando o objeto
+                    var objetoFicticio = faker.Generate();
+
+                    string gerado = JsonConvert.SerializeObject(objetoFicticio);
+
                     // Gera um texto Lorem Ipsum
-                    string textoAleatorio = faker.Lorem.Paragraphs(1); // Gera 1 parágrafo
+                    //var faker = new Faker();
+                    //string gerado = faker.Lorem.Paragraphs(1); // Gera 1 parágrafo
 
                     // Define o valor do parâmetro
-                    cmd.Parameters["@texto"].Value = textoAleatorio;
+                    cmd.Parameters["@value"].Value = gerado;
 
                     // Executa o INSERT
                     cmd.ExecuteNonQuery();
 
                     // Opcional: Log para cada 100.000 inserções
-                    if (i % 100_000 == 0)
+                    if (i % 100 == 0)
                     {
                         Console.WriteLine($"{i} registros inseridos...");
                     }
@@ -56,3 +70,10 @@ if(dbHost == string.Empty){
                 Console.WriteLine("Inserção concluída.");
             }
         }
+
+class MyObjectExample{
+    public int Id { get; set;} = 0;
+    public string Name { get; set;}
+    public string Email { get; set;}
+    public int Age { get; set;}
+}

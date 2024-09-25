@@ -60,7 +60,7 @@ public class API : ControllerBase
                 Console.Write("OK! ... ");
 
                 Console.Write($"Creating new index ({index}) ... ");
-                CreateTigger(index);
+                CreateIndex(index);
                 Console.Write("OK! ... ");
 
                 TryToSave(index, json);
@@ -87,7 +87,7 @@ public class API : ControllerBase
     private int TryToSave(string index, string json)
     {
 
-        using var command = new NpgsqlCommand($"INSERT INTO {index} (content) VALUES (@value)", _connection);
+        using var command = new NpgsqlCommand($"INSERT INTO {index} (content) VALUES (@value::jsonb)", _connection);
         command.Parameters.AddWithValue("value", json);
 
         return command.ExecuteNonQuery();
@@ -96,18 +96,16 @@ public class API : ControllerBase
     private void CreateIndexTable(string index){
         string txt_command = @$"CREATE TABLE {index} (
                                 id SERIAL PRIMARY KEY,
-                                content TEXT,
-                                tsv_content tsvector
+                                content jsonb
                             );";
         using var command = new NpgsqlCommand(txt_command, _connection);
         command.ExecuteNonQuery();
     }
 
-    private void CreateTigger(string index){
+    private void CreateIndex(string index){
         string txt_command = 
-            @$"CREATE TRIGGER trigger_{index}
-                BEFORE INSERT OR UPDATE ON {index}
-                FOR EACH ROW EXECUTE FUNCTION atualizar_tsvector();";
+            @$"CREATE INDEX idx_{index} ON {index} USING GIN (content jsonb_ops);
+";
         using var command = new NpgsqlCommand(txt_command, _connection);
         command.ExecuteNonQuery();
     }
