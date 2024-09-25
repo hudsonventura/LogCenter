@@ -14,6 +14,8 @@ string dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? string.
 string connectionString = $"Host={dbHost};Port={dbPort};Username={dbUser};Password={dbPassword};Database={dbName}";
 Console.WriteLine($"connectionString -> {connectionString}");
 
+string test_index = "outro_teste";
+
 if(dbHost == string.Empty){
     Console.WriteLine("The environment variables is null or not present. Check the .env file.");
     Environment.Exit(1);  // 0 indica saída bem-sucedida
@@ -55,11 +57,12 @@ for (int i = 0; i < 1_000_000; i++){
 
 contador = 0;
 
+
 // Loop para inserir os registros
 foreach (var item in list)
 {
 
-    _db.Insert("teste", item);
+    _db.Insert(test_index, item);
     
     // Opcional: Log para cada 100.000 inserções
     if (contador % 100 == 0)
