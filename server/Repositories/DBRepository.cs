@@ -151,8 +151,9 @@ public class DBRepository
         var record = new
         {
             Id = reader.GetInt64(reader.GetOrdinal("id")),
+            Level = ((Level)reader.GetInt64(reader.GetOrdinal("level"))).ToString(),
             CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at")),
-            Content = reader["content"].ToString()
+            Content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(reader["content"].ToString())
         };
 
         // Adiciona o objeto dinâmico à lista de resultados
@@ -204,7 +205,7 @@ public class DBRepository
                 Id = reader.GetInt64(reader.GetOrdinal("id")),
                 Level = ((Level)reader.GetInt64(reader.GetOrdinal("level"))).ToString(),
                 CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at")),
-                Content = reader["content"].ToString()
+                Content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(reader["content"].ToString())
             };
 
             // Adiciona o objeto dinâmico à lista de resultados
