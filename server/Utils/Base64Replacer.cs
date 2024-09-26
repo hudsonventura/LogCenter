@@ -27,12 +27,12 @@ public class Base64Replacer
             if (value.StartsWith("data:"))
             {
                 // Substituir o base64 por um texto explicativo
-                jsonObject[property.Name] = "Base64 file content was removed";
+                jsonObject[property.Name] = $"{value.Substring(0, 950)} ... Base64 file content was droped";
             }
             else if (value.Length > 1024)
             {
                 // Substituir o base64 por um texto explicativo
-                jsonObject[property.Name] = "Large content was removed (more than 1024KB)";
+                jsonObject[property.Name] = $"{value.Substring(0, 950)} ... Large content was droped (more than 1024KB)";
             }
             else if (property.Value.ValueKind == JsonValueKind.Object)
             {
