@@ -56,10 +56,20 @@ builder.Services.AddControllers();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment()) //use swagger in dev
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}else{ //use redoc in prod
+    {
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.UseReDoc(c =>
+    {
+        c.DocumentTitle = "LogCenter";
+        c.SpecUrl = "/swagger/v1/swagger.json";
+    });
+}
 }
 
 app.UseHttpsRedirection();
