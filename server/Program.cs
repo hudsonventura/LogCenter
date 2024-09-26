@@ -4,6 +4,7 @@ using System.Reflection;
 using DotNetEnv;
 using Npgsql;
 using server.Repositories;
+using server.BackgroundServices;
 
 
 
@@ -35,6 +36,7 @@ builder.Services.AddTransient<NpgsqlConnection>(sp =>
 });
 
 builder.Services.AddScoped<DBRepository>();
+builder.Services.AddHostedService<RecyclingRecords>();
 
 
 // Add services to the container.
