@@ -14,6 +14,19 @@ public class RecyclingRecords : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
+        Task task11 = Task.Run(() => Recycling()); 
+        return Task.CompletedTask;
+
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+
+    }
+
+
+    public void Recycling(){
         while(true){
             Console.WriteLine("Starting Recycling Records");
 
@@ -41,17 +54,8 @@ public class RecyclingRecords : IHostedService
                     }
                 }
             }
-            Console.WriteLine("Starting Recycling Records - Finshed right now");
-            Thread.Sleep(1000*60*10); //each 10 minutes
+            Console.WriteLine("Starting Recycling Records - Finished right now");
+            Thread.Sleep(1000*10); //each 10 minutes
         }
-
-        return Task.CompletedTask;
-
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-
     }
 }
