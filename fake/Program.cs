@@ -3,6 +3,7 @@ using Npgsql;
 using Bogus;
 using Newtonsoft.Json;
 using server.Repositories;
+using server.Domain;
 
 
 string dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? string.Empty;
@@ -14,7 +15,7 @@ string dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? string.
 string connectionString = $"Host={dbHost};Port={dbPort};Username={dbUser};Password={dbPassword};Database={dbName}";
 Console.WriteLine($"connectionString -> {connectionString}");
 
-string test_index = "outro_teste";
+string table = "SEAPI";
 
 if(dbHost == string.Empty){
     Console.WriteLine("The environment variables is null or not present. Check the .env file.");
@@ -25,9 +26,9 @@ var conn = new NpgsqlConnection(connectionString);
 DBRepository _db = new DBRepository(conn);
 
 int contador = 0;
+Random random = new Random();
 
 //loop para criar os registros
-List<string> list = new List<string>();
 for (int i = 0; i < 1_000_000; i++){
     var faker = new Faker<MyObjectExample>()
         .RuleFor(o => o.Name, f => f.Person.FullName)
@@ -44,7 +45,11 @@ for (int i = 0; i < 1_000_000; i++){
     //string gerado = faker.Lorem.Paragraphs(1); // Gera 1 parágrafo
 
 
-    list.Add(gerado);
+    int number = random.Next(1, 6);
+    Level level = (Level)number;
+
+
+    _db.Insert(table, level, gerado);
 
     
     // Opcional: Log para cada 100.000 inserções
@@ -55,22 +60,9 @@ for (int i = 0; i < 1_000_000; i++){
     contador++;
 }
 
-contador = 0;
 
 
-// Loop para inserir os registros
-foreach (var item in list)
-{
 
-    _db.Insert(test_index, item);
-    
-    // Opcional: Log para cada 100.000 inserções
-    if (contador % 100 == 0)
-    {
-        Console.WriteLine($"{contador} registros inseridos...");
-    }
-    contador++;
-}
 
 
 Console.WriteLine("Inserção concluída.");

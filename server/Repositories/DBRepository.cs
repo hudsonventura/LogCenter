@@ -40,9 +40,10 @@ public class DBRepository
         return tables;
     }
 
-    public void CreateIndexTable(string index){
+    public void CreateTable(string index){
         string txt_command = @$"CREATE TABLE {index} (
                                 id BIGINT PRIMARY KEY,
+                                level SMALLINT CHECK (level >= 0 AND level <= 9),
                                 created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                 content jsonb
                             );";
@@ -78,25 +79,27 @@ public class DBRepository
 
 
 
-    public void ValidateIndex(string index)
+    public void ValidateTable(string table)
     {
         var regex = new Regex(@"[!@#$%^&*(),.?""{}|<>]");
-        if(regex.IsMatch(index)){
+        if(regex.IsMatch(table)){
             throw new Exception("The index must be a string without special chars");
         }
 
     }
 
-    public ulong Insert(string index, string json)
+    public ulong Insert(string table, Level level, string json)
     {
         // Gera o ID Snowflake
         ulong id = SnowflakeIDGenerator.GetSnowflake(0).ToUInt64();
 
         // Cria o comando de inserção
-        using var command = new NpgsqlCommand($"INSERT INTO {index} (id, content) VALUES (@id, @value::jsonb)", _conn);
+        using var command = new NpgsqlCommand($"INSERT INTO {table} (id, level, content) VALUES (@id, @level, @value::jsonb)", _conn);
 
         // Define o parâmetro 'id' explicitamente como BIGINT
         command.Parameters.Add(new NpgsqlParameter("id", NpgsqlTypes.NpgsqlDbType.Bigint) { Value = (long)id });
+
+        command.Parameters.Add(new NpgsqlParameter("level", NpgsqlTypes.NpgsqlDbType.Integer) { Value = (int)level });
 
         // Adiciona o parâmetro 'value' com o JSON
         command.Parameters.AddWithValue("value", NpgsqlTypes.NpgsqlDbType.Jsonb, json);
@@ -112,7 +115,7 @@ public class DBRepository
     {
     // Cria o comando de consulta com um intervalo de datas
     using var command = new NpgsqlCommand(@$"
-        SELECT id, created_at, content 
+        SELECT id, level, created_at, content 
         FROM {table} 
         WHERE 1=1 
         and created_at BETWEEN @datetime1 AND @datetime2
@@ -181,7 +184,7 @@ public class DBRepository
     internal object GetByID(string table, long id)
     {
         using var command = new NpgsqlCommand(@$"
-            SELECT id, created_at, content 
+            SELECT id, level, created_at, content 
             FROM {table} 
             WHERE 1=1 
             and id = @id", _conn);
@@ -199,6 +202,7 @@ public class DBRepository
             var record = new
             {
                 Id = reader.GetInt64(reader.GetOrdinal("id")),
+                Level = ((Level)reader.GetInt64(reader.GetOrdinal("level"))).ToString(),
                 CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at")),
                 Content = reader["content"].ToString()
             };

@@ -38,9 +38,9 @@ public class API : ControllerBase
     /// </summary>
     /// <returns></returns>
     [HttpPost("/{table}/_doc")]
-    public ActionResult Index_Doc(string table, [FromBody] dynamic obj)
+    public ActionResult Index_Doc(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info)
     {
-        return Index(table, obj);
+        return Index(table, obj, level);
     }
 
     /// <summary>
@@ -48,9 +48,9 @@ public class API : ControllerBase
     /// </summary>
     /// <returns></returns>
     [HttpPost("/{table}")]
-    public ActionResult Index(string table, [FromBody] dynamic obj)
+    public ActionResult Index(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info)
     {
-        _db.ValidateIndex(table);
+        _db.ValidateTable(table);
         table = table.Replace(" ", "_");
         
         var json = string.Empty;
@@ -70,7 +70,7 @@ public class API : ControllerBase
         {
             //tenta salvar na tabela do meu index.
             //se der certo, 200
-            var id = _db.Insert(table, json);
+            var id = _db.Insert(table, level, json);
             return Created("teste", id);
         }
         catch (System.Exception error1)
@@ -80,14 +80,14 @@ public class API : ControllerBase
             try
             {
                 Console.Write($"Creating new table ({table}) ... ");
-                _db.CreateIndexTable(table);
+                _db.CreateTable(table);
                 Console.Write("OK! ... ");
 
                 Console.Write($"Creating new JSONB index ({table}) ... ");
                 _db.CreateJsonbIndex(table);
                 Console.Write("OK! ... ");
 
-                var id = _db.Insert(table, json);
+                var id = _db.Insert(table, level, json);
                 return Created("teste", id);
             }
             catch (System.Exception error2)
@@ -109,7 +109,7 @@ public class API : ControllerBase
     [HttpDelete("/Drop/{table}")]
     public ActionResult DropTable(string table)
     {
-        _db.ValidateIndex(table);
+        _db.ValidateTable(table);
         table = table.Replace(" ", "_");
         _db.DropTable(table);
 
@@ -123,7 +123,7 @@ public class API : ControllerBase
     [HttpDelete("/{table}")]
     public ActionResult Delete(string table, [FromQuery] DateTime datecut)
     {
-        _db.ValidateIndex(table);
+        _db.ValidateTable(table);
         table = table.Replace(" ", "_");
         _db.DeleteRecords(table, datecut);
 
@@ -147,7 +147,7 @@ public class API : ControllerBase
         var response = _db.GetByID(table, id);
         if(response == null){
             return NotFound();
-    }
+        }
         return Ok(response);
     }
 }
