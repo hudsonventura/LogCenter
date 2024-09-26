@@ -60,10 +60,9 @@ if (app.Environment.IsDevelopment()) //use swagger in dev
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}else{ //use redoc in prod
+}else{ //use redoc in PROD
     {
     app.UseSwagger();
-    app.UseSwaggerUI();
     app.UseReDoc(c =>
     {
         c.DocumentTitle = "LogCenter";

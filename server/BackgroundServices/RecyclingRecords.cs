@@ -55,7 +55,7 @@ public class RecyclingRecords : IHostedService
                 }
             }
             Console.WriteLine("Starting Recycling Records - Finished right now");
-            Thread.Sleep(1000*10); //each 10 minutes
+            Thread.Sleep(1000*60*10); //each 10 minutes
         }
     }
 }
