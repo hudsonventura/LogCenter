@@ -139,7 +139,15 @@ public class API : ControllerBase
             return NoContent();
         }
         return Ok(response);
-        
     }
 
+
+    [HttpGet("/{table}/{id}")]
+    public ActionResult GetByID(string table, long id){
+        var response = _db.GetByID(table, id);
+        if(response == null){
+            return NotFound();
+    }
+        return Ok(response);
+    }
 }

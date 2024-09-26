@@ -177,4 +177,37 @@ public class DBRepository
         // Executa o comando de exclusão
         command.ExecuteNonQuery();
     }
+
+    internal object GetByID(string table, long id)
+    {
+        using var command = new NpgsqlCommand(@$"
+            SELECT id, created_at, content 
+            FROM {table} 
+            WHERE 1=1 
+            and id = @id", _conn);
+
+        command.Parameters.Add(new NpgsqlParameter("id", NpgsqlTypes.NpgsqlDbType.Bigint) { Value = id });
+
+
+        // Executa o comando e obtém o resultado
+        using var reader = command.ExecuteReader();
+
+        // Percorre todos os registros retornados
+        while (reader.Read())
+        {
+            // Cria um objeto dinâmico para armazenar os valores da linha
+            var record = new
+            {
+                Id = reader.GetInt64(reader.GetOrdinal("id")),
+                CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at")),
+                Content = reader["content"].ToString()
+            };
+
+            // Adiciona o objeto dinâmico à lista de resultados
+            return record;
+        }
+
+        // Retorna a lista de resultados
+        return null;
+    }
 }
