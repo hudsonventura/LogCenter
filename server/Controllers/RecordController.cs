@@ -12,43 +12,36 @@ namespace server.Controllers;
 /// DOC 1
 /// </summary>
 [ApiController]
-public class API : ControllerBase
+public class RecordController : ControllerBase
 {
 
     private readonly DBRepository _db;
 
-    public API(DBRepository db)
+    public RecordController(DBRepository db)
     {
         _db = db;
     }
 
 
-    [HttpGet("/ListTables")]
-    public ActionResult ListTabels(){
-        var tables = _db.ListTabels();
-        if(tables.Count() == 0){
-            return NoContent();
-        }
-        return Ok(tables);
-    }
+    
 
 
     /// <summary>
-    /// Save a message to table log
+    /// Save a message string or object json to table log. Returns a snowflake id
     /// </summary>
-    /// <returns></returns>
+    /// <returns>long</returns>
     [HttpPost("/{table}/_doc")]
-    public ActionResult Index_Doc(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info)
+    public ActionResult<long> Insert_Doc(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info)
     {
-        return Index(table, obj, level);
+        return Insert(table, obj, level);
     }
 
     /// <summary>
-    /// Save a message to table log
+    /// Save a message string or object json to table log. Returns a snowflake id
     /// </summary>
-    /// <returns></returns>
+    /// <returns>long</returns>
     [HttpPost("/{table}")]
-    public ActionResult Index(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info)
+    public ActionResult<long> Insert(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info)
     {
         _db.ValidateTable(table);
         table = table.Replace(" ", "_");
@@ -102,22 +95,10 @@ public class API : ControllerBase
     
 
 
-    /// <summary>
-    /// Drop the table log
-    /// </summary>
-    /// <returns></returns>
-    [HttpDelete("/Drop/{table}")]
-    public ActionResult DropTable(string table)
-    {
-        _db.ValidateTable(table);
-        table = table.Replace(" ", "_");
-        _db.DropTable(table);
-
-        return NoContent();
-    }
+    
 
     /// <summary>
-    /// Delete records from table log
+    /// Delete records from table log before a cutoff date
     /// </summary>
     /// <returns></returns>
     [HttpDelete("/{table}")]
@@ -132,8 +113,14 @@ public class API : ControllerBase
 
 
 
+    /// <summary>
+    /// Search string or json object into a table. Returns a list of record
+    /// </summary>
+    /// <param name="table"></param>
+    /// <param name="query"></param>
+    /// <returns></returns>
     [HttpGet("/Search/{table}")]
-    public ActionResult Search(string table, [FromQuery] SearchObject query){
+    public ActionResult<List<Record>> Search(string table, [FromQuery] SearchObject query){
         var response = _db.Search(table, query);
         if(response.Count() == 0){
             return NoContent();
@@ -142,6 +129,12 @@ public class API : ControllerBase
     }
 
 
+    /// <summary>
+    /// Get a record by ID. Returns a record
+    /// </summary>
+    /// <param name="table"></param>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpGet("/{table}/{id}")]
     public ActionResult GetByID(string table, long id){
         var response = _db.GetByID(table, id);
