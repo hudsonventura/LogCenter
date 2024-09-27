@@ -12,7 +12,7 @@ public class UnitTest1
 {
     ITestOutputHelper _output;
     HttpClient client = new Host().CreateClient();
-    string table = "integration tests";
+    string table = "integration_tests";
 
 
     public UnitTest1(ITestOutputHelper output)
@@ -60,7 +60,9 @@ public class UnitTest1
 
     [Fact]
     public async Task CheckInputLongList(){
-        
+        long id = 7245539150718304256;
+        var response = await client.GetAsync($"/{table}/{id}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     //TODO: check if the object was input
@@ -76,35 +78,46 @@ public class UnitTest1
         var obj = new { name = "joao", age = 18, email = "joao@joao.com", imageBase64 };
         var content = new StringContent(JsonSerializer.Serialize(obj), Encoding.UTF8, "application/json");
         var response = await client.PostAsync($"/{table}/_doc", content);
+
+        string responseBody = await response.Content.ReadAsStringAsync();
+        long id = long.Parse(responseBody);
+        _output.WriteLine($"ID: {id}"); 
+
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
     [Fact]
     public async Task CheckInputLargeObject(){
-
+        long id = 7245539365034655744;
+        var response = await client.GetAsync($"/{table}/{id}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
     
     [Fact]
     public async Task CheckInputLargeObjectBase64Droped(){
-
+        long id = 7245539365034655744;
+        var response = await client.GetAsync($"/{table}/{id}");
+        string responseBody = await response.Content.ReadAsStringAsync();
+        if(!responseBody.Contains("Large content was droped")){
+            Assert.Equal(false, true);
+        }
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
 
     [Fact]
     public async Task ListTables(){
-
-    }
-
-    [Fact]
-    public async Task DeleteOldRecords(){
-
+        var response = await client.GetAsync($"/ListTables");
+        string responseBody = await response.Content.ReadAsStringAsync();
+        if(!responseBody.Contains(table)){
+            Assert.Equal(false, true);
+        }
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     
 
-    [Fact]
-    public async Task GetLogByID(){
+    
 
-    }
 
 
     [Fact]
@@ -157,6 +170,11 @@ public class UnitTest1
 
     [Fact]
     public async Task Search(){
+
+    }
+
+    [Fact]
+    public async Task DeleteOldRecords(){
 
     }
 }
