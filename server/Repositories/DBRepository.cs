@@ -165,21 +165,23 @@ public class DBRepository
 }
 
 
-    public void DeleteRecords(string table, DateTime cutdate)
+    public void DeleteRecords(string table, DateTime before_date)
     {
+        Console.WriteLine($"It will remove records before {before_date} from table {table}");
         // Prepara o comando de deletar
         using var command = new NpgsqlCommand(@$"
             DELETE FROM {table} 
-            WHERE created_at < @cutdate;", _conn);
+            WHERE created_at < @before_date;", _conn);
 
         // Define o parâmetro 'cutdate' como 'TIMESTAMP WITH TIME ZONE'
-        command.Parameters.Add(new NpgsqlParameter("cutdate", NpgsqlTypes.NpgsqlDbType.TimestampTz)
+        command.Parameters.Add(new NpgsqlParameter("before_date", NpgsqlTypes.NpgsqlDbType.TimestampTz)
         {
-            Value = DateTime.SpecifyKind(cutdate, DateTimeKind.Utc) // Certifique-se que a data é UTC
+            Value = DateTime.SpecifyKind(before_date, DateTimeKind.Utc) // Certifique-se que a data é UTC
         });
 
-        // Executa o comando de exclusão
-        command.ExecuteNonQuery();
+
+        int effected = command.ExecuteNonQuery();
+        Console.WriteLine($"Removed {effected} records from table {table}");
     }
 
     internal Record GetByID(string table, long id)

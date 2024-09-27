@@ -107,19 +107,19 @@ public class RecordController : ControllerBase
     /// Delete records from table log before a cutoff date. It will mark the records to be deleted, but will not delete them at the moment. They will be deleted in a few minutes
     /// </summary>
     /// <param name="table">Table name</param>
-    /// <param name="datecut">Remove records inserted before a date</param>
+    /// <param name="before_date">Remove records inserted before a date</param>
     /// <returns></returns>
     [HttpDelete("/{table}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public ActionResult Delete(string table, [FromQuery] DateTime datecut)
+    public ActionResult Delete(string table, [FromQuery] DateTime before_date)
     {
         _db.ValidateTable(table);
         table = table.Replace(" ", "_").ToLower();
         
         try
         {
-            _db.DeleteRecords(table, datecut);
+            _db.DeleteRecords(table, before_date);
             return Ok();
         }
         catch (System.Exception error)
