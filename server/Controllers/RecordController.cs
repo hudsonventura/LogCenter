@@ -29,6 +29,9 @@ public class RecordController : ControllerBase
     /// <summary>
     /// Save a message string or object json to table log. Returns a snowflake id
     /// </summary>
+    /// <param name="table">Table name</param>
+    /// <param name="obj">Message string or object json</param>
+    /// <param name="level">Log level. Default is Info</param>
     /// <returns>long</returns>
     [HttpPost("/{table}/_doc")]
     public ActionResult<long> Insert_Doc(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info)
@@ -39,12 +42,15 @@ public class RecordController : ControllerBase
     /// <summary>
     /// Save a message string or object json to table log. Returns a snowflake id
     /// </summary>
+    /// <param name="table">Table name</param>
+    /// <param name="obj">Message string or object json</param>
+    /// <param name="level">Log level. Default is Info</param>
     /// <returns>long</returns>
     [HttpPost("/{table}")]
     public ActionResult<long> Insert(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info)
     {
         _db.ValidateTable(table);
-        table = table.Replace(" ", "_");
+        table = table.Replace(" ", "_").ToLower();
         
         var json = string.Empty;
         try
@@ -98,17 +104,28 @@ public class RecordController : ControllerBase
     
 
     /// <summary>
-    /// Delete records from table log before a cutoff date
+    /// Delete records from table log before a cutoff date. It will mark the records to be deleted, but will not delete them at the moment. They will be deleted in a few minutes
     /// </summary>
+    /// <param name="table">Table name</param>
+    /// <param name="datecut">Remove records inserted before a date</param>
     /// <returns></returns>
     [HttpDelete("/{table}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public ActionResult Delete(string table, [FromQuery] DateTime datecut)
     {
         _db.ValidateTable(table);
-        table = table.Replace(" ", "_");
-        _db.DeleteRecords(table, datecut);
-
-        return NoContent();
+        table = table.Replace(" ", "_").ToLower();
+        
+        try
+        {
+            _db.DeleteRecords(table, datecut);
+            return Ok();
+        }
+        catch (System.Exception error)
+        {
+            return StatusCode(500, error.Message);
+        }
     }
 
 
@@ -116,10 +133,10 @@ public class RecordController : ControllerBase
     /// <summary>
     /// Search string or json object into a table. Returns a list of record
     /// </summary>
-    /// <param name="table"></param>
+    /// <param name="table">Table name</param>
     /// <param name="query"></param>
     /// <returns></returns>
-    [HttpGet("/Search/{table}")]
+    [HttpGet("/{table}")]
     public ActionResult<List<Record>> Search(string table, [FromQuery] SearchObject query){
         var response = _db.Search(table, query);
         if(response.Count() == 0){
@@ -132,14 +149,23 @@ public class RecordController : ControllerBase
     /// <summary>
     /// Get a record by ID. Returns a record
     /// </summary>
+    /// <param name="table">Table name</param>
+    /// <param name="id">Record ID (Snowflake)</param>
+    /// <returns></returns>
+    /// <summary>
+    /// Get a record by ID. Returns a record
+    /// </summary>
     /// <param name="table"></param>
     /// <param name="id"></param>
-    /// <returns></returns>
+    /// <returns>200 - Record, 204 - No Content, 500 - Internal Server Error</returns>
     [HttpGet("/{table}/{id}")]
-    public ActionResult GetByID(string table, long id){
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Record))]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public ActionResult<Record> GetByID(string table, long id){
         var response = _db.GetByID(table, id);
         if(response == null){
-            return NotFound();
+            return NoContent();
         }
         return Ok(response);
     }
