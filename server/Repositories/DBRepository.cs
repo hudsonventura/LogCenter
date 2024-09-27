@@ -111,7 +111,7 @@ public class DBRepository
         return id;
     }
 
-    internal List<dynamic> Search(string table, SearchObject query)
+    internal List<Record> Search(string table, SearchObject query)
     {
     // Cria o comando de consulta com um intervalo de datas
     using var command = new NpgsqlCommand(@$"
@@ -142,18 +142,18 @@ public class DBRepository
     using var reader = command.ExecuteReader();
 
     // Cria uma lista para armazenar os resultados
-    var results = new List<dynamic>();
+    var results = new List<Record>();
 
     // Percorre todos os registros retornados
     while (reader.Read())
     {
         // Cria um objeto dinâmico para armazenar os valores da linha
-        var record = new
+        var record = new Record
         {
-            Id = reader.GetInt64(reader.GetOrdinal("id")),
-            Level = ((Level)reader.GetInt64(reader.GetOrdinal("level"))).ToString(),
-            CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at")),
-            Content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(reader["content"].ToString())
+            id = reader.GetInt64(reader.GetOrdinal("id")),
+            level = (Level)reader.GetInt64(reader.GetOrdinal("level")),
+            created_ad = reader.GetDateTime(reader.GetOrdinal("created_at")),
+            content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(reader["content"].ToString())
         };
 
         // Adiciona o objeto dinâmico à lista de resultados
@@ -182,7 +182,7 @@ public class DBRepository
         command.ExecuteNonQuery();
     }
 
-    internal object GetByID(string table, long id)
+    internal Record GetByID(string table, long id)
     {
         using var command = new NpgsqlCommand(@$"
             SELECT id, level, created_at, content 
@@ -200,12 +200,12 @@ public class DBRepository
         while (reader.Read())
         {
             // Cria um objeto dinâmico para armazenar os valores da linha
-            var record = new
+            var record = new Record
             {
-                Id = reader.GetInt64(reader.GetOrdinal("id")),
-                Level = ((Level)reader.GetInt64(reader.GetOrdinal("level"))).ToString(),
-                CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at")),
-                Content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(reader["content"].ToString())
+                id = reader.GetInt64(reader.GetOrdinal("id")),
+                level = (Level)reader.GetInt64(reader.GetOrdinal("level")),
+                created_ad = reader.GetDateTime(reader.GetOrdinal("created_at")),
+                content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(reader["content"].ToString())
             };
 
             // Adiciona o objeto dinâmico à lista de resultados
