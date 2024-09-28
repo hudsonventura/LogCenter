@@ -11,7 +11,7 @@ services:
       POSTGRES_PORT: ${DB_PORT}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ./db/:/var/lib/postgresql/data/
+      - /temp/db/:/var/lib/postgresql/data/
     networks:
       - centerlog
     ports:
@@ -30,6 +30,7 @@ services:
       DB_NAME: ${DB_NAME}
       DB_HOST: ${DB_HOST}
       DB_PASSWORD: ${DB_PASSWORD}
+      ASPNETCORE_ENVIRONMENT: Production
     networks:
       - centerlog
     ports:

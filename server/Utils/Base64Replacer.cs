@@ -13,7 +13,7 @@ public class Base64Replacer
     /// </summary>
     /// <param name="element"></param>
     /// <returns></returns>
-    public static JsonElement ReplaceBase64Content(JsonElement element)
+    public static dynamic ReplaceBase64Content(JsonElement element)
     {
         if (element.ValueKind == JsonValueKind.Undefined)
             return element;
@@ -23,16 +23,34 @@ public class Base64Replacer
         foreach (var property in element.EnumerateObject())
         {
             var value = property.Value.ToString();
-            Console.WriteLine(value);
+
             if (value.StartsWith("data:"))
             {
                 // Substituir o base64 por um texto explicativo
-                jsonObject[property.Name] = "Base64 file content was removed";
+                jsonObject[property.Name] = $"{value.Substring(0, 950)} ... Base64 file content was droped";
+            }
+            else if (property.Value.ValueKind == JsonValueKind.Array)
+            {
+                // Se for uma lista, iterar sobre cada item
+                var array = new List<object>();
+                foreach (var item in property.Value.EnumerateArray())
+                {
+                    if (item.ValueKind == JsonValueKind.Object)
+                    {
+                        // Chamar recursivamente para subobjetos
+                        array.Add(ReplaceBase64Content(item));
+                    }
+                    else
+                    {
+                        array.Add(item.Clone()); // Clone para manter o valor original
+                    }
+                }
+                jsonObject[property.Name] = array; // Não serializar para string, manter como objeto
             }
             else if (value.Length > 1024)
             {
                 // Substituir o base64 por um texto explicativo
-                jsonObject[property.Name] = "Large content was removed (more than 1024KB)";
+                jsonObject[property.Name] = $"{value.Substring(0, 950)} ... Large content was droped (more than 1024KB)";
             }
             else if (property.Value.ValueKind == JsonValueKind.Object)
             {
@@ -45,8 +63,10 @@ public class Base64Replacer
             }
         }
 
+        // Retornar o objeto JSON modificado como um JsonElement
         return JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(jsonObject));
     }
+
 
 
 }

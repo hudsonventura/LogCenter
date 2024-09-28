@@ -4,6 +4,7 @@ using System.Reflection;
 using DotNetEnv;
 using Npgsql;
 using server.Repositories;
+using server.BackgroundServices;
 
 
 
@@ -35,6 +36,7 @@ builder.Services.AddTransient<NpgsqlConnection>(sp =>
 });
 
 builder.Services.AddScoped<DBRepository>();
+builder.Services.AddHostedService<RecyclingRecords>();
 
 
 // Add services to the container.
@@ -54,10 +56,19 @@ builder.Services.AddControllers();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment()) //use swagger in dev
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}else{ //use redoc in PROD
+    {
+    app.UseSwagger();
+    app.UseReDoc(c =>
+    {
+        c.DocumentTitle = "LogCenter";
+        c.SpecUrl = "/swagger/v1/swagger.json";
+    });
+}
 }
 
 app.UseHttpsRedirection();
@@ -67,3 +78,4 @@ app.MapControllers();
 
 app.Run();
 
+public partial class Program { } //for tests
