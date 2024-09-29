@@ -28,15 +28,23 @@ Headers:
 Body:  
 The body could be your json object to save, or a list of objects.
 ```json
-    {
-        "chatId": "556592327494@c.us",
-        "contentType": "string",
-        "content": "content",
-        "contents":{
-            "filename":"iamge.jpg",
-            "data": "iVBORw0KGgoAAAANSUhEUgAA"
-        }
-    }
+{
+    "nome": "João",
+  "idade": 30,
+  "cargo": "Desenvolvedor",
+  "localizacao": {
+    "cidade": "São Paulo",
+    "pais": "Brasil"
+  },
+  "habilidades": ["C#", ".NET", "Elasticsearch"],
+  "FileContent1": "SGVsbG8gd29ybGQh", // Base64 de "Hello world!"
+  "FileContent2": "data:/SGVsbG8gd29ybGQh",
+  "NestedObject": 
+  {
+    "AnotherFile": "data:image/png;base64,/9j/4QuYRXhpZgAATU0AKgAAAAgABwESAAMAAAA" // Base64 de "Some other content"
+  }
+
+}
 ```
 If you upload a file in base64, the base64 string will be removed with a message that it has been removed.  
 
