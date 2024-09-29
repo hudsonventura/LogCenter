@@ -35,9 +35,26 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
     networks:
       - centerlog
+      #- your-network
     ports:
       - 5000:5000
 
+  client:
+    container_name: centerlog_client
+    #image:
+    restart: always
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    #volumes:
+    #  - "./appsettings-front.json:/app/src/appsettings.json"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server
+    networks:
+      - centerlog
+      #- your-network
 
 
 networks:
