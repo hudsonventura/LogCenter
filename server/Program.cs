@@ -4,6 +4,7 @@ using System.Reflection;
 using DotNetEnv;
 using Npgsql;
 using server.Repositories;
+using server.BackgroundServices;
 
 
 
@@ -35,6 +36,7 @@ builder.Services.AddTransient<NpgsqlConnection>(sp =>
 });
 
 builder.Services.AddScoped<DBRepository>();
+builder.Services.AddHostedService<RecyclingRecords>();
 
 
 // Add services to the container.
@@ -44,7 +46,6 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "LogCenter", Version = "1.0" });
 
-    // Inclua o caminho para o arquivo XML gerado
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
@@ -54,10 +55,24 @@ builder.Services.AddControllers();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment()) //use swagger in dev
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        // Definindo o prefixo swagger para evitar conflitos
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "LogCenter V1");
+        c.RoutePrefix = "docs/swagger"; // Define o prefixo da rota do Swagger
+    });
+}else{
+    app.UseSwagger();
+
+    app.UseReDoc(c =>
+    {
+        c.DocumentTitle = "LogCenter";
+        c.SpecUrl = "/swagger/v1/swagger.json";
+        c.RoutePrefix = "docs/swagger/redoc"; // Define o prefixo para o ReDoc
+    });
 }
 
 app.UseHttpsRedirection();
@@ -67,3 +82,4 @@ app.MapControllers();
 
 app.Run();
 
+public partial class Program { } //for tests

@@ -11,7 +11,7 @@ services:
       POSTGRES_PORT: ${DB_PORT}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ./db/:/var/lib/postgresql/data/
+      - /temp/db/:/var/lib/postgresql/data/
     networks:
       - centerlog
     ports:
@@ -27,14 +27,34 @@ services:
     #image:
     restart: always
     environment:
-      DB_NAME: ${DB_NAME}
       DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+      ASPNETCORE_ENVIRONMENT: Production
     networks:
       - centerlog
+      #- your-network
     ports:
       - 5000:5000
 
+  client:
+    container_name: centerlog_client
+    #image:
+    restart: always
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    #volumes:
+    #  - "./appsettings-front.json:/app/src/appsettings.json"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server
+    networks:
+      - centerlog
+      #- your-network
 
 
 networks:
