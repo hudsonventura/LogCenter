@@ -75,6 +75,14 @@ if (app.Environment.IsDevelopment()) //use swagger in dev
     });
 }
 
+app.UseCors(builder =>
+{
+    builder.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+});
+
+
 app.UseHttpsRedirection();
 
 
