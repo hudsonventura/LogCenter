@@ -36,6 +36,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+import api from "@/services/api"
+
 const data: Payment[] = [
   {
     id: "m5gr84i9",
@@ -167,7 +169,7 @@ export const columns: ColumnDef<Payment>[] = [
   },
 ]
 
-export function DataTableDemo() {
+export function Teste() {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -175,6 +177,7 @@ export function DataTableDemo() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+
 
   const table = useReactTable({
     data,
@@ -194,6 +197,19 @@ export function DataTableDemo() {
       rowSelection,
     },
   })
+
+  const listTables = async () => {
+    try {
+      const response = await api.get("/teste");
+      console.log(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  React.useEffect(() => {
+    listTables();
+  }, []);
 
   return (
     <div className="w-full">
