@@ -5,7 +5,7 @@ public class SearchObject
     /// <summary>
     /// Term of search
     /// </summary>
-    public string search { get; set; }
+    public string search { get; set; } = string.Empty;
 
     /// <summary>
     /// //TODO: DATETIME1
