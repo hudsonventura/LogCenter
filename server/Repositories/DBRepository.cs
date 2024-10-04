@@ -161,7 +161,7 @@ public class DBRepository
     }
 
     // Retorna a lista de resultados
-    return results;
+    return results.OrderByDescending(x => x.id).ToList();
 }
 
 
