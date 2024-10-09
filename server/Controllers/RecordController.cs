@@ -136,7 +136,8 @@ public class RecordController : ControllerBase
     /// <param name="query"></param>
     /// <returns></returns>
     [HttpGet("/{table}")]
-    public ActionResult<List<Record>> Search(string table, [FromQuery] SearchObject query){
+    public ActionResult<List<Record>> Search(string table, [FromQuery] SearchObject query, [FromHeader] int timezone){
+        _db.SetTimezone(timezone); 
         var response = _db.Search(table, query);
         if(response.Count() == 0){
             return NoContent();
@@ -161,7 +162,8 @@ public class RecordController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Record))]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public ActionResult<Record> GetByID(string table, long id){
+    public ActionResult<Record> GetByID(string table, long id, [FromHeader] int timezone){
+        _db.SetTimezone(timezone); 
         var response = _db.GetByID(table, id);
         if(response == null){
             return NoContent();

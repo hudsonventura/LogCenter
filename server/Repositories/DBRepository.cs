@@ -14,6 +14,7 @@ public class DBRepository
     }
 
     NpgsqlConnection _conn;
+    private TimeSpan _tz = TimeSpan.Zero;
 
     /// <summary>
     /// List tables for frontend use
@@ -130,10 +131,10 @@ public class DBRepository
         ", _conn);
 
     // Define os parâmetros para datetime1 e datetime2
-    DateTime datetime1 = DateTime.SpecifyKind(query.datetime1, DateTimeKind.Utc);
-    DateTime datetime2 = DateTime.SpecifyKind(query.datetime2, DateTimeKind.Utc);
-    command.Parameters.Add(new NpgsqlParameter("datetime1", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime1 });
-    command.Parameters.Add(new NpgsqlParameter("datetime2", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime2 });
+        DateTime datetime1 = (query.datetime1 > DateTime.MinValue) ? DateTime.SpecifyKind(query.datetime1, DateTimeKind.Utc) : DateTime.UtcNow.AddHours(-1);
+        DateTime datetime2 = (query.datetime2 > DateTime.MinValue) ? DateTime.SpecifyKind(query.datetime2, DateTimeKind.Utc) : DateTime.UtcNow;
+        command.Parameters.Add(new NpgsqlParameter("datetime1", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime1.Add(-_tz) });
+        command.Parameters.Add(new NpgsqlParameter("datetime2", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime2.Add(-_tz) });
 
     command.Parameters.Add(new NpgsqlParameter("take", NpgsqlTypes.NpgsqlDbType.Integer) { Value = query.take });
     command.Parameters.Add(new NpgsqlParameter("skip", NpgsqlTypes.NpgsqlDbType.Integer) { Value = query.skip });
@@ -156,7 +157,7 @@ public class DBRepository
             id = reader.GetInt64(reader.GetOrdinal("id")),
             level = (Level)reader.GetInt64(reader.GetOrdinal("level")),
             description = reader.IsDBNull(reader.GetOrdinal("description")) ? null : reader.GetString(reader.GetOrdinal("description")),
-            created_ad = reader.GetDateTime(reader.GetOrdinal("created_at")),
+                created_ad = reader.GetDateTime(reader.GetOrdinal("created_at")).Add(_tz),
             content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(reader["content"].ToString())
         };
 
@@ -211,7 +212,7 @@ public class DBRepository
                 id = reader.GetInt64(reader.GetOrdinal("id")),
                 level = (Level)reader.GetInt64(reader.GetOrdinal("level")),
                 description = reader.IsDBNull(reader.GetOrdinal("description")) ? null : reader.GetString(reader.GetOrdinal("description")),
-                created_ad = reader.GetDateTime(reader.GetOrdinal("created_at")),
+                created_ad = reader.GetDateTime(reader.GetOrdinal("created_at")).Add(_tz),
                 content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(reader["content"].ToString())
             };
 
@@ -222,4 +223,11 @@ public class DBRepository
         // Retorna a lista de resultados
         return null;
     }
+
+
+    public void SetTimezone(int timezone){
+        _tz = TimeSpan.FromHours(timezone);
+    }
+
+
 }
