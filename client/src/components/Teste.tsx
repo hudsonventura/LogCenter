@@ -38,47 +38,20 @@ import {
 
 import api from "@/services/api"
 
-const data: Payment[] = [
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@yahoo.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@gmail.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@gmail.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@gmail.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@hotmail.com",
-  },
-]
+import { format } from 'date-fns';
 
-export type Payment = {
+
+
+
+export type Record = {
   id: string
-  amount: number
-  status: "pending" | "processing" | "success" | "failed"
-  email: string
+  level: number
+  description: string
+  content: object
+  created_at: Date
 }
 
-export const columns: ColumnDef<Payment>[] = [
+export const columns: ColumnDef<Record>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -102,42 +75,58 @@ export const columns: ColumnDef<Payment>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: "id",
+    header: "#",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
+      <div className="capitalize">{row.original.id}</div>
     ),
   },
   {
-    accessorKey: "email",
+    accessorKey: "level",
+    header: "Level",
+    cell: ({ row }) => (
+      <div className="capitalize">{row.original.level}</div>
+    ),
+  },
+  
+  {
+    accessorKey: "description",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Email
+          Description
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+    cell: ({ row }) => <div className="lowercase">{row.original.description}</div>,
   },
   {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
+    accessorKey: "created_at",
+    header: () => <div className="text-right">Created at</div>,
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"))
-
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount)
-
-      return <div className="text-right font-medium">{formatted}</div>
+      // Formatar a data no formato personalizado
+      //const formattedDate = format(new Date(row.original.created_at), 'yyyy/MM/dd HH:mm:ss');
+      console.log(row.original.created_at)
+      return <div className="text-right font-medium">{row.original.created_at}</div>;
     },
   },
+  {
+    accessorKey: "content",
+    header: () => <div className="text-left">Content</div>,
+    cell: ({ row }) => {
+      // Converter o objeto `content` para uma string JSON formatada
+      return (
+        <div className="text-left font-medium">
+          {JSON.stringify(row.original.content, null, 2)} {/* O 'null' e '2' são usados para formatação e indentação */}
+        </div>
+      );
+    },
+  },
+  
   {
     id: "actions",
     enableHiding: false,
@@ -170,6 +159,7 @@ export const columns: ColumnDef<Payment>[] = [
 ]
 
 export function Teste() {
+  const [data, setData] = React.useState([])
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -200,8 +190,9 @@ export function Teste() {
 
   const listTables = async () => {
     try {
-      const response = await api.get("/teste");
+      const response = await api.get("/teste?search=erro");
       console.log(response.data);
+      setData(response.data)
     } catch (error) {
       console.log(error);
     }
@@ -216,10 +207,8 @@ export function Teste() {
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
-          }
+          //value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
+          //onChange={(event) => table.getColumn("email")?.setFilterValue(event.target.value)}
           className="max-w-sm"
         />
         <DropdownMenu>
