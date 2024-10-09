@@ -46,7 +46,6 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "LogCenter", Version = "1.0" });
 
-    // Inclua o caminho para o arquivo XML gerado
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
@@ -59,17 +58,30 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment()) //use swagger in dev
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
-}else{ //use redoc in PROD
+    app.UseSwaggerUI(c =>
     {
+        // Definindo o prefixo swagger para evitar conflitos
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "LogCenter V1");
+        c.RoutePrefix = "docs/swagger"; // Define o prefixo da rota do Swagger
+    });
+}else{
     app.UseSwagger();
+
     app.UseReDoc(c =>
     {
         c.DocumentTitle = "LogCenter";
         c.SpecUrl = "/swagger/v1/swagger.json";
+        c.RoutePrefix = "docs/swagger/redoc"; // Define o prefixo para o ReDoc
     });
 }
-}
+
+app.UseCors(builder =>
+{
+    builder.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+});
+
 
 app.UseHttpsRedirection();
 
