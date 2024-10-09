@@ -49,17 +49,41 @@ public class Base64Replacer
             }
             else if (value.Length > 1024)
             {
-                // Substituir o base64 por um texto explicativo
-                jsonObject[property.Name] = $"{value.Substring(0, 950)} ... Large content was droped (more than 1024KB)";
+                if (value.StartsWith("{") && value.EndsWith("}"))
+                {
+                    var jsonElement = JsonDocument.Parse(value).RootElement;
+                    jsonObject[property.Name] = ReplaceBase64Content(jsonElement);
+                }
+                else
+                {
+                    jsonObject[property.Name] = $"{value.Substring(0, 950)} ... Large content was droped (more than 1024KB)";
+                }
             }
             else if (property.Value.ValueKind == JsonValueKind.Object)
             {
-                // Chamar recursivamente para subobjetos
-                jsonObject[property.Name] = ReplaceBase64Content(property.Value);
+                if (value.StartsWith("{") && value.EndsWith("}"))
+                {
+                    var jsonElement = JsonDocument.Parse(value).RootElement;
+                    jsonObject[property.Name] = ReplaceBase64Content(jsonElement);
+                }
+                else
+                {
+                    jsonObject[property.Name] = ReplaceBase64Content(property.Value);
+                }
+                
             }
             else
             {
-                jsonObject[property.Name] = property.Value.Clone(); // Clone para manter o valor original
+                if (value.StartsWith("{") && value.EndsWith("}"))
+                {
+                    var jsonElement = JsonDocument.Parse(value).RootElement;
+                    jsonObject[property.Name] = ReplaceBase64Content(jsonElement);
+                }
+                else
+                {
+                    jsonObject[property.Name] = property.Value.Clone(); // Clone para manter o valor original
+                }
+                
             }
         }
 

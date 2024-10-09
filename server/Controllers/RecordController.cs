@@ -34,9 +34,9 @@ public class RecordController : ControllerBase
     /// <param name="level">Log level. Default is Info</param>
     /// <returns>long</returns>
     [HttpPost("/{table}/_doc")]
-    public ActionResult<long> Insert_Doc(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info)
+    public ActionResult<long> Insert_Doc(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info, [FromHeader] string? description = null)
     {
-        return Insert(table, obj, level);
+        return Insert(table, obj, level, description);
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ public class RecordController : ControllerBase
     /// <param name="level">Log level. Default is Info</param>
     /// <returns>long</returns>
     [HttpPost("/{table}")]
-    public ActionResult<long> Insert(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info)
+    public ActionResult<long> Insert(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info, [FromHeader] string? description = null)
     {
         _db.ValidateTable(table);
         table = table.Replace(" ", "_").ToLower();
@@ -64,12 +64,11 @@ public class RecordController : ControllerBase
         }
         
 
-
         try
         {
             //tenta salvar na tabela do meu index.
             //se der certo, 200
-            var id = _db.Insert(table, level, json);
+            var id = _db.Insert(table, level, description, json);
             return Created("teste", id);
         }
         catch (System.Exception error1)
@@ -86,7 +85,7 @@ public class RecordController : ControllerBase
                 _db.CreateJsonbIndex(table);
                 Console.Write("OK! ... ");
 
-                var id = _db.Insert(table, level, json);
+                var id = _db.Insert(table, level, description, json);
                 return Created("teste", id);
             }
             catch (System.Exception error2)
@@ -137,7 +136,8 @@ public class RecordController : ControllerBase
     /// <param name="query"></param>
     /// <returns></returns>
     [HttpGet("/{table}")]
-    public ActionResult<List<Record>> Search(string table, [FromQuery] SearchObject query){
+    public ActionResult<List<Record>> Search(string table, [FromQuery] SearchObject query, [FromHeader] int timezone){
+        _db.SetTimezone(timezone); 
         var response = _db.Search(table, query);
         if(response.Count() == 0){
             return NoContent();
@@ -162,7 +162,8 @@ public class RecordController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Record))]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public ActionResult<Record> GetByID(string table, long id){
+    public ActionResult<Record> GetByID(string table, long id, [FromHeader] int timezone){
+        _db.SetTimezone(timezone); 
         var response = _db.GetByID(table, id);
         if(response == null){
             return NoContent();
