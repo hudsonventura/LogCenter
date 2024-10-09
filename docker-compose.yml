@@ -15,7 +15,7 @@ services:
     networks:
       - centerlog
     ports:
-      - "5435:5432"
+      - "${DB_PORT}:5432"
     mem_limit: 256m
     cpus: 1           # Limita o uso a 2 CPUs
 
