@@ -157,7 +157,7 @@ public class DBRepository
             id = reader.GetInt64(reader.GetOrdinal("id")),
             level = (Level)reader.GetInt64(reader.GetOrdinal("level")),
             description = reader.IsDBNull(reader.GetOrdinal("description")) ? null : reader.GetString(reader.GetOrdinal("description")),
-                created_ad = reader.GetDateTime(reader.GetOrdinal("created_at")).Add(_tz),
+            created_at = reader.GetDateTime(reader.GetOrdinal("created_at")).Add(_tz),
             content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(reader["content"].ToString())
         };
 
@@ -212,7 +212,7 @@ public class DBRepository
                 id = reader.GetInt64(reader.GetOrdinal("id")),
                 level = (Level)reader.GetInt64(reader.GetOrdinal("level")),
                 description = reader.IsDBNull(reader.GetOrdinal("description")) ? null : reader.GetString(reader.GetOrdinal("description")),
-                created_ad = reader.GetDateTime(reader.GetOrdinal("created_at")).Add(_tz),
+                created_at = reader.GetDateTime(reader.GetOrdinal("created_at")).Add(_tz),
                 content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(reader["content"].ToString())
             };
 

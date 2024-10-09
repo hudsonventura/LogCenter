@@ -26,7 +26,7 @@ public class Record
     /// <summary>
     /// Record created at a datetime
     /// </summary>
-    public DateTime created_ad { get; set; }
+    public DateTime created_at { get; set; }
 
     /// <summary>
     /// Your content. It can be string or json object

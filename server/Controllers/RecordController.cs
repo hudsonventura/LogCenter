@@ -133,6 +133,7 @@ public class RecordController : ControllerBase
     /// Search string or json object into a table. Returns a list of record
     /// </summary>
     /// <param name="table">Table name</param>
+    /// <param name="timezone">Integer value of your timezone. Default is 0. Ex.: -3 (represents timezone of Sao_Paulo)</param>
     /// <param name="query"></param>
     /// <returns></returns>
     [HttpGet("/{table}")]
@@ -157,6 +158,7 @@ public class RecordController : ControllerBase
     /// </summary>
     /// <param name="table"></param>
     /// <param name="id"></param>
+    /// <param name="timezone">Integer value of your timezone. Default is 0. Ex.: -3 (represents timezone of Sao_Paulo)</param>
     /// <returns>200 - Record, 204 - No Content, 500 - Internal Server Error</returns>
     [HttpGet("/{table}/{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Record))]
