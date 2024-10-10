@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useLocation } from "react-router-dom";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -41,7 +42,7 @@ import { toast } from "sonner";
 import api from "@/services/api";
 
 import { format } from "date-fns";
-import { ModalObject } from "./ModalObject";
+import { ModalObject } from "../ModalObject";
 import JsonView from "@uiw/react-json-view";
 
 export type Record = {
@@ -179,6 +180,8 @@ export const columns: ColumnDef<Record>[] = [
 ];
 
 export function TableLogs() {
+  const location = useLocation();
+  const { tabela } = location.state || {};
   const [data, setData] = React.useState([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -210,7 +213,7 @@ export function TableLogs() {
   const listTables = async () => {
     try {
       const response = await api.get(
-        "/teste?search=erro&datetime1=2024-10-08T16:22:30"
+        `/${tabela}?search=erro&datetime1=2024-10-08T16:22:30`
       );
       const data = response.data.map((item) => ({
         ...item,
@@ -226,6 +229,7 @@ export function TableLogs() {
   React.useEffect(() => {
     listTables();
   }, []);
+
 
   return (
     <>
