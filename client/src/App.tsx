@@ -1,12 +1,14 @@
 import "./App.css";
-import { Teste } from "./components/Teste";
+import { TableLogs } from "./components/TableLogs";
+import { Toaster } from "@/components/ui/sonner"
+
 
 export default function App() {
   return (
     <>
       <div className="App">
-        <h1 className="text-3xl font-bold underline">Teste</h1>
-        <Teste />
+        <Toaster />
+        <TableLogs />
       </div>
     </>
   );
