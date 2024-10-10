@@ -35,7 +35,7 @@
             "serverReadyAction": {
                 "action": "openExternally",
                 "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-                "uriFormat": "%s/swagger/index.html"
+                "uriFormat": "%s/docs/swagger/index.html"
                 //"uriFormat": "%s/api-docs"
             },
             "env": {

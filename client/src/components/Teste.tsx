@@ -39,12 +39,13 @@ import {
 import api from "@/services/api"
 
 import { format } from 'date-fns';
+import { ModalObject } from "./ModalObject"
 
 
 
 
 export type Record = {
-  id: string
+  id: BigInt
   level: number
   description: string
   content: object
@@ -78,7 +79,7 @@ export const columns: ColumnDef<Record>[] = [
     accessorKey: "id",
     header: "#",
     cell: ({ row }) => (
-      <div className="capitalize">{row.original.id}</div>
+      <div className="capitalize"><ModalObject id={row.original.id}></ModalObject></div>
     ),
   },
   {
@@ -109,9 +110,8 @@ export const columns: ColumnDef<Record>[] = [
     header: () => <div className="text-right">Created at</div>,
     cell: ({ row }) => {
       // Formatar a data no formato personalizado
-      //const formattedDate = format(new Date(row.original.created_at), 'yyyy/MM/dd HH:mm:ss');
-      console.log(row.original.created_at)
-      return <div className="text-right font-medium">{row.original.created_at}</div>;
+      const formattedDate = format(new Date(row.original.created_at), 'yyyy/MM/dd HH:mm:ss');
+      return <div className="text-right font-medium">{formattedDate}</div>;
     },
   },
   {
@@ -190,9 +190,13 @@ export function Teste() {
 
   const listTables = async () => {
     try {
-      const response = await api.get("/teste?search=erro");
-      console.log(response.data);
-      setData(response.data)
+      const response = await api.get("/teste?search=erro&datetime1=2024-10-08T16:22:30");
+      const data = response.data.map(item => ({
+        ...item,
+        id: BigInt(item.id) // Certifique-se de que `snowflakeId` seja o campo correto
+      }));
+      console.log(data);
+      setData(data);
     } catch (error) {
       console.log(error);
     }
