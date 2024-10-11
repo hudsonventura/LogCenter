@@ -16,21 +16,36 @@ import React from "react";
 import { useState } from "react";
 
 import JsonView from "@uiw/react-json-view";
+import { toast } from "sonner"
 
 export function ModalObject({ id, isOpen, onOpenChange }) {
   const [data, setData] = useState([]);
   const getObject = async () => {
     try {
       const response = await api.get(`/teste/${id}`);
-      setData(response.data);
+      setData(response.data.content);
     } catch (error) {
       console.log(error);
     }
   };
+  
 
   React.useEffect(() => {
     getObject();
   }, []);
+
+  const handleCopy = async () => {
+    try {
+        const jsonStr = JSON.stringify(data, null, 2);
+        await navigator.clipboard.writeText(jsonStr);
+        
+        toast("Copied!", {
+            description: "The content was copied to clipoboar",
+        })
+    } catch (error) {
+        console.log(error);
+    }
+}
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -52,6 +67,7 @@ export function ModalObject({ id, isOpen, onOpenChange }) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="sm:justify-start">
+            <Button variant="outline"onClick={handleCopy}>Copy content</Button>
             <DialogClose asChild>
               <Button
                 type="button"
