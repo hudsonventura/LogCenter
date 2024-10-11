@@ -47,11 +47,19 @@ import JsonView from "@uiw/react-json-view";
 
 export type Record = {
   id: BigInt;
-  level: number;
+  level: RecordLevel;
   description: string;
   content: object;
   created_at: Date;
 };
+
+export enum RecordLevel {
+  Info = 1,
+  Debug = 2,
+  Warning = 3,
+  Error = 4,
+  Critical = 5,
+}
 
 export const columns: ColumnDef<Record>[] = [
   {
@@ -76,18 +84,18 @@ export const columns: ColumnDef<Record>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-  {
-    accessorKey: "id",
-    header: "Id",
-    cell: ({ row }) => (
-      console.log("testando", row.original.id),
-      (<div className="capitalize">{row.original.id.toString()}</div>)
-    ),
-  },
+  // {
+  //   accessorKey: "id",
+  //   header: "Id",
+  //   cell: ({ row }) => (
+  //     console.log("testando", row.original.id),
+  //     (<div className="capitalize">{row.original.id.toString()}</div>)
+  //   ),
+  // },
   {
     accessorKey: "level",
     header: "Level",
-    cell: ({ row }) => <div className="capitalize">{row.original.level}</div>,
+    cell: ({ row }) => <div className="capitalize">{RecordLevel[row.original.level]}</div>,
   },
 
   {
