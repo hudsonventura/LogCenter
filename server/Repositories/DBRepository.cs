@@ -42,6 +42,24 @@ public class DBRepository
         return tables;
     }
 
+    public bool TableExists(string table)
+    {
+        using var command = new NpgsqlCommand(@"
+            SELECT COUNT(*) 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_type = 'BASE TABLE' 
+            AND table_name = @table", _conn);
+
+        command.Parameters.AddWithValue("table", table);
+
+        var result = (long)command.ExecuteScalar();
+        if(result == 0){
+            throw new Exception($"Doesn't exist a table named '{table}'");
+        }
+
+        return result > 0;
+    }
 
     public void CreateTable(string table)
     {
@@ -103,7 +121,7 @@ public class DBRepository
         ulong id = SnowflakeIDGenerator.GetSnowflake(0).ToUInt64();
 
         // Cria o comando de inserção
-        using var command = new NpgsqlCommand($"INSERT INTO {table} (id, level, description, content) VALUES (@id, @level, @description, @value::jsonb)", _conn);
+        using var command = new NpgsqlCommand($"INSERT INTO log_{table} (id, level, description, content) VALUES (@id, @level, @description, @value::jsonb)", _conn);
 
         // Define o parâmetro 'id' explicitamente como BIGINT
         command.Parameters.Add(new NpgsqlParameter("id", NpgsqlTypes.NpgsqlDbType.Bigint) { Value = (long)id });
@@ -236,5 +254,45 @@ public class DBRepository
         _tz = TimeSpan.FromHours(timezone);
     }
 
+    internal void UpsertConfig(string table, ConfigTableObject configs)
+    {
+        using var command = new NpgsqlCommand(@$"
+            INSERT INTO config (table_name, delete, delete_input, vacuum, vacuum_input, vacuum_full, vacuum_Full_input) 
+            VALUES (@table, @delete, @delete_input, @vacuum, @vacuum_input, @vacuum_full, @vacuum_Full_input) 
+            ON CONFLICT (table_name) 
+            DO UPDATE SET 
+                delete = @delete,
+                delete_input = @delete_input,
+                vacuum = @vacuum,
+                vacuum_input = @vacuum_input,
+                vacuum_full = @vacuum_full,
+                vacuum_Full_input = @vacuum_Full_input", _conn);
+
+        command.Parameters.Add(new NpgsqlParameter("table", NpgsqlTypes.NpgsqlDbType.Text) { Value = table });
+        command.Parameters.Add(new NpgsqlParameter("delete", NpgsqlTypes.NpgsqlDbType.Boolean) { Value = configs.delete });
+        command.Parameters.Add(new NpgsqlParameter("delete_input", NpgsqlTypes.NpgsqlDbType.Integer) { Value = configs.delete_input });
+        command.Parameters.Add(new NpgsqlParameter("vacuum", NpgsqlTypes.NpgsqlDbType.Boolean) { Value = configs.vacuum });
+        command.Parameters.Add(new NpgsqlParameter("vacuum_input", NpgsqlTypes.NpgsqlDbType.Text) { Value = configs.vacuum_input });
+        command.Parameters.Add(new NpgsqlParameter("vacuum_full", NpgsqlTypes.NpgsqlDbType.Boolean) { Value = configs.vacuum_full });
+        command.Parameters.Add(new NpgsqlParameter("vacuum_Full_input", NpgsqlTypes.NpgsqlDbType.Text) { Value = configs.vacuum_full_input });
+
+        command.ExecuteNonQuery();
+    }
+
+    internal void CreateConfigTable()
+    {
+        using var command = new NpgsqlCommand(@$"
+            CREATE TABLE IF NOT EXISTS config (
+                table_name text PRIMARY KEY,
+                delete boolean NOT NULL DEFAULT false,
+                delete_input integer,
+                vacuum boolean NOT NULL DEFAULT false,
+                vacuum_input text,
+                vacuum_full boolean NOT NULL DEFAULT false,
+                vacuum_Full_input text
+            );", _conn);
+
+        command.ExecuteNonQuery();
+    }
 
 }

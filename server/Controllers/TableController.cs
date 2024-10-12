@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using server.Domain;
 using server.Repositories;
 
 namespace server.Controllers;
@@ -65,5 +66,20 @@ public class TableController : Controller
         {
             return StatusCode(500, "Internal Server Error");
         }
+    }
+
+    /// <summary>
+    /// Insert or update a table config
+    /// </summary>
+    /// <param name="configs"></param>
+    /// <param name="table"></param>
+    /// <returns>ConfigTableObject</returns>
+    [HttpPut("/Config/{table}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ConfigTableObject))]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public ActionResult<ConfigTableObject> ConfigTable([FromBody]ConfigTableObject configs, string table){
+        _db.TableExists(table);
+        _db.UpsertConfig(table, configs);
+        return Ok(configs);
     }
 }
