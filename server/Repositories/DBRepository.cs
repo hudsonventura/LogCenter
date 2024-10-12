@@ -25,10 +25,11 @@ public class DBRepository
         var tables = new List<string>();
 
         using var command = new NpgsqlCommand(@"
-            SELECT table_name
+            SELECT substr(table_name, 5) as table_name
             FROM information_schema.tables
             WHERE table_schema = 'public'
-            AND table_type = 'BASE TABLE';", _conn);
+            AND table_type = 'BASE TABLE'
+            and substr(table_name, 0, 5) = 'log_';", _conn);
 
         using var reader = command.ExecuteReader();
 
@@ -41,8 +42,12 @@ public class DBRepository
         return tables;
     }
 
-    public void CreateTable(string index){
-        string txt_command = @$"CREATE TABLE {index} (
+
+    public void CreateTable(string table)
+    {
+        ValidateTable(table);
+
+        string txt_command = @$"CREATE TABLE log_{table} (
                                 id BIGINT PRIMARY KEY,
                                 level SMALLINT CHECK (level >= 0 AND level <= 9),
                                 created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -53,9 +58,9 @@ public class DBRepository
         command.ExecuteNonQuery();
     }
 
-    public void DropTable(string index)
+    public void DropTable(string table)
     {
-        string txt_command = $"DROP TABLE IF EXISTS {index};";
+        string txt_command = $"DROP TABLE IF EXISTS log_{table};";
         using var command = new NpgsqlCommand(txt_command, _conn);
         command.ExecuteNonQuery();
     }
@@ -63,9 +68,9 @@ public class DBRepository
 
 
 
-    public void CreateJsonbIndex(string index){
+    public void CreateJsonbIndex(string table){
         string txt_command = 
-            @$"CREATE INDEX idx_{index} ON {index} USING GIN (content jsonb_ops);";
+            @$"CREATE INDEX idx_{table} ON log_{table} USING GIN (content jsonb_ops);";
         using var command = new NpgsqlCommand(txt_command, _conn);
         command.ExecuteNonQuery();
     }
@@ -92,6 +97,8 @@ public class DBRepository
 
     public ulong Insert(string table, Level level, string description, string json)
     {
+        ValidateTable(table);
+
         // Gera o ID Snowflake
         ulong id = SnowflakeIDGenerator.GetSnowflake(0).ToUInt64();
 
@@ -120,7 +127,7 @@ public class DBRepository
     // Cria o comando de consulta com um intervalo de datas
     using var command = new NpgsqlCommand(@$"
         SELECT id, level, created_at, description, content 
-        FROM {table} 
+        FROM log_{table} 
         WHERE 1=1 
         and created_at BETWEEN @datetime1 AND @datetime2
         and content::text ILIKE @search
@@ -172,10 +179,10 @@ public class DBRepository
 
     public void DeleteRecords(string table, DateTime before_date)
     {
-        Console.WriteLine($"It will remove records before {before_date} from table {table}");
+        Console.WriteLine($"It will remove records before {before_date} from table log_{table}");
         // Prepara o comando de deletar
         using var command = new NpgsqlCommand(@$"
-            DELETE FROM {table} 
+            DELETE FROM log_{table} 
             WHERE created_at < @before_date;", _conn);
 
         // Define o parâmetro 'cutdate' como 'TIMESTAMP WITH TIME ZONE'
@@ -186,14 +193,14 @@ public class DBRepository
 
 
         int effected = command.ExecuteNonQuery();
-        Console.WriteLine($"Removed {effected} records from table {table}");
+        Console.WriteLine($"Removed {effected} records from table log_{table}");
     }
 
     internal Record GetByID(string table, long id)
     {
         using var command = new NpgsqlCommand(@$"
             SELECT id, level, created_at, description, content 
-            FROM {table} 
+            FROM log_{table} 
             WHERE 1=1 
             and id = @id", _conn);
 
