@@ -2,6 +2,8 @@ namespace server.Domain;
 
 public class ConfigTableObject
 {
+    public string table_name { get; internal set; }
+
     /// <summary>
     /// Able auto DELETE rows table older than a number of days
     /// </summary>

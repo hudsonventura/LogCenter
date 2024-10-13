@@ -51,7 +51,7 @@ public class DBRepository
             AND table_type = 'BASE TABLE' 
             AND table_name = @table", _conn);
 
-        command.Parameters.AddWithValue("table", table);
+        command.Parameters.AddWithValue("table", $"log_{table}");
 
         var result = (long)command.ExecuteScalar();
         if(result == 0){
@@ -254,6 +254,11 @@ public class DBRepository
         _tz = TimeSpan.FromHours(timezone);
     }
 
+        /// <summary>
+        /// Insert or update a table config
+        /// </summary>
+        /// <param name="table">Table name</param>
+        /// <param name="configs">ConfigTableObject</param>
     internal void UpsertConfig(string table, ConfigTableObject configs)
     {
         using var command = new NpgsqlCommand(@$"
@@ -295,4 +300,45 @@ public class DBRepository
         command.ExecuteNonQuery();
     }
 
+    internal List<ConfigTableObject> GetConfiguredTables()
+    {
+        using var command = new NpgsqlCommand("SELECT * FROM config", _conn);
+        using var reader = command.ExecuteReader();
+
+        var tables = new List<ConfigTableObject>();
+        while (reader.Read())
+        {
+            tables.Add(new ConfigTableObject
+            {
+                table_name = reader.GetString(0),
+                delete = reader.GetBoolean(1),
+                delete_input = reader.GetInt32(2),
+                vacuum = reader.GetBoolean(3),
+                vacuum_input = reader.IsDBNull(4) ? null : reader.GetString(4),
+                vacuum_full = reader.GetBoolean(5),
+                vacuum_full_input = reader.IsDBNull(6) ? null : reader.GetString(6),
+            });
+        }
+
+        return tables;
+    }
+
+    internal void DeleteRecords(object table, DateTime dateTime)
+    {
+        throw new NotImplementedException();
+    }
+
+    internal void VacuumTable(string table_name)
+    {
+        using var command = new NpgsqlCommand($"VACUUM log_{table_name}", _conn);
+        command.ExecuteNonQuery();
+    }
+
+    internal void VacuumFullTable(string table_name)
+    {
+        using var command = new NpgsqlCommand($"VACUUM FULL log_{table_name}", _conn);
+        command.ExecuteNonQuery();
+    }
+
 }
+

@@ -159,6 +159,8 @@ export const columns: ColumnDef<Record>[] = [
       const fecharDetalhes = () => {
         setAbrirModal(false);
       }
+      const location = useLocation();
+      const { tabela } = location.state || {};
 
       return (
         <>
@@ -179,7 +181,7 @@ export const columns: ColumnDef<Record>[] = [
             </DropdownMenuContent>
           </DropdownMenu>
           {abrirModal && (
-            <ModalObject id={dados.id} isOpen={abrirModal} onOpenChange={fecharDetalhes} />
+            <ModalObject id={dados.id} tableName={tabela} isOpen={abrirModal} onOpenChange={fecharDetalhes} />
           )}
         </>
       );
@@ -221,13 +223,12 @@ export function TableLogs() {
   const listTables = async () => {
     try {
       const response = await api.get(
-        `/${tabela}?search=erro&datetime1=2024-10-08T16:22:30`
+        `/${tabela}?datetime1=2024-10-08T16:22:30`
       );
       const data = response.data.map((item) => ({
         ...item,
         id: BigInt(item.id), // Certifique-se de que `snowflakeId` seja o campo correto
       }));
-      console.log(data);
       setData(data);
     } catch (error) {
       console.log(error);

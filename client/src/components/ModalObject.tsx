@@ -18,11 +18,13 @@ import { useState } from "react";
 import JsonView from "@uiw/react-json-view";
 import { toast } from "sonner"
 
-export function ModalObject({ id, isOpen, onOpenChange }) {
+export function ModalObject({ id, tableName, isOpen, onOpenChange }) {
   const [data, setData] = useState([]);
+
   const getObject = async () => {
     try {
-      const response = await api.get(`/teste/${id}`);
+      const response = await api.get(`/${tableName}/${id}`);
+      console.log(response.data.content)
       setData(response.data.content);
     } catch (error) {
       console.log(error);
