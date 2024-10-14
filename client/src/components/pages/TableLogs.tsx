@@ -132,9 +132,17 @@ export const columns: ColumnDef<Record>[] = [
     header: () => <div className="text-left">Conteúdo</div>,
     cell: ({ row }) => {
       // Converter o objeto `content` para uma string JSON formatada
+      const content = row.original.content;
+      if (typeof content === "string") {
+        return <div className="text-left font-medium">{content}</div>;
+      }
+
+      const jsonStr = JSON.stringify(content);
+      const lines = jsonStr.split(/\r?\n/);
+      const truncatedLines = lines.slice(0, 2).map((line) => line.slice(0, 120));
       return (
-        <div className="text-left font-medium">
-          <JsonView value={row.original.content} collapsed={true} />
+        <div className="text-left font-medium" style={{ whiteSpace: "pre-wrap" }}>
+          {truncatedLines.join("\n")}
         </div>
       );
     },
