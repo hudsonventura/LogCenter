@@ -78,6 +78,7 @@ public class TableController : Controller
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ConfigTableObject))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public ActionResult<ConfigTableObject> ConfigTable([FromBody]ConfigTableObject configs, string table){
+        configs.Validate();
         _db.TableExists(table);
         _db.UpsertConfig(table, configs);
         return Ok(configs);

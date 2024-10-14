@@ -1,3 +1,6 @@
+
+using Cronos;
+
 namespace server.Domain;
 
 public class ConfigTableObject
@@ -34,4 +37,25 @@ public class ConfigTableObject
     /// Schedulle to VACUUM FULL ANALYSE
     /// </summary>
     public string vacuum_full_input { get; set; } = "0 0 1 1 *";
+
+    internal void Validate()
+    {
+        try
+        {
+            CronExpression.Parse(vacuum_input);
+        }
+        catch (System.Exception error)
+        {
+            throw new Exception($"Cron expression error on vacuum_input -> {error.Message}");
+        }
+
+        try
+        {
+            CronExpression.Parse(vacuum_full_input);
+        }
+        catch (System.Exception error)
+        {
+            throw new Exception($"Cron expression error on vacuum_full_input -> {error.Message}");
+        }
+    }
 }

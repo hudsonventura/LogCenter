@@ -45,28 +45,30 @@ public class RecyclingRecords : IHostedService
                 var db = scope.ServiceProvider.GetRequiredService<DBRepository>();
 
                 
-
-                RegisterLog(execution_id, "Starting Recycling Records");
+                
                 List<ConfigTableObject> tables = db.GetConfiguredTables();
             
                 foreach(ConfigTableObject table in tables)
                 {
-                    if(table.delete){
-                        DeletingRecords(db, table);
-                    }
-                    
                     bool execute_vacuum = ValidateCron(table.vacuum_input);
-                    if(execute_vacuum){
-                        VacuumTable(db, table);
+                    bool execute_vacuum_full = ValidateCron(table.vacuum_full_input);
+                    if(!table.delete && !execute_vacuum && !execute_vacuum_full){
+                        continue;
                     }
 
-                    bool execute_vacuum_full = ValidateCron(table.vacuum_full_input);
-                    if(execute_vacuum_full && !execute_vacuum){ //jump the vacuum full if vacuum was executed
-                        VacuumFullTable(db, table);
-                    }
+                    RegisterLog(Level.Info, execution_id, $"Starting tables cleanup on table '{table.table_name}'... ");
+
+                    if(table.delete) DeletingRecords(db, table);
+                    
+                    if(execute_vacuum) VacuumTable(db, table);
+                    
+                    //jump the vacuum full if vacuum was executed
+                    if(execute_vacuum_full && !execute_vacuum) VacuumFullTable(db, table);
+
+                    RegisterLog(Level.Info, execution_id, $"Starting tables cleanup on table '{table.table_name}'... Finished");
                 }
             
-                RegisterLog(execution_id, "Finished");
+                
                 Thread.Sleep(1000*60); //each 1 minute
             }
         }
@@ -77,9 +79,9 @@ public class RecyclingRecords : IHostedService
     {
         try
         {
-            RegisterLog(execution_id, $"Deleting rows from table '{table.table_name}' ... ");
+            RegisterLog(Level.Info, execution_id, $"Deleting rows from table '{table.table_name}' ... ");
             db.DeleteRecords(table.table_name, DateTime.UtcNow.AddDays(-table.delete_input));
-            RegisterLog(execution_id, "Ok");
+            RegisterLog(Level.Info, execution_id, $"Deleting rows from table '{table.table_name}' ... Ok");
         }
         catch (System.Exception error)
         {
@@ -87,7 +89,7 @@ public class RecyclingRecords : IHostedService
             if(error.InnerException != null){
                 msg += error.InnerException.Message;
             }
-            RegisterLog(execution_id, $"Some error was got -> {msg}");
+            RegisterLog(Level.Error, execution_id, $"Deleting rows from table '{table.table_name}' ... Some error was got -> {msg}");
         }
     }
 
@@ -95,9 +97,9 @@ public class RecyclingRecords : IHostedService
     {
         try
         {
-            RegisterLog(execution_id, $"Vacuuming table '{table.table_name}' ... ");
+            RegisterLog(Level.Info, execution_id, $"Vacuuming table '{table.table_name}' ... ");
             db.VacuumTable(table.table_name);
-            RegisterLog(execution_id, "Ok");
+            RegisterLog(Level.Info, execution_id, $"Vacuuming table '{table.table_name}' ...  Ok");
         }
         catch (System.Exception error)
         {
@@ -105,7 +107,7 @@ public class RecyclingRecords : IHostedService
             if(error.InnerException != null){
                 msg += error.InnerException.Message;
             }
-            RegisterLog(execution_id, $"Some error was got -> {msg}");
+            RegisterLog(Level.Error, execution_id, $"Vacuuming table '{table.table_name}' ...  Some error was got -> {msg}");
         }
     }
 
@@ -113,9 +115,9 @@ public class RecyclingRecords : IHostedService
     {
         try
         {
-            RegisterLog(execution_id, $"Vacuuming full table '{table.table_name}' ... ");
+            RegisterLog(Level.Info, execution_id, $"Vacuuming full table '{table.table_name}' ... ");
             db.VacuumFullTable(table.table_name);
-            RegisterLog(execution_id, "Ok");
+            RegisterLog(Level.Info, execution_id, $"Vacuuming full table '{table.table_name}' ... Ok");
         }
         catch (System.Exception error)
         {
@@ -123,7 +125,7 @@ public class RecyclingRecords : IHostedService
             if(error.InnerException != null){
                 msg += error.InnerException.Message;
             }
-            RegisterLog(execution_id, $"Some error was got -> {msg}");
+            RegisterLog(Level.Error, execution_id, $"Vacuuming full table '{table.table_name}' ... Some error was got -> {msg}");
         }
     }
 
@@ -144,17 +146,18 @@ public class RecyclingRecords : IHostedService
     }
 
 
-    private void RegisterLog(string execution_id, string log)
+    private void RegisterLog(Level level, string execution_id, string log)
     {
-        Console.WriteLine($"{execution_id} -> {log}");
+        Console.WriteLine($"{level.ToString()}: {execution_id} -> {log}");
 
 
-        HttpContent content = new StringContent($"\"log\"", Encoding.UTF8, "application/json");
+        HttpContent content = new StringContent($"\"{log}\"", Encoding.UTF8, "application/json");
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,"/LogCenter_JobExecution")
         {
             Content = content
         };
         request.Headers.Add("description", execution_id);
+        request.Headers.Add("level", level.ToString());
 
         HttpResponseMessage response = _client.SendAsync(request).Result; //ou .Result para não async
 		
