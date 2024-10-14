@@ -24,7 +24,6 @@ export function ModalObject({ id, tableName, isOpen, onOpenChange }) {
   const getObject = async () => {
     try {
       const response = await api.get(`/${tableName}/${id}`);
-      console.log(response.data.content)
       setData(response.data.content);
     } catch (error) {
       console.log(error);
@@ -64,12 +63,18 @@ export function ModalObject({ id, tableName, isOpen, onOpenChange }) {
                   marginTop: "1em",
                 }}
               >
-                <JsonView value={data} />
+                {typeof data === "string" && !/^\{.*\}$/.test(data) ? (
+                  <pre style={{ whiteSpace: "pre-wrap" }}>{data}</pre>
+                ) : (
+                  <JsonView value={data} />
+                )}
               </div>
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="sm:justify-start">
-            <Button variant="outline"onClick={handleCopy}>Copy content</Button>
+            <Button variant="outline" onClick={handleCopy}>
+              Copy content
+            </Button>
             <DialogClose asChild>
               <Button
                 type="button"
