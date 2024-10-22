@@ -69,7 +69,7 @@ public class RecordController : ControllerBase
             //tenta salvar na tabela do meu index.
             //se der certo, 200
             var id = _db.Insert(table, level, description, json);
-            return Created("teste", id);
+            return Created($"/{table}/{id}", $"/{table}/{id}");
         }
         catch (System.Exception error1)
         {
@@ -86,7 +86,7 @@ public class RecordController : ControllerBase
                 Console.Write("OK! ... ");
 
                 var id = _db.Insert(table, level, description, json);
-                return Created("teste", id);
+                return Created($"/{table}/{id}", $"/{table}/{id}");
             }
             catch (System.Exception error2)
             {
