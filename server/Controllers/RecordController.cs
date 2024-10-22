@@ -69,7 +69,7 @@ public class RecordController : ControllerBase
             //tenta salvar na tabela do meu index.
             //se der certo, 200
             var id = _db.Insert(table, level, description, json);
-            return Created("teste", id);
+            return Created($"/{table}/{id}", $"/{table}/{id}");
         }
         catch (System.Exception error1)
         {
@@ -81,12 +81,16 @@ public class RecordController : ControllerBase
                 _db.CreateTable(table);
                 Console.Write("OK! ... ");
 
+                Console.Write($"Creating new description index ({table}) ... ");
+                _db.CreateDescriptionbIndex(table);
+                Console.Write("OK! ... ");
+                
                 Console.Write($"Creating new JSONB index ({table}) ... ");
                 _db.CreateJsonbIndex(table);
                 Console.Write("OK! ... ");
 
                 var id = _db.Insert(table, level, description, json);
-                return Created("teste", id);
+                return Created($"/{table}/{id}", $"/{table}/{id}");
             }
             catch (System.Exception error2)
             {

@@ -60,6 +60,10 @@ The response is a simples string with the id of the created object
 
 
 
+# Table Recycling
+
+
+
  - TODO: Create a way to configure dates for each table in the RecyclingRecords service
 
  - BUG: In the cloud test, table Lucas id 7246184241443110912, it was possible to add a base64 without the drop work
@@ -69,3 +73,6 @@ The response is a simples string with the id of the created object
  - TODO: Do VACUUM and/or VACUUM FULL ANALYSE.
 
  - TODO: Compatibility with XML
+
+ - ~~TODO: Change API port to 9200, like ElasticSearch default~~
+

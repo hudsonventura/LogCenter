@@ -5,7 +5,7 @@ using SnowflakeID;
 
 namespace server.Repositories;
 
-public class DBRepository
+public class DBRepository : IDisposable
 {
     public DBRepository(NpgsqlConnection connection)
     {
@@ -15,6 +15,23 @@ public class DBRepository
 
     NpgsqlConnection _conn;
     private TimeSpan _tz = TimeSpan.Zero;
+
+    public void Dispose()
+    {
+        if (_conn.State == System.Data.ConnectionState.Open)
+        {
+            _conn.Close();
+        }
+    }
+
+    /// <summary>
+    /// Creates the necessary extensions 
+    /// </summary>
+    internal void CreateExtensions(){
+        using var command = new NpgsqlCommand("CREATE EXTENSION IF NOT EXISTS pg_trgm", _conn);
+        command.ExecuteNonQuery();
+    }
+    
 
     /// <summary>
     /// List tables for frontend use
@@ -72,6 +89,13 @@ public class DBRepository
                                 description VARCHAR(255) NULL,
                                 content jsonb
                             );";
+        using var command = new NpgsqlCommand(txt_command, _conn);
+        command.ExecuteNonQuery();
+    }
+
+    public void CreateDescriptionbIndex(string table){
+        string txt_command = 
+            @$"CREATE INDEX idx_{table}_desc ON log_{table} USING GIN (description gin_trgm_ops);";
         using var command = new NpgsqlCommand(txt_command, _conn);
         command.ExecuteNonQuery();
     }
@@ -197,7 +221,7 @@ public class DBRepository
 
     public void DeleteRecords(string table, DateTime before_date)
     {
-        Console.WriteLine($"It will remove records before {before_date} from table log_{table}");
+        Console.WriteLine($"It will remove records added before {before_date.ToString("yyyy/MM/dd")} from table {table}. If you don't like that, you can edit the configuration. See the session 'Table Recycling' on https://github.com/hudsonventura/LogCenter");
         // Prepara o comando de deletar
         using var command = new NpgsqlCommand(@$"
             DELETE FROM log_{table} 
@@ -284,6 +308,7 @@ public class DBRepository
         command.ExecuteNonQuery();
     }
 
+
     internal void CreateConfigTable()
     {
         using var command = new NpgsqlCommand(@$"
@@ -299,6 +324,8 @@ public class DBRepository
 
         command.ExecuteNonQuery();
     }
+
+
 
     internal List<ConfigTableObject> GetConfiguredTables()
     {
