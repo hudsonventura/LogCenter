@@ -67,3 +67,5 @@ The response is a simples string with the id of the created object
  - TODO: Create a way to set a timezone to show on frontend. Backend was implemented with header timezone.
 
  - TODO: Do VACUUM and/or VACUUM FULL ANALYSE.
+
+ - ~~TODO: Change API port to 9200, like ElasticSearch default~~

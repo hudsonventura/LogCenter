@@ -52,6 +52,10 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.AddControllers();
 
+string listen = Environment.GetEnvironmentVariable("ASPNETCORE_LISTEN") ?? "http://localhost:9200";
+builder.WebHost.UseUrls(listen);
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
