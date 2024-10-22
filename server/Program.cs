@@ -27,7 +27,10 @@ if(dbHost == string.Empty){
     Environment.Exit(1);  // 0 indica saída bem-sucedida
 }
 
-
+using (DBRepository db = new DBRepository(new NpgsqlConnection(connectionString)))
+{
+    db.CreateExtensions();
+}
 
 
 builder.Services.AddTransient<NpgsqlConnection>(sp =>

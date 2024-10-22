@@ -81,6 +81,10 @@ public class RecordController : ControllerBase
                 _db.CreateTable(table);
                 Console.Write("OK! ... ");
 
+                Console.Write($"Creating new description index ({table}) ... ");
+                _db.CreateDescriptionbIndex(table);
+                Console.Write("OK! ... ");
+                
                 Console.Write($"Creating new JSONB index ({table}) ... ");
                 _db.CreateJsonbIndex(table);
                 Console.Write("OK! ... ");

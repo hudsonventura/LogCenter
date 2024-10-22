@@ -5,7 +5,7 @@ using SnowflakeID;
 
 namespace server.Repositories;
 
-public class DBRepository
+public class DBRepository : IDisposable
 {
     public DBRepository(NpgsqlConnection connection)
     {
@@ -15,6 +15,23 @@ public class DBRepository
 
     NpgsqlConnection _conn;
     private TimeSpan _tz = TimeSpan.Zero;
+
+    public void Dispose()
+    {
+        if (_conn.State == System.Data.ConnectionState.Open)
+        {
+            _conn.Close();
+        }
+    }
+
+    /// <summary>
+    /// Creates the necessary extensions 
+    /// </summary>
+    internal void CreateExtensions(){
+        using var command = new NpgsqlCommand("CREATE EXTENSION IF NOT EXISTS pg_trgm", _conn);
+        command.ExecuteNonQuery();
+    }
+    
 
     /// <summary>
     /// List tables for frontend use
@@ -49,6 +66,13 @@ public class DBRepository
                                 description VARCHAR(255) NULL,
                                 content jsonb
                             );";
+        using var command = new NpgsqlCommand(txt_command, _conn);
+        command.ExecuteNonQuery();
+    }
+
+    public void CreateDescriptionbIndex(string index){
+        string txt_command = 
+            @$"CREATE INDEX idx_{index}_desc ON {index} USING GIN (description gin_trgm_ops);";
         using var command = new NpgsqlCommand(txt_command, _conn);
         command.ExecuteNonQuery();
     }
@@ -229,5 +253,5 @@ public class DBRepository
         _tz = TimeSpan.FromHours(timezone);
     }
 
-
+    
 }
