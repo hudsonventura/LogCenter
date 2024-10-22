@@ -93,13 +93,7 @@ public class DBRepository : IDisposable
         command.ExecuteNonQuery();
     }
 
-    public void CreateDescriptionbIndex(string table){
-        string txt_command = 
-            @$"CREATE INDEX idx_{table}_desc ON log_{table} USING GIN (description gin_trgm_ops);";
-        using var command = new NpgsqlCommand(txt_command, _conn);
-        command.ExecuteNonQuery();
-    }
-
+    
     public void DropTable(string table)
     {
         string txt_command = $"DROP TABLE IF EXISTS log_{table};";
@@ -113,6 +107,20 @@ public class DBRepository : IDisposable
     public void CreateJsonbIndex(string table){
         string txt_command = 
             @$"CREATE INDEX idx_{table} ON log_{table} USING GIN (content jsonb_ops);";
+        using var command = new NpgsqlCommand(txt_command, _conn);
+        command.ExecuteNonQuery();
+    }
+
+    public void CreateDescriptionbIndex(string table){
+        string txt_command = 
+            @$"CREATE INDEX idx_{table}_desc ON log_{table} USING GIN (description gin_trgm_ops);";
+        using var command = new NpgsqlCommand(txt_command, _conn);
+        command.ExecuteNonQuery();
+    }
+
+    public void CreateDateTimeIndex(string table){
+        string txt_command = 
+            @$"CREATE INDEX idx_{table}_created_at ON log_{table} (created_at);";
         using var command = new NpgsqlCommand(txt_command, _conn);
         command.ExecuteNonQuery();
     }
