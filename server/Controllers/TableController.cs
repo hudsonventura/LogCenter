@@ -55,8 +55,8 @@ public class TableController : Controller
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public ActionResult DropTable(string table)
     {
+        table = table.Replace(" ", "_").ToLower();
         _db.ValidateTable(table);
-        table = table.Replace(" ", "_");
         try
         {
             _db.DropTable(table);
@@ -77,8 +77,10 @@ public class TableController : Controller
     [HttpPut("/Config/{table}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ConfigTableObject))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public ActionResult<ConfigTableObject> ConfigTable([FromBody]ConfigTableObject configs, string table){
+    public ActionResult<ConfigTableObject> ConfigTable([FromBody]ConfigTableObject configs, string table)
+    {
         configs.Validate();
+        table = table.Replace(" ", "_").ToLower();
         _db.TableExists(table);
         _db.UpsertConfig(table, configs);
         return Ok(configs);

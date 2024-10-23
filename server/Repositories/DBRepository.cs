@@ -358,10 +358,7 @@ public class DBRepository : IDisposable
         return tables;
     }
 
-    internal void DeleteRecords(object table, DateTime dateTime)
-    {
-        throw new NotImplementedException();
-    }
+
 
     internal void VacuumTable(string table_name)
     {
