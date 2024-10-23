@@ -60,7 +60,7 @@ public class RecyclingRecords : IHostedService
 
                     RegisterLog(Level.Info, execution_id, $"Starting Table Recycling on table '{table.table_name}'... ");
 
-                    if(table.delete) DeletingRecords(db, table);
+                    if(table.delete && DateTime.Now.Minute == 0) DeletingRecords(db, table);
                     
                     if(execute_vacuum) VacuumTable(db, table);
                     
