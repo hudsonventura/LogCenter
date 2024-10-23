@@ -55,8 +55,8 @@ public class TableController : Controller
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public ActionResult DropTable(string table)
     {
+        table = table.Replace(" ", "_").ToLower();
         _db.ValidateTable(table);
-        table = table.Replace(" ", "_");
         try
         {
             _db.DropTable(table);
@@ -77,10 +77,60 @@ public class TableController : Controller
     [HttpPut("/Config/{table}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ConfigTableObject))]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public ActionResult<ConfigTableObject> ConfigTable([FromBody]ConfigTableObject configs, string table){
+    public ActionResult<ConfigTableObject> ConfigTable([FromBody]ConfigTableObject configs, string table)
+    {
         configs.Validate();
+        table = table.Replace(" ", "_").ToLower();
         _db.TableExists(table);
         _db.UpsertConfig(table, configs);
         return Ok(configs);
+    }
+
+
+
+    /// <summary>
+    /// Queue vacuum to a table
+    /// </summary>
+    /// <param name="table"></param>
+    /// <returns></returns>
+    [HttpPost("/Vacuum/{table}")]
+    public ActionResult<string> Vaccum(string table)
+    {
+        try
+        {
+            table = table.Replace(" ", "_").ToLower();
+            _db.TableExists(table);
+        }
+        catch (System.Exception error)
+        {
+            return BadRequest(error.Message);
+        }
+        
+        _db.VacuumFullTable(table);
+
+        return Ok($"The table '{table}' vacuumed");
+    }
+
+    /// <summary>
+    /// Queue vacuum full to a table (it will lock the table)
+    /// </summary>
+    /// <param name="table"></param>
+    /// <returns></returns>
+    [HttpPost("/VacuumFull/{table}")]
+    public ActionResult<string> VaccumFull(string table)
+    {
+        try
+        {
+            table = table.Replace(" ", "_").ToLower();
+            _db.TableExists(table);
+        }
+        catch (System.Exception error)
+        {
+            return BadRequest(error.Message);
+        }
+        
+        _db.VacuumFullTable(table);
+
+        return Ok($"The table '{table}' was fully vacuumed");
     }
 }

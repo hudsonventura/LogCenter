@@ -49,8 +49,8 @@ public class RecordController : ControllerBase
     [HttpPost("/{table}")]
     public ActionResult<long> Insert(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info, [FromHeader] string? description = null)
     {
-        _db.ValidateTable(table);
         table = table.Replace(" ", "_").ToLower();
+        _db.ValidateTable(table);
         
         var json = string.Empty;
         try
@@ -81,12 +81,16 @@ public class RecordController : ControllerBase
                 _db.CreateTable(table);
                 Console.Write("OK! ... ");
 
-                Console.Write($"Creating new description index ({table}) ... ");
+                Console.Write($"Creating new DESCRIPTION index ({table}) ... ");
                 _db.CreateDescriptionbIndex(table);
                 Console.Write("OK! ... ");
                 
                 Console.Write($"Creating new JSONB index ({table}) ... ");
                 _db.CreateJsonbIndex(table);
+                Console.Write("OK! ... ");
+
+                Console.Write($"Creating new DATETIME index ({table}) ... ");
+                _db.CreateDateTimeIndex(table);
                 Console.Write("OK! ... ");
 
                 var id = _db.Insert(table, level, description, json);
@@ -107,7 +111,7 @@ public class RecordController : ControllerBase
     
 
     /// <summary>
-    /// Delete records from table log before a cutoff date. It will mark the records to be deleted, but will not delete them at the moment. They will be deleted in a few minutes
+    /// Remove older records manually from a table (see table config).
     /// </summary>
     /// <param name="table">Table name</param>
     /// <param name="before_date">Remove records inserted before a date</param>
@@ -117,8 +121,16 @@ public class RecordController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public ActionResult Delete(string table, [FromQuery] DateTime before_date)
     {
-        _db.ValidateTable(table);
-        table = table.Replace(" ", "_").ToLower();
+        try
+        {
+            table = table.Replace(" ", "_").ToLower();
+            _db.TableExists(table);
+        }
+        catch (System.Exception error)
+        {
+            return BadRequest(error.Message);
+        }
+        
         
         try
         {
