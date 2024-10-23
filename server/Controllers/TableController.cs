@@ -85,4 +85,52 @@ public class TableController : Controller
         _db.UpsertConfig(table, configs);
         return Ok(configs);
     }
+
+
+
+    /// <summary>
+    /// Queue vacuum to a table
+    /// </summary>
+    /// <param name="table"></param>
+    /// <returns></returns>
+    [HttpPost("/Vacuum/{table}")]
+    public ActionResult<string> Vaccum(string table)
+    {
+        try
+        {
+            table = table.Replace(" ", "_").ToLower();
+            _db.TableExists(table);
+        }
+        catch (System.Exception error)
+        {
+            return BadRequest(error.Message);
+        }
+        
+        _db.VacuumFullTable(table);
+
+        return Ok($"The table '{table}' was queued for vacuum. It's going to take a few minutes");
+    }
+
+    /// <summary>
+    /// Queue vacuum full to a table (it will lock the table)
+    /// </summary>
+    /// <param name="table"></param>
+    /// <returns></returns>
+    [HttpPost("/VacuumFull/{table}")]
+    public ActionResult<string> VaccumFull(string table)
+    {
+        try
+        {
+            table = table.Replace(" ", "_").ToLower();
+            _db.TableExists(table);
+        }
+        catch (System.Exception error)
+        {
+            return BadRequest(error.Message);
+        }
+        
+        _db.VacuumFullTable(table);
+
+        return Ok($"The table '{table}' was queued for vacuum full. It's going to lock the table for several minutes");
+    }
 }
