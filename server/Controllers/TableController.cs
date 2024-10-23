@@ -108,7 +108,7 @@ public class TableController : Controller
         
         _db.VacuumFullTable(table);
 
-        return Ok($"The table '{table}' was queued for vacuum. It's going to take a few minutes");
+        return Ok($"The table '{table}' vacuumed");
     }
 
     /// <summary>
@@ -131,6 +131,6 @@ public class TableController : Controller
         
         _db.VacuumFullTable(table);
 
-        return Ok($"The table '{table}' was queued for vacuum full. It's going to lock the table for several minutes");
+        return Ok($"The table '{table}' was fully vacuumed");
     }
 }
