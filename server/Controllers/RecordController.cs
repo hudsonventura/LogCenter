@@ -34,9 +34,9 @@ public class RecordController : ControllerBase
     /// <param name="level">Log level. Default is Info</param>
     /// <returns>long</returns>
     [HttpPost("/{table}/_doc")]
-    public ActionResult<long> Insert_Doc(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info)
+    public ActionResult<long> Insert_Doc(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info, [FromHeader] string? description = null)
     {
-        return Insert(table, obj, level);
+        return Insert(table, obj, level, description);
     }
 
     /// <summary>
@@ -47,10 +47,10 @@ public class RecordController : ControllerBase
     /// <param name="level">Log level. Default is Info</param>
     /// <returns>long</returns>
     [HttpPost("/{table}")]
-    public ActionResult<long> Insert(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info)
+    public ActionResult<long> Insert(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info, [FromHeader] string? description = null)
     {
-        _db.ValidateTable(table);
         table = table.Replace(" ", "_").ToLower();
+        _db.ValidateTable(table);
         
         var json = string.Empty;
         try
@@ -64,13 +64,12 @@ public class RecordController : ControllerBase
         }
         
 
-
         try
         {
             //tenta salvar na tabela do meu index.
             //se der certo, 200
-            var id = _db.Insert(table, level, json);
-            return Created("teste", id);
+            var id = _db.Insert(table, level, description, json);
+            return Created($"/{table}/{id}", $"/{table}/{id}");
         }
         catch (System.Exception error1)
         {
@@ -82,12 +81,20 @@ public class RecordController : ControllerBase
                 _db.CreateTable(table);
                 Console.Write("OK! ... ");
 
+                Console.Write($"Creating new DESCRIPTION index ({table}) ... ");
+                _db.CreateDescriptionbIndex(table);
+                Console.Write("OK! ... ");
+                
                 Console.Write($"Creating new JSONB index ({table}) ... ");
                 _db.CreateJsonbIndex(table);
                 Console.Write("OK! ... ");
 
-                var id = _db.Insert(table, level, json);
-                return Created("teste", id);
+                Console.Write($"Creating new DATETIME index ({table}) ... ");
+                _db.CreateDateTimeIndex(table);
+                Console.Write("OK! ... ");
+
+                var id = _db.Insert(table, level, description, json);
+                return Created($"/{table}/{id}", $"/{table}/{id}");
             }
             catch (System.Exception error2)
             {
@@ -104,7 +111,7 @@ public class RecordController : ControllerBase
     
 
     /// <summary>
-    /// Delete records from table log before a cutoff date. It will mark the records to be deleted, but will not delete them at the moment. They will be deleted in a few minutes
+    /// Remove older records manually from a table (see table config).
     /// </summary>
     /// <param name="table">Table name</param>
     /// <param name="before_date">Remove records inserted before a date</param>
@@ -114,8 +121,16 @@ public class RecordController : ControllerBase
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public ActionResult Delete(string table, [FromQuery] DateTime before_date)
     {
-        _db.ValidateTable(table);
-        table = table.Replace(" ", "_").ToLower();
+        try
+        {
+            table = table.Replace(" ", "_").ToLower();
+            _db.TableExists(table);
+        }
+        catch (System.Exception error)
+        {
+            return BadRequest(error.Message);
+        }
+        
         
         try
         {
@@ -134,10 +149,12 @@ public class RecordController : ControllerBase
     /// Search string or json object into a table. Returns a list of record
     /// </summary>
     /// <param name="table">Table name</param>
+    /// <param name="timezone">Integer value of your timezone. Default is 0. Ex.: -3 (represents timezone of Sao_Paulo)</param>
     /// <param name="query"></param>
     /// <returns></returns>
     [HttpGet("/{table}")]
-    public ActionResult<List<Record>> Search(string table, [FromQuery] SearchObject query){
+    public ActionResult<List<Record>> Search(string table, [FromQuery] SearchObject query, [FromHeader] int timezone){
+        _db.SetTimezone(timezone); 
         var response = _db.Search(table, query);
         if(response.Count() == 0){
             return NoContent();
@@ -157,12 +174,14 @@ public class RecordController : ControllerBase
     /// </summary>
     /// <param name="table"></param>
     /// <param name="id"></param>
+    /// <param name="timezone">Integer value of your timezone. Default is 0. Ex.: -3 (represents timezone of Sao_Paulo)</param>
     /// <returns>200 - Record, 204 - No Content, 500 - Internal Server Error</returns>
     [HttpGet("/{table}/{id}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Record))]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public ActionResult<Record> GetByID(string table, long id){
+    public ActionResult<Record> GetByID(string table, long id, [FromHeader] int timezone){
+        _db.SetTimezone(timezone); 
         var response = _db.GetByID(table, id);
         if(response == null){
             return NoContent();

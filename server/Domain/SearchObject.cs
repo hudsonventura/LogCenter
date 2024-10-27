@@ -5,25 +5,25 @@ public class SearchObject
     /// <summary>
     /// Term of search
     /// </summary>
-    public string search { get; set; }
+    public string search { get; set; } = string.Empty;
 
     /// <summary>
-    /// //TODO: DATETIME1
+    /// Search from datetime
     /// </summary>
     public DateTime datetime1 { get; set; } = DateTime.UtcNow.AddHours(-1);
 
     /// <summary>
-    /// //TODO: DATETIME2
+    /// Search until datetime
     /// </summary>
     public DateTime datetime2 { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// //TODO: PAGINATION
+    /// Inform the page that you want
     /// </summary>
     public int page { get; set; } = 1;
 
     /// <summary>
-    /// //TODO: PAGINATION
+    /// Inform the page size
     /// </summary>
     public  int take {get; set; } = 100;
     

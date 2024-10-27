@@ -10,14 +10,13 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_PORT: ${DB_PORT}
       PGDATA: /var/lib/postgresql/data/pgdata
+    shm_size: '256m' # Necessary to use Postgres VACUUM. You can increment it as you need
     volumes:
       - /temp/db/:/var/lib/postgresql/data/
     networks:
       - centerlog
     ports:
-      - "5435:5432"
-    mem_limit: 256m
-    cpus: 1           # Limita o uso a 2 CPUs
+      - "${DB_PORT}:5432"
 
     
 
@@ -33,11 +32,12 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_LISTEN: http://0.0.0.0:9200
     networks:
       - centerlog
       #- your-network
     ports:
-      - 5000:5000
+      - 9200:9200
 
   client:
     container_name: centerlog_client
@@ -46,8 +46,6 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
-    #volumes:
-    #  - "./appsettings-front.json:/app/src/appsettings.json"
     ports:
       - "5173:5173"
     depends_on:

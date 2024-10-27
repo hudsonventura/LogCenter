@@ -27,7 +27,12 @@ if(dbHost == string.Empty){
     Environment.Exit(1);  // 0 indica saída bem-sucedida
 }
 
-
+//Apply DB migration
+using (DBRepository db = new DBRepository(new NpgsqlConnection(connectionString)))
+{
+    db.CreateExtensions();
+    db.CreateConfigTable();
+}
 
 
 builder.Services.AddTransient<NpgsqlConnection>(sp =>
@@ -51,6 +56,10 @@ builder.Services.AddSwaggerGen(c =>
     c.IncludeXmlComments(xmlPath);
 });
 builder.Services.AddControllers();
+
+string listen = Environment.GetEnvironmentVariable("ASPNETCORE_LISTEN") ?? "http://localhost:9200";
+builder.WebHost.UseUrls(listen);
+
 
 var app = builder.Build();
 
