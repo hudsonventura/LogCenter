@@ -102,7 +102,11 @@ export const columns: ColumnDef<Record>[] = [
     accessorKey: "level",
     header: "Level",
     cell: ({ row }) => (
-      <Badge className={`capitalize ${getCorBadge(row.original.level)} min-w-[40px] flex items-center justify-center`}>
+      <Badge
+        className={`capitalize ${getCorBadge(
+          row.original.level
+        )} min-w-[40px] flex items-center justify-center`}
+      >
         {RecordLevel[row.original.level]}
       </Badge>
     ),
@@ -177,13 +181,22 @@ export const columns: ColumnDef<Record>[] = [
 
       const abrirDetalhes = () => {
         setAbrirModal(true);
+        console.log(abrirModal);
       };
 
       const fecharDetalhes = () => {
         setAbrirModal(false);
+        document.body.style.pointerEvents = "";
       };
       const location = useLocation();
       const { tabela } = location.state || {};
+
+      React.useEffect(() => {
+        // Cleanup ao desmontar ou quando o modal fechar
+        return () => {
+          document.body.style.pointerEvents = "";
+        };
+      }, [abrirModal]);
 
       return (
         <>
@@ -203,6 +216,8 @@ export const columns: ColumnDef<Record>[] = [
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* ModalObject renderizado com base no estado */}
           {abrirModal && (
             <ModalObject
               id={dados.id}
@@ -360,12 +375,12 @@ export function TableLogs() {
           </Table>
         </div>
         <div className="flex items-center justify-end space-x-2 py-4">
-          <div className="flex-1 text-sm text-muted-foreground">
+          <div className="flex-1 text-sm text-muted-foreground p-2">
             Linhas Selecionadas -{" "}
             {table.getFilteredSelectedRowModel().rows.length} de{" "}
             {table.getFilteredRowModel().rows.length}
           </div>
-          <div className="space-x-2">
+          <div className="space-x-2 p-2">
             <Button
               variant="outline"
               size="sm"

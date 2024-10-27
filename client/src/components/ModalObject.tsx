@@ -16,7 +16,7 @@ import React from "react";
 import { useState } from "react";
 
 import JsonView from "@uiw/react-json-view";
-import { toast } from "sonner"
+import { toast } from "sonner";
 
 export function ModalObject({ id, tableName, isOpen, onOpenChange }) {
   const [data, setData] = useState([]);
@@ -29,64 +29,57 @@ export function ModalObject({ id, tableName, isOpen, onOpenChange }) {
       console.log(error);
     }
   };
-  
 
   React.useEffect(() => {
     getObject();
-  }, []);
+  }, [id]);
 
   const handleCopy = async () => {
     try {
-        const jsonStr = JSON.stringify(data, null, 2);
-        await navigator.clipboard.writeText(jsonStr);
-        
-        toast("Copied!", {
-            description: "The content was copied to clipoboar",
-        })
+      const jsonStr = JSON.stringify(data, null, 2);
+      await navigator.clipboard.writeText(jsonStr);
+
+      toast("Copied!", {
+        description: "The content was copied to clipoboar",
+      });
     } catch (error) {
-        console.log(error);
+      console.log(error);
     }
-}
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      {isOpen && (
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Detalhes</DialogTitle>
-            <DialogDescription>
-              <div
-                style={{
-                  maxHeight: "400px", // Definindo a altura máxima para ativar o scroll
-                  overflowY: "auto", // Habilita o scroll vertical se o conteúdo exceder a altura
-                  width: "32em",
-                  marginTop: "1em",
-                }}
-              >
-                {typeof data === "string" && !/^\{.*\}$/.test(data) ? (
-                  <pre style={{ whiteSpace: "pre-wrap" }}>{data}</pre>
-                ) : (
-                  <JsonView value={data} />
-                )}
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="sm:justify-start">
-            <Button variant="outline" onClick={handleCopy}>
-              Copy content
+      <DialogContent className="max-w-[800px] min-w-[300px]">
+        <DialogHeader>
+          <DialogTitle>Detalhes</DialogTitle>
+          <DialogDescription className="w-full">
+            <div
+              style={{
+                maxHeight: "400px", // Definindo a altura máxima para ativar o scroll
+                overflow: "auto", // Habilita o scroll vertical se o conteúdo exceder a altura
+                marginTop: "1em",
+              }}
+              className="min-w-full"
+            >
+              {typeof data === "string" && !/^\{.*\}$/.test(data) ? (
+                <pre style={{ whiteSpace: "pre-wrap" }}>{data}</pre>
+              ) : (
+                <JsonView value={data} />
+              )}
+            </div>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCopy}>
+            Copiar Conteudo
+          </Button>
+          <DialogClose asChild onClick={onOpenChange}>
+            <Button type="button" variant="secondary">
+              Fechar
             </Button>
-            <DialogClose asChild>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => onOpenChange(false)}
-              >
-                Fechar
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      )}
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 }
