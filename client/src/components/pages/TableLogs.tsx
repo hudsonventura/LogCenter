@@ -17,6 +17,7 @@ import {
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -36,17 +37,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
 import { toast } from "sonner";
-
 import api from "@/services/api";
-
 import { format } from "date-fns";
 import { ModalObject } from "../ModalObject";
-import JsonView from "@uiw/react-json-view";
 
 export type Record = {
-  id: BigInt;
+  id: bigint;
   level: RecordLevel;
   description: string;
   content: object;
@@ -60,6 +57,23 @@ export enum RecordLevel {
   Error = 4,
   Critical = 5,
 }
+
+const getCorBadge = (level: RecordLevel) => {
+  switch (level) {
+    case RecordLevel.Info:
+      return "bg-blue-200 text-blue-800";
+    case RecordLevel.Debug:
+      return "bg-gray-200 text-gray-800";
+    case RecordLevel.Warning:
+      return "bg-yellow-200 text-yellow-800";
+    case RecordLevel.Error:
+      return "bg-red-200 text-red-800";
+    case RecordLevel.Critical:
+      return "bg-red-700 text-white";
+    default:
+      return "bg-gray-200 text-gray-800";
+  }
+};
 
 export const columns: ColumnDef<Record>[] = [
   {
@@ -84,18 +98,18 @@ export const columns: ColumnDef<Record>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-  // {
-  //   accessorKey: "id",
-  //   header: "Id",
-  //   cell: ({ row }) => (
-  //     console.log("testando", row.original.id),
-  //     (<div className="capitalize">{row.original.id.toString()}</div>)
-  //   ),
-  // },
   {
     accessorKey: "level",
     header: "Level",
-    cell: ({ row }) => <div className="capitalize">{RecordLevel[row.original.level]}</div>,
+    cell: ({ row }) => (
+      <Badge
+        className={`capitalize ${getCorBadge(
+          row.original.level
+        )} min-w-[40px] flex items-center justify-center`}
+      >
+        {RecordLevel[row.original.level]}
+      </Badge>
+    ),
   },
 
   {
@@ -139,9 +153,14 @@ export const columns: ColumnDef<Record>[] = [
 
       const jsonStr = JSON.stringify(content);
       const lines = jsonStr.split(/\r?\n/);
-      const truncatedLines = lines.slice(0, 2).map((line) => line.slice(0, 120));
+      const truncatedLines = lines
+        .slice(0, 2)
+        .map((line) => line.slice(0, 120));
       return (
-        <div className="text-left font-medium" style={{ whiteSpace: "pre-wrap" }}>
+        <div
+          className="text-left font-medium"
+          style={{ whiteSpace: "pre-wrap" }}
+        >
           {truncatedLines.join("\n")}
         </div>
       );
@@ -162,13 +181,22 @@ export const columns: ColumnDef<Record>[] = [
 
       const abrirDetalhes = () => {
         setAbrirModal(true);
+        console.log(abrirModal);
       };
 
       const fecharDetalhes = () => {
         setAbrirModal(false);
-      }
+        document.body.style.pointerEvents = "";
+      };
       const location = useLocation();
       const { tabela } = location.state || {};
+
+      React.useEffect(() => {
+        // Cleanup ao desmontar ou quando o modal fechar
+        return () => {
+          document.body.style.pointerEvents = "";
+        };
+      }, [abrirModal]);
 
       return (
         <>
@@ -188,8 +216,15 @@ export const columns: ColumnDef<Record>[] = [
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* ModalObject renderizado com base no estado */}
           {abrirModal && (
-            <ModalObject id={dados.id} tableName={tabela} isOpen={abrirModal} onOpenChange={fecharDetalhes} />
+            <ModalObject
+              id={dados.id}
+              tableName={tabela}
+              isOpen={abrirModal}
+              onOpenChange={fecharDetalhes}
+            />
           )}
         </>
       );
@@ -247,10 +282,9 @@ export function TableLogs() {
     listTables();
   }, []);
 
-
   return (
     <>
-      <h1 className="py-2 mb-4 font-bold">Logs</h1>
+      <h1 className="py-2 mb-4 font-bold text-center">Logs</h1>
       <div className="w-full">
         <div className="flex items-center py-4">
           <Input
@@ -341,12 +375,12 @@ export function TableLogs() {
           </Table>
         </div>
         <div className="flex items-center justify-end space-x-2 py-4">
-          <div className="flex-1 text-sm text-muted-foreground">
+          <div className="flex-1 text-sm text-muted-foreground p-2">
             Linhas Selecionadas -{" "}
             {table.getFilteredSelectedRowModel().rows.length} de{" "}
             {table.getFilteredRowModel().rows.length}
           </div>
-          <div className="space-x-2">
+          <div className="space-x-2 p-2">
             <Button
               variant="outline"
               size="sm"
