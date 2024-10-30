@@ -1,7 +1,7 @@
 services:
 
   db:
-    container_name: centerlog_db
+    container_name: logcenter_db
     image: "postgres:16"
     restart: always
     environment:
@@ -14,7 +14,7 @@ services:
     volumes:
       - /temp/db/:/var/lib/postgresql/data/
     networks:
-      - centerlog
+      - logcenter
     ports:
       - "${DB_PORT}:5432"
 
@@ -22,7 +22,7 @@ services:
 
   server:
     build: ./server
-    container_name: centerlog_server
+    container_name: logcenter_server
     #image:
     restart: always
     environment:
@@ -34,13 +34,12 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_LISTEN: http://0.0.0.0:9200
     networks:
-      - centerlog
-      #- your-network
+      - logcenter
     ports:
       - 9200:9200
 
   client:
-    container_name: centerlog_client
+    container_name: logcenter_client
     #image:
     restart: always
     build:
@@ -51,10 +50,10 @@ services:
     depends_on:
       - server
     networks:
-      - centerlog
-      #- your-network
+      - logcenter
+
 
 
 networks:
-  centerlog:
+  logcenter:
     driver: bridge
