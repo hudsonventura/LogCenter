@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import api from "@/services/api";
 import { format } from "date-fns";
 import { ModalObject } from "../ModalObject";
+import { DateTimePicker } from "../DateTimePicker";
 
 export type Record = {
   id: bigint;
@@ -286,6 +287,7 @@ export function TableLogs() {
     <>
       <h1 className="py-2 mb-4 font-bold text-center">Logs</h1>
       <div className="w-full">
+        &nbsp;
         <div className="flex items-center py-4">
           <Input
             placeholder="Filtrar por descrição"
@@ -297,6 +299,10 @@ export function TableLogs() {
             }
             className="max-w-sm"
           />
+          &nbsp;
+          <DateTimePicker />
+          &nbsp;
+          <DateTimePicker />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">
@@ -324,6 +330,7 @@ export function TableLogs() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        <div className="mt-4" />
         <div className="rounded-md border">
           <Table>
             <TableHeader>
