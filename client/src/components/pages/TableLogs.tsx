@@ -42,6 +42,7 @@ import api from "@/services/api";
 import { format } from "date-fns";
 import { ModalObject } from "../ModalObject";
 import { DateTimePicker } from "../DateTimePicker";
+import { TimeZoneSelect } from "../TimeZoneSelect";
 
 export type Record = {
   id: bigint;
@@ -285,9 +286,8 @@ export function TableLogs() {
 
   return (
     <>
-      <h1 className="py-2 mb-4 font-bold text-center">Logs</h1>
+      <h1 className="py-2 mb-4 font-bold text-center">Logs from {tabela}</h1>
       <div className="w-full">
-        &nbsp;
         <div className="flex items-center py-4">
           <Input
             placeholder="Filtrar por descrição"
@@ -299,10 +299,17 @@ export function TableLogs() {
             }
             className="max-w-sm"
           />
-          &nbsp;
+          <div className="max-w-xs" style={{padding: "0 0.5em"}}>
           <DateTimePicker />
-          &nbsp;
+          </div>
+          <div className="max-w-xs">
           <DateTimePicker />
+          </div>
+          <div className="max-w-xs" style={{padding: "0 0.5em"}}>
+            <TimeZoneSelect />
+          </div><div className="max-w-xs" style={{padding: "0 0.5em"}}>
+            <Button>Search</Button>
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">
