@@ -30,6 +30,7 @@
     "chart": "^0.1.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "cmdk": "^1.0.0",
     "cronstrue": "^2.50.0",
     "date-fns": "^2.30.0",
     "lucide-react": "^0.446.0",
