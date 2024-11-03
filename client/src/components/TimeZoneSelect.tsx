@@ -22,9 +22,9 @@ import api from "@/services/api"
 
 
 
-export function TimeZoneSelect() {
+export function TimeZoneSelect({value, setValue}) {
   const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState("")
+  
 
   const [timezones, setTimezones] = React.useState([]);
 

@@ -265,50 +265,81 @@ export function TableLogs() {
     },
   });
 
-  const listTables = async () => {
+  const search = async () => {
     try {
+      const from = dateFrom.toISOString();
+      const to = dateTo.toISOString();
       const response = await api.get(
-        `/${tabela}?datetime1=2024-10-08T16:22:30`
+        `/${tabela}?datetime1=${from}&datetime2=${to}&timezone=${timezone}${
+          searchTerm ? `&search=${searchTerm}` : ''
+        }`
       );
-      const data = response.data.map((item) => ({
-        ...item,
-        id: BigInt(item.id), // Certifique-se de que `snowflakeId` seja o campo correto
-      }));
+      const data = response.data
+        ? response.data.map((item) => ({
+            ...item,
+            id: BigInt(item.id), // Certifique-se de que `snowflakeId` seja o campo correto
+          }))
+        : [];
       setData(data);
     } catch (error) {
       console.log(error);
+      setData([]);
     }
   };
 
   React.useEffect(() => {
-    listTables();
+    search();
   }, []);
+
+  const [timezone, setTimezone] = React.useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const [dateFrom, setDateFrom] = React.useState<Date>(() => {
+    const now = new Date();
+    now.setHours(now.getHours() - 1);
+    return now;
+  });
+  const [dateTo, setDateTo] = React.useState<Date>(new Date());
+  const [searchTerm, setSearchTerm] = React.useState<string>("");
 
   return (
     <>
       <h1 className="py-2 mb-4 font-bold text-center">Logs from {tabela}</h1>
       <div className="w-full">
         <div className="flex items-center py-4">
-          <Input
-            placeholder="Filtrar por descrição"
-            value={
-              (table.getColumn("description")?.getFilterValue() as string) ?? ""
-            }
-            onChange={(event) =>
-              table.getColumn("description")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
+          <div className="max-w-xs"style={{padding: "0 0.5em"}}>
+            <Input
+              placeholder="Search"
+              value={searchTerm}
+              className="max-w-sm"
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  search();
+                }
+              }}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </div>
+          <div className="max-w-xs"style={{padding: "0 0.5em"}}>
+            <Input
+              placeholder="Filter table"
+              value={
+                (table.getColumn("description")?.getFilterValue() as string) ?? ""
+              }
+              onChange={(event) =>
+                table.getColumn("description")?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm"
+            />
+          </div>
           <div className="max-w-xs" style={{padding: "0 0.5em"}}>
-          <DateTimePicker />
+          <DateTimePicker date={dateFrom} setDate={setDateFrom}/>
           </div>
           <div className="max-w-xs">
-          <DateTimePicker />
+            <DateTimePicker date={dateTo} setDate={setDateTo}/>
           </div>
           <div className="max-w-xs" style={{padding: "0 0.5em"}}>
-            <TimeZoneSelect />
+            <TimeZoneSelect value={timezone} setValue={setTimezone} />
           </div><div className="max-w-xs" style={{padding: "0 0.5em"}}>
-            <Button>Search</Button>
+            <Button onClick={search}>Search</Button>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
