@@ -47,7 +47,7 @@ export function ListTables() {
 
   return (
     <>
-      <h1 className="text-3xl font-bold mb-5 text-center mt-5">Tabelas</h1>
+      <h1 className="font-bold mb-5 text-center mt-5">Tabelas</h1>
       <div className="flex flex-col items-center justify-center h-full">
         <div className="flex flex-wrap gap-4 text-center ">
           {data.map((item, index) => (
@@ -72,7 +72,7 @@ export function ListTables() {
               <CardHeader>
                 <CardTitle>{item || "Tabela sem nome"}</CardTitle>
               </CardHeader>
-              <CardFooter className="flex justify-between">
+              <CardFooter className="flex justify-between gap-2">
                 <Button
                   className="w-full"
                   onClick={() => consultarTabela(item)}

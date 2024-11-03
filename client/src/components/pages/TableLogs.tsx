@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -15,7 +15,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
-
+import { ChartBar } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -42,6 +42,13 @@ import api from "@/services/api";
 import { format } from "date-fns";
 import { ModalObject } from "../ModalObject";
 import { DateTimePicker } from "../DateTimePicker";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { TimeZoneSelect } from "../TimeZoneSelect";
 
 export type Record = {
@@ -236,6 +243,7 @@ export const columns: ColumnDef<Record>[] = [
 
 export function TableLogs() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { tabela } = location.state || {};
   const [data, setData] = React.useState([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -291,6 +299,10 @@ export function TableLogs() {
     search();
   }, []);
 
+  const goToChart = (data) => {
+    navigate("/charts", { state: { data } });
+  };
+
   const [timezone, setTimezone] = React.useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [dateFrom, setDateFrom] = React.useState<Date>(() => {
     const now = new Date();
@@ -302,7 +314,7 @@ export function TableLogs() {
 
   return (
     <>
-      <h1 className="py-2 mb-4 font-bold text-center">Logs from {tabela}</h1>
+      <h1 className="py-5 mb-4 font-bold text-center">Logs from {tabela}</h1>
       <div className="w-full">
         <div className="flex items-center py-4">
           <div className="max-w-xs"style={{padding: "0 0.5em"}}>
@@ -341,32 +353,47 @@ export function TableLogs() {
           </div><div className="max-w-xs" style={{padding: "0 0.5em"}}>
             <Button onClick={search}>Search</Button>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                Colunas <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className=" flex ml-auto gap-2 ">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="ml-auto">
+                  Colunas <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end">
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Button onClick={() => goToChart(data)}>
+                    <ChartBar size={32} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Visualizar gráficos</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
         <div className="mt-4" />
         <div className="rounded-md border">
