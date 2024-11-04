@@ -7,7 +7,27 @@
 `LogCenter` is a custom solution for log store and querying, debug and audit log, similar to ElasticSearch — which is widely used for storing, searching, but not analyzing data logs (yet). However, LogCenter utilizes PostgreSQL as the underlying database for storing and querying logs.  
 
 
+### How do start?
 
+Create a file named `.env` with the content:
+
+```
+DB_NAME=logcenter
+DB_HOST=db
+DB_PORT=5432
+DB_USER=logcenter
+DB_PASSWORD=MyS3cr3tP@ssw0rd
+```
+
+After:
+``` bash
+sudo docker compose up
+```
+
+
+### Docs
+
+Go to `http://localhost:9200/docs/redoc`
 
 
 ### How to store a log?
@@ -40,7 +60,7 @@ The body could be your json object to save, or a list of objects.
       "pais": "Brasil"
     },
     "habilidades": ["C#", ".NET", "Elasticsearch"],
-    "FileContent1": "SGVsbG8gd29ybGQh", // Base64 de "Hello world!"
+    "FileContent1": "SGVsbG8gd29ybGQh",
     "FileContent2": "data:/SGVsbG8gd29ybGQh",
     "NestedObject": 
     {
@@ -81,3 +101,6 @@ The response is a simples string with the id of the created object
 
  - ~~TODO: Change API port to 9200, like ElasticSearch default~~
 
+ - BUG: favicon int backend
+ - TODO: Normalize backend return
+ - TODO: Retrieve more than 100 itens on frontend.

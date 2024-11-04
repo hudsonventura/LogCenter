@@ -63,7 +63,7 @@ export function TimeZoneSelect({value, setValue}) {
         <Command>
           <CommandInput placeholder="Search framework..." className="h-9" />
           <CommandList>
-            <CommandEmpty>No framework found.</CommandEmpty>
+            <CommandEmpty>No timezone found</CommandEmpty>
             <CommandGroup>
               {timezones.map((framework) => (
                 <CommandItem
