@@ -68,12 +68,14 @@ export function TableConfigs() {
             </pre>
           ),
         });
-      } catch (error) {
+      } catch (error: unknown) {
         console.log(error);
         toast("Error!", {
           description: (
             <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-              <code className="text-white">{error.response.data}</code>
+              <code className="text-white">
+                {(error as { response: { data: string } }).response.data}
+              </code>
             </pre>
           ),
         });
@@ -84,7 +86,8 @@ export function TableConfigs() {
   }
 
   return (
-    <Form {...form} className="flex flex-col min-h-screen h-screen">
+    <Form {...form}
+    >
       <h1 className="text-3xl font-bold mb-4 text-center mt-5">
         Table {tableName.toUpperCase()} Configs{" "}
       </h1>

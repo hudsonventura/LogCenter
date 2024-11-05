@@ -184,7 +184,7 @@ export const columns: ColumnDef<Record>[] = [
       const [abrirModal, setAbrirModal] = React.useState(false);
 
       const copiarId = () => {
-        navigator.clipboard.writeText(dados.id);
+        navigator.clipboard.writeText(dados.id.toString());
         toast("ID copiado com sucesso!");
       };
 
@@ -229,7 +229,7 @@ export const columns: ColumnDef<Record>[] = [
           {/* ModalObject renderizado com base no estado */}
           {abrirModal && (
             <ModalObject
-              id={dados.id}
+              id={dados.id.toString()}
               tableName={tabela}
               isOpen={abrirModal}
               onOpenChange={fecharDetalhes}
@@ -283,7 +283,7 @@ export function TableLogs() {
         }`
       );
       const data = response.data
-        ? response.data.map((item) => ({
+        ? response.data.map((item: any) => ({
             ...item,
             id: BigInt(item.id), // Certifique-se de que `snowflakeId` seja o campo correto
           }))
@@ -343,10 +343,10 @@ export function TableLogs() {
             />
           </div>
           <div className="max-w-xs" style={{padding: "0 0.5em"}}>
-          <DateTimePicker date={dateFrom} setDate={setDateFrom}/>
+          <DateTimePicker date={dateFrom} setDate={setDateFrom as React.Dispatch<React.SetStateAction<Date | undefined>>}/>
           </div>
           <div className="max-w-xs">
-            <DateTimePicker date={dateTo} setDate={setDateTo}/>
+            <DateTimePicker date={dateTo} setDate={setDateTo as React.Dispatch<React.SetStateAction<Date | undefined>>}/>
           </div>
           <div className="max-w-xs" style={{padding: "0 0.5em"}}>
             <TimeZoneSelect value={timezone} setValue={setTimezone} />

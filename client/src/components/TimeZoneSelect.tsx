@@ -22,7 +22,7 @@ import api from "@/services/api"
 
 
 
-export function TimeZoneSelect({value, setValue}) {
+export function TimeZoneSelect({value, setValue}: {value: string | undefined, setValue: (value: string) => void}) {
   const [open, setOpen] = React.useState(false)
   
 
@@ -53,9 +53,13 @@ export function TimeZoneSelect({value, setValue}) {
           aria-expanded={open}
           className="w-[200px] justify-between"
         >
-          {value
-            ? timezones.find((framework) => framework.id === value)?.id
-            : "Select framework..."}
+          {value || "Select your timezone ..."}
+          {
+            //value
+            //? timezones.find((tz: { id: string }) => tz.id === value)?.id
+            //:// "Select your timezone ..."
+          }
+
           <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -65,20 +69,20 @@ export function TimeZoneSelect({value, setValue}) {
           <CommandList>
             <CommandEmpty>No timezone found</CommandEmpty>
             <CommandGroup>
-              {timezones.map((framework) => (
+              {timezones.map((tz: { id: string, displayName: string }) => (
                 <CommandItem
-                  key={framework.id}
-                  value={framework.id}
+                  key={tz.id}
+                  value={tz.id}
                   onSelect={(currentValue) => {
                     setValue(currentValue === value ? "" : currentValue)
                     setOpen(false)
                   }}
                 >
-                  {framework.displayName}
+                  {tz.displayName}
                   <CheckIcon
                     className={cn(
                       "ml-auto h-4 w-4",
-                      value === framework.id ? "opacity-100" : "opacity-0"
+                      value === tz.id ? "opacity-100" : "opacity-0"
                     )}
                   />
                 </CommandItem>

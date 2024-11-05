@@ -7,10 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import api from "@/services/api";
 import React from "react";
 import { useState } from "react";
@@ -18,7 +15,17 @@ import { useState } from "react";
 import JsonView from "@uiw/react-json-view";
 import { toast } from "sonner";
 
-export function ModalObject({ id, tableName, isOpen, onOpenChange }) {
+export function ModalObject({
+  id,
+  tableName,
+  isOpen,
+  onOpenChange,
+}: {
+  id: string;
+  tableName: string;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+}) {
   const [data, setData] = useState([]);
 
   const getObject = async () => {
@@ -73,7 +80,7 @@ export function ModalObject({ id, tableName, isOpen, onOpenChange }) {
           <Button variant="outline" onClick={handleCopy}>
             Copiar Conteudo
           </Button>
-          <DialogClose asChild onClick={onOpenChange}>
+          <DialogClose asChild onClick={() => onOpenChange(false)}>
             <Button type="button" variant="secondary">
               Fechar
             </Button>

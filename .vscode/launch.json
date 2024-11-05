@@ -32,12 +32,12 @@
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
-            "serverReadyAction": {
-                "action": "openExternally",
-                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-                "uriFormat": "%s/docs/swagger/index.html"
-                //"uriFormat": "%s/api-docs"
-            },
+            // "serverReadyAction": {
+            //     "action": "openExternally",
+            //     "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+            //     "uriFormat": "%s/docs/swagger/index.html"
+            //     //"uriFormat": "%s/api-docs"
+            // },
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
             },

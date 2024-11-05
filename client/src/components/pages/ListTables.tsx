@@ -9,16 +9,10 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuPortal,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
+
 
 export function ListTables() {
   const [data, setData] = useState([]);
@@ -37,11 +31,11 @@ export function ListTables() {
     }
   };
 
-  const consultarTabela = (tabela) => {
+  const consultarTabela = (tabela: string) => {
     navigate("/table-logs", { state: { tabela } });
   };
 
-  const goToConfigsTable = (tabela) => {
+  const goToConfigsTable = (tabela: string) => {
     navigate(`/table-configs/${tabela}`, { state: { tabela } });
   };
 
