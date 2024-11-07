@@ -198,7 +198,7 @@ export const columns: ColumnDef<Record>[] = [
         document.body.style.pointerEvents = "";
       };
       const location = useLocation();
-      const { tabela } = location.state || {};
+      const { tabela } = location.state || { tabela:  (new URLSearchParams(location.search).get("tabela"))  };
 
       React.useEffect(() => {
         // Cleanup ao desmontar ou quando o modal fechar
@@ -244,7 +244,7 @@ export const columns: ColumnDef<Record>[] = [
 export function TableLogs() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { tabela } = location.state || {};
+  const { tabela } = location.state || { tabela:  (new URLSearchParams(location.search).get("tabela"))  };
   const [data, setData] = React.useState([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -273,15 +273,18 @@ export function TableLogs() {
     },
   });
 
+  
+
   const search = async () => {
     try {
       const from = dateFrom.toISOString();
       const to = dateTo.toISOString();
-      const response = await api.get(
-        `/${tabela}?datetime1=${from}&datetime2=${to}&timezone=${timezone}${
-          searchTerm ? `&search=${searchTerm}` : ''
-        }`
-      );
+      const queryParams = `tabela=${tabela}&take=1000&datetime1=${from}&datetime2=${to}&timezone=${timezone}${
+        searchTerm ? `&search=${searchTerm}` : ''
+      }`;
+      
+      const response = await api.get(`/${tabela}?${queryParams}`);
+
       const data = response.data
         ? response.data.map((item: any) => ({
             ...item,
@@ -289,6 +292,12 @@ export function TableLogs() {
           }))
         : [];
       setData(data);
+      
+      // Update the URL query parameters
+      const url = new URL(window.location.href);
+      url.search = queryParams;
+      window.history.replaceState({}, '', url.toString());
+      
     } catch (error) {
       console.log(error);
       setData([]);
@@ -303,14 +312,24 @@ export function TableLogs() {
     navigate("/charts", { state: { data } });
   };
 
-  const [timezone, setTimezone] = React.useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const params = new URLSearchParams(location.search);
+
+  const [timezone, setTimezone] = React.useState(params.getAll('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [dateFrom, setDateFrom] = React.useState<Date>(() => {
+    const datetime = params.getAll('datetime1')?.[0];
     const now = new Date();
     now.setHours(now.getHours() - 1);
-    return now;
+
+    return datetime ? new Date(datetime) : now;
   });
-  const [dateTo, setDateTo] = React.useState<Date>(new Date());
-  const [searchTerm, setSearchTerm] = React.useState<string>("");
+  const [dateTo, setDateTo] = React.useState<Date>(() => {
+    const datetime = params.getAll('datetime2')?.[0];
+    const now = new Date();
+    return datetime ? new Date(datetime) : now;
+  });
+  const [searchTerm, setSearchTerm] = React.useState<string>(params.getAll('search')?.[0]);
+
+  
 
   return (
     <>
