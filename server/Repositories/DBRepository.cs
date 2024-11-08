@@ -180,7 +180,7 @@ public class DBRepository : IDisposable
         FROM log_{table} 
         WHERE 1=1 
         and created_at BETWEEN @datetime1 AND @datetime2
-        and content::text ILIKE @search
+        and (content::text ILIKE @search OR description::text ILIKE @search)
         --
         ORDER BY id
         LIMIT @take -- Toma 20 registros
