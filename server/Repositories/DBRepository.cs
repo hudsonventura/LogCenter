@@ -14,7 +14,7 @@ public class DBRepository : IDisposable
     }
 
     NpgsqlConnection _conn;
-    private TimeSpan _tz = TimeSpan.Zero;
+    private TimeZoneInfo _tz = TimeZoneInfo.Utc;
 
     public void Dispose()
     {
@@ -188,10 +188,18 @@ public class DBRepository : IDisposable
         ", _conn);
 
     // Define os parâmetros para datetime1 e datetime2
-        DateTime datetime1 = (query.datetime1 > DateTime.MinValue) ? DateTime.SpecifyKind(query.datetime1, DateTimeKind.Utc) : DateTime.UtcNow.AddHours(-1);
-        DateTime datetime2 = (query.datetime2 > DateTime.MinValue) ? DateTime.SpecifyKind(query.datetime2, DateTimeKind.Utc) : DateTime.UtcNow;
-        command.Parameters.Add(new NpgsqlParameter("datetime1", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime1.Add(-_tz) });
-        command.Parameters.Add(new NpgsqlParameter("datetime2", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime2.Add(-_tz) });
+        DateTime datetime1 = DateTime.UtcNow.AddHours(-1);
+        if(query.datetime1 > DateTime.MinValue){
+            datetime1 = query.datetime1.Add(-_tz.GetUtcOffset(query.datetime1));
+        }
+        command.Parameters.Add(new NpgsqlParameter("datetime1", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime1 });
+
+        DateTime datetime2 = DateTime.UtcNow;
+        if(query.datetime2 > DateTime.MinValue){
+            datetime2 = query.datetime2.Add(-_tz.GetUtcOffset(query.datetime2));
+        }
+        command.Parameters.Add(new NpgsqlParameter("datetime2", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime2 });
+
 
     command.Parameters.Add(new NpgsqlParameter("take", NpgsqlTypes.NpgsqlDbType.Integer) { Value = query.take });
     command.Parameters.Add(new NpgsqlParameter("skip", NpgsqlTypes.NpgsqlDbType.Integer) { Value = query.skip });
@@ -214,9 +222,11 @@ public class DBRepository : IDisposable
             id = reader.GetInt64(reader.GetOrdinal("id")),
             level = (Level)reader.GetInt64(reader.GetOrdinal("level")),
             description = reader.IsDBNull(reader.GetOrdinal("description")) ? null : reader.GetString(reader.GetOrdinal("description")),
-            created_at = reader.GetDateTime(reader.GetOrdinal("created_at")).Add(_tz),
+            created_at = reader.GetDateTime(reader.GetOrdinal("created_at")),
             content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(reader["content"].ToString())
         };
+
+        record.created_at = record.created_at.Add(_tz.GetUtcOffset(record.created_at)); //correcting the timezone
 
         // Adiciona o objeto dinâmico à lista de resultados
         results.Add(record);
@@ -269,9 +279,11 @@ public class DBRepository : IDisposable
                 id = reader.GetInt64(reader.GetOrdinal("id")),
                 level = (Level)reader.GetInt64(reader.GetOrdinal("level")),
                 description = reader.IsDBNull(reader.GetOrdinal("description")) ? null : reader.GetString(reader.GetOrdinal("description")),
-                created_at = reader.GetDateTime(reader.GetOrdinal("created_at")).Add(_tz),
+                created_at = reader.GetDateTime(reader.GetOrdinal("created_at")),
                 content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(reader["content"].ToString())
             };
+
+            record.created_at = record.created_at.Add(_tz.GetUtcOffset(record.created_at)); //correcting the timezone
 
             // Adiciona o objeto dinâmico à lista de resultados
             return record;
@@ -282,8 +294,9 @@ public class DBRepository : IDisposable
     }
 
 
-    public void SetTimezone(int timezone){
-        _tz = TimeSpan.FromHours(timezone);
+    public void SetTimezone(string timezone)
+    {
+        _tz = TimeZoneInfo.FindSystemTimeZoneById(timezone);
     }
 
         /// <summary>

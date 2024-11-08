@@ -283,7 +283,11 @@ export function TableLogs() {
         searchTerm ? `&search=${searchTerm}` : ''
       }`;
       
-      const response = await api.get(`/${tabela}?${queryParams}`);
+      const response = await api.get(`/${tabela}?${queryParams}`, {
+        headers: {
+          'Timezone': timezone, // Adicione o valor correto aqui
+        },
+      });
 
       const data = response.data
         ? response.data.map((item: any) => ({
@@ -314,7 +318,12 @@ export function TableLogs() {
 
   const params = new URLSearchParams(location.search);
 
-  const [timezone, setTimezone] = React.useState(params.getAll('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const timezoneParam = params.getAll('timezone');
+  const [timezone, setTimezone] = React.useState(
+    timezoneParam.length > 0 && timezoneParam[0] !== ''
+      ? timezoneParam[0]
+      : Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
   const [dateFrom, setDateFrom] = React.useState<Date>(() => {
     const datetime = params.getAll('datetime1')?.[0];
     const now = new Date();

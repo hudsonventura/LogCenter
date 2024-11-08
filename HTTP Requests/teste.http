@@ -1,0 +1,24 @@
+@table=testekkk
+###
+//ListTables
+GET {{APP_HOST}}/ListTables
+
+
+HTTP/1.1 200  - OK
+server: openresty
+date: Wed, 06 Nov 2024 01:15:01 GMT
+content-type: application/json; charset=utf-8
+transfer-encoding: chunked
+connection: keep-alive
+x-served-by: logcenter.hudsonventura.ddnsgeek.com
+###
+//Search
+GET {{APP_HOST}}/testekkk
+?datetime1=2024-11-02T04:00:00.000Z
+&datetime2=2024-11-04T01:43:12.089Z
+&timezone=America/Sao_Paulo
+
+
+###
+//Get one object
+GET {{APP_HOST}}/{{table}}/7258874717069639680
