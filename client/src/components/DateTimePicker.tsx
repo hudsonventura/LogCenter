@@ -67,7 +67,7 @@ export function DateTimePicker({
           {date ? (
             format(date, "yyyy/MM/dd hh:mm aa")
           ) : (
-            <span>YYYY/mMM/DD hh:mm aa</span>
+            <span>YYYY/MM/DD hh:mm aa</span>
           )}
         </Button>
       </PopoverTrigger>
@@ -77,6 +77,7 @@ export function DateTimePicker({
             mode="single"
             toDate={new Date()}
             selected={date}
+            defaultMonth={date}
             onSelect={handleDateSelect}
             initialFocus
           />
