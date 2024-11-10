@@ -324,6 +324,24 @@ export function TableLogs() {
       ? timezoneParam[0]
       : Intl.DateTimeFormat().resolvedOptions().timeZone
   );
+  const handleTimeZone = (tz: React.ChangeEvent<HTMLSelectElement>) => {
+    const before = timezone;
+    const after = tz;
+    setTimezone(tz);
+
+    const now = new Date();
+    const dateInBeforeTZ = new Date(now.toLocaleString("en-US", { timeZone: before }));
+    const dateInAfterTZ = new Date(now.toLocaleString("en-US", { timeZone: after }));
+    const offset = dateInAfterTZ.getTime() - dateInBeforeTZ.getTime();
+
+
+    setDateFrom(new Date(dateFrom.getTime() + offset));
+    setDateTo(new Date(dateTo.getTime() + offset));
+  };
+
+
+
+
   const [dateFrom, setDateFrom] = React.useState<Date>(() => {
     const datetime = params.getAll('datetime1')?.[0];
     const now = new Date();
@@ -377,7 +395,7 @@ export function TableLogs() {
             <DateTimePicker date={dateTo} setDate={setDateTo as React.Dispatch<React.SetStateAction<Date | undefined>>}/>
           </div>
           <div className="max-w-xs" style={{padding: "0 0.5em"}}>
-            <TimeZoneSelect value={timezone} setValue={setTimezone} />
+            <TimeZoneSelect value={timezone} setValue={(tz) => handleTimeZone(tz)} />
           </div><div className="max-w-xs" style={{padding: "0 0.5em"}}>
             <Button onClick={search}>Search</Button>
           </div>
