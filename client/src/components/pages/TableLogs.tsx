@@ -339,7 +339,7 @@ export function TableLogs() {
     setDateTo(new Date(dateTo.getTime() + offset));
   };
 
-
+  
 
 
   const [dateFrom, setDateFrom] = React.useState<Date>(() => {
@@ -349,11 +349,28 @@ export function TableLogs() {
 
     return datetime ? new Date(datetime) : now;
   });
+  const handleDateFrom = (date: Date) => {
+    if (date > dateTo) {
+      const newDate = new Date(date.getTime() + 3600000); // date + 1 hour
+      setDateTo(newDate);
+    }
+    setDateFrom(date);
+  }
+
   const [dateTo, setDateTo] = React.useState<Date>(() => {
     const datetime = params.getAll('datetime2')?.[0];
     const now = new Date();
     return datetime ? new Date(datetime) : now;
   });
+  const handleDateTo = (date: Date) => {
+    if (date < dateFrom) {
+      const newDate = new Date(date.getTime() + 3600000); // date + 1 hour
+      setDateFrom(newDate);
+    }
+    setDateTo(date);
+  }
+
+
   const [searchTerm, setSearchTerm] = React.useState<string>(params.getAll('search')?.[0]);
 
   
@@ -389,10 +406,10 @@ export function TableLogs() {
             />
           </div>
           <div className="max-w-xs" style={{padding: "0 0.5em"}}>
-          <DateTimePicker date={dateFrom} setDate={setDateFrom as React.Dispatch<React.SetStateAction<Date | undefined>>}/>
+          <DateTimePicker date={dateFrom} setDate={handleDateFrom as React.Dispatch<React.SetStateAction<Date | undefined>>}/>
           </div>
           <div className="max-w-xs">
-            <DateTimePicker date={dateTo} setDate={setDateTo as React.Dispatch<React.SetStateAction<Date | undefined>>}/>
+            <DateTimePicker date={dateTo} setDate={handleDateTo as React.Dispatch<React.SetStateAction<Date | undefined>>}/>
           </div>
           <div className="max-w-xs" style={{padding: "0 0.5em"}}>
             <TimeZoneSelect value={timezone} setValue={(tz) => handleTimeZone(tz)} />
