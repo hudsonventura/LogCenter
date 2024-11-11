@@ -65,9 +65,9 @@ export function DateTimePicker({
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {date ? (
-            format(date, "MM/dd/yyyy hh:mm aa")
+            format(date, "yyyy/MM/dd hh:mm aa")
           ) : (
-            <span>MM/DD/YYYY hh:mm aa</span>
+            <span>YYYY/MM/DD hh:mm aa</span>
           )}
         </Button>
       </PopoverTrigger>
@@ -75,7 +75,9 @@ export function DateTimePicker({
         <div className="sm:flex">
           <Calendar
             mode="single"
+            toDate={new Date()}
             selected={date}
+            defaultMonth={date}
             onSelect={handleDateSelect}
             initialFocus
           />

@@ -42,7 +42,6 @@ import api from "@/services/api";
 import { format } from "date-fns";
 import { ModalObject } from "../ModalObject";
 import { DateTimePicker } from "../DateTimePicker";
-
 import {
   Tooltip,
   TooltipContent,
@@ -50,6 +49,20 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { TimeZoneSelect } from "../TimeZoneSelect";
+
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
 export type Record = {
   id: bigint;
@@ -198,7 +211,9 @@ export const columns: ColumnDef<Record>[] = [
         document.body.style.pointerEvents = "";
       };
       const location = useLocation();
-      const { tabela } = location.state || { tabela:  (new URLSearchParams(location.search).get("tabela"))  };
+      const { tabela } = location.state || {
+        tabela: new URLSearchParams(location.search).get("tabela"),
+      };
 
       React.useEffect(() => {
         // Cleanup ao desmontar ou quando o modal fechar
@@ -241,10 +256,117 @@ export const columns: ColumnDef<Record>[] = [
   },
 ];
 
+const generateMockedHits = () => {
+  const now = new Date();
+  const data = [
+    {
+      timestamp: now,
+      count: 50,
+    },
+    {
+      timestamp: now,
+      count: 20,
+    },
+    {
+      timestamp: now,
+      count: 30,
+    },
+    {
+      timestamp: now,
+      count: 40,
+    },
+    {
+      timestamp: now,
+      count: 50,
+    },
+  ];
+
+  return data;
+};
+
+export default function HitsHistogram() {
+  const [data, setData] = React.useState(generateMockedHits());
+
+  console.log('testando',data)
+  return (
+    <Card className="w-full mb-8">
+      <CardHeader>
+        <CardTitle>Hits</CardTitle>
+        <CardDescription>
+          Quantidade de hits nas últimas 24 horas
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[200px]">
+          <ResponsiveContainer width="50%" height="100%">
+            <BarChart data={data}>
+              <XAxis
+                dataKey="timestamp"
+                tickFormatter={(value) => format(new Date(value), "HH:mm")}
+                stroke="#888888"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                stroke="#888888"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => `${value}`}
+              />
+              <Bar
+                dataKey="count"
+                fill="currentColor"
+                radius={[4, 4, 0, 0]}
+                className="fill-primary"
+              />
+              <ChartTooltip
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="rounded-lg border bg-background p-2 shadow-sm">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="flex flex-col">
+                            <span className="text-[0.70rem] uppercase text-muted-foreground">
+                              Time
+                            </span>
+                            <span className="font-bold text-muted-foreground">
+                              {format(
+                                new Date(payload[0].payload.timestamp),
+                                "HH:mm"
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[0.70rem] uppercase text-muted-foreground">
+                              Hits
+                            </span>
+                            <span className="font-bold">
+                              {payload[0].value}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function TableLogs() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { tabela } = location.state || { tabela:  (new URLSearchParams(location.search).get("tabela"))  };
+  const { tabela } = location.state || {
+    tabela: new URLSearchParams(location.search).get("tabela"),
+  };
   const [data, setData] = React.useState([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -273,19 +395,17 @@ export function TableLogs() {
     },
   });
 
-  
-
   const search = async () => {
     try {
       const from = dateFrom.toISOString();
       const to = dateTo.toISOString();
       const queryParams = `tabela=${tabela}&take=1000&datetime1=${from}&datetime2=${to}&timezone=${timezone}${
-        searchTerm ? `&search=${searchTerm}` : ''
+        searchTerm ? `&search=${searchTerm}` : ""
       }`;
-      
+
       const response = await api.get(`/${tabela}?${queryParams}`, {
         headers: {
-          'Timezone': timezone, // Adicione o valor correto aqui
+          Timezone: timezone, // Adicione o valor correto aqui
         },
       });
 
@@ -296,15 +416,15 @@ export function TableLogs() {
           }))
         : [];
       setData(data);
-      
+
       // Update the URL query parameters
       const url = new URL(window.location.href);
       url.search = queryParams;
-      window.history.replaceState({}, '', url.toString());
-      
+      window.history.replaceState({}, "", url.toString());
     } catch (error) {
       console.log(error);
       setData([]);
+      toast.error("Erro ao carregar dados");
     }
   };
 
@@ -318,67 +438,123 @@ export function TableLogs() {
 
   const params = new URLSearchParams(location.search);
 
-  const timezoneParam = params.getAll('timezone');
+  const timezoneParam = params.getAll("timezone");
   const [timezone, setTimezone] = React.useState(
-    timezoneParam.length > 0 && timezoneParam[0] !== ''
+    timezoneParam.length > 0 && timezoneParam[0] !== ""
       ? timezoneParam[0]
       : Intl.DateTimeFormat().resolvedOptions().timeZone
   );
+  const handleTimeZone = (tz: React.ChangeEvent<HTMLSelectElement>) => {
+    const before = timezone;
+    const after = tz;
+    setTimezone(tz);
+
+    const now = new Date();
+    const dateInBeforeTZ = new Date(
+      now.toLocaleString("en-US", { timeZone: before })
+    );
+    const dateInAfterTZ = new Date(
+      now.toLocaleString("en-US", { timeZone: after })
+    );
+    const offset = dateInAfterTZ.getTime() - dateInBeforeTZ.getTime();
+
+    setDateFrom(new Date(dateFrom.getTime() + offset));
+    setDateTo(new Date(dateTo.getTime() + offset));
+  };
+
   const [dateFrom, setDateFrom] = React.useState<Date>(() => {
-    const datetime = params.getAll('datetime1')?.[0];
+    const datetime = params.getAll("datetime1")?.[0];
     const now = new Date();
     now.setHours(now.getHours() - 1);
 
     return datetime ? new Date(datetime) : now;
   });
+  const handleDateFrom = (date: Date) => {
+    if (date > dateTo) {
+      const newDate = new Date(date.getTime() + 3600000); // date + 1 hour
+      setDateTo(newDate);
+    }
+    setDateFrom(date);
+  };
+
   const [dateTo, setDateTo] = React.useState<Date>(() => {
-    const datetime = params.getAll('datetime2')?.[0];
+    const datetime = params.getAll("datetime2")?.[0];
     const now = new Date();
     return datetime ? new Date(datetime) : now;
   });
-  const [searchTerm, setSearchTerm] = React.useState<string>(params.getAll('search')?.[0]);
+  const handleDateTo = (date: Date) => {
+    if (date < dateFrom) {
+      const newDate = new Date(date.getTime() + 3600000); // date + 1 hour
+      setDateFrom(newDate);
+    }
+    setDateTo(date);
+  };
 
-  
+  const [searchTerm, setSearchTerm] = React.useState<string>(
+    params.getAll("search")?.[0]
+  );
 
   return (
     <>
       <h1 className="py-5 mb-4 font-bold text-center">Logs from {tabela}</h1>
+      <HitsHistogram />
       <div className="w-full">
         <div className="flex items-center py-4">
-          <div className="max-w-xs"style={{padding: "0 0.5em"}}>
+          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
             <Input
               placeholder="Search"
               value={searchTerm}
               className="max-w-sm"
               onKeyDown={(event) => {
-                if (event.key === 'Enter') {
+                if (event.key === "Enter") {
                   search();
                 }
               }}
               onChange={(event) => setSearchTerm(event.target.value)}
             />
           </div>
-          <div className="max-w-xs"style={{padding: "0 0.5em"}}>
+          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
             <Input
               placeholder="Filter table"
               value={
-                (table.getColumn("description")?.getFilterValue() as string) ?? ""
+                (table.getColumn("description")?.getFilterValue() as string) ??
+                ""
               }
               onChange={(event) =>
-                table.getColumn("description")?.setFilterValue(event.target.value)
+                table
+                  .getColumn("description")
+                  ?.setFilterValue(event.target.value)
               }
               className="max-w-sm"
             />
           </div>
-          <div className="max-w-xs" style={{padding: "0 0.5em"}}>
-          <DateTimePicker date={dateFrom} setDate={setDateFrom as React.Dispatch<React.SetStateAction<Date | undefined>>}/>
+          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
+            <DateTimePicker
+              date={dateFrom}
+              setDate={
+                handleDateFrom as React.Dispatch<
+                  React.SetStateAction<Date | undefined>
+                >
+              }
+            />
           </div>
           <div className="max-w-xs">
-            <DateTimePicker date={dateTo} setDate={setDateTo as React.Dispatch<React.SetStateAction<Date | undefined>>}/>
+            <DateTimePicker
+              date={dateTo}
+              setDate={
+                handleDateTo as React.Dispatch<
+                  React.SetStateAction<Date | undefined>
+                >
+              }
+            />
           </div>
-          <div className="max-w-xs" style={{padding: "0 0.5em"}}>
-            <TimeZoneSelect value={timezone} setValue={setTimezone} />
-          </div><div className="max-w-xs" style={{padding: "0 0.5em"}}>
+          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
+            <TimeZoneSelect
+              value={timezone}
+              setValue={(tz) => handleTimeZone(tz)}
+            />
+          </div>
+          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
             <Button onClick={search}>Search</Button>
           </div>
           <div className=" flex ml-auto gap-2 ">
