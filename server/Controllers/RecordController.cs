@@ -180,7 +180,7 @@ public class RecordController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Record))]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public ActionResult<Record> GetByID(string table, long id, [FromHeader] string timezone){
+    public ActionResult<Record> GetByID(string table, long id, [FromHeader] string timezone = "UTC"){
         _db.SetTimezone(timezone); 
         var response = _db.GetByID(table, id);
         if(response == null){
