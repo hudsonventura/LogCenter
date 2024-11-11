@@ -56,7 +56,7 @@ export function ModalObject({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[800px] min-w-[300px]">
+      <DialogContent className="max-w-[1080px] min-w-[300px]">
         <DialogHeader>
           <DialogTitle>Detalhes</DialogTitle>
           <DialogDescription className="w-full">
@@ -71,7 +71,11 @@ export function ModalObject({
               {typeof data === "string" && !/^\{.*\}$/.test(data) ? (
                 <pre style={{ whiteSpace: "pre-wrap" }}>{data}</pre>
               ) : (
-                <JsonView value={data} />
+                <JsonView 
+                  value={data} 
+                  shortenTextAfterLength={1000}
+                />
+                
               )}
             </div>
           </DialogDescription>
