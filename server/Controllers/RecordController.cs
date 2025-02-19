@@ -32,9 +32,9 @@ public class RecordController : ControllerBase
     /// <param name="table">Table name</param>
     /// <param name="obj">Message string or object json</param>
     /// <param name="level">Log level. Default is Info</param>
-    /// <returns>long</returns>
+    /// <returns>uuid</returns>
     [HttpPost("/{table}/_doc")]
-    public ActionResult<long> Insert_Doc(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info, [FromHeader] string? description = null)
+    public ActionResult<Guid> Insert_Doc(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info, [FromHeader] string? description = null)
     {
         return Insert(table, obj, level, description);
     }
@@ -45,9 +45,9 @@ public class RecordController : ControllerBase
     /// <param name="table">Table name</param>
     /// <param name="obj">Message string or object json</param>
     /// <param name="level">Log level. Default is Info</param>
-    /// <returns>long</returns>
+    /// <returns>uuid</returns>
     [HttpPost("/{table}")]
-    public ActionResult<long> Insert(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info, [FromHeader] string? description = null)
+    public ActionResult<Guid> Insert(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info, [FromHeader] string? description = null)
     {
         table = table.Replace(" ", "_").ToLower();
         _db.ValidateTable(table);
@@ -180,7 +180,7 @@ public class RecordController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Record))]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public ActionResult<Record> GetByID(string table, long id, [FromHeader] string timezone = "UTC"){
+    public ActionResult<Record> GetByID(string table, Guid id, [FromHeader] string timezone = "UTC"){
         _db.SetTimezone(timezone); 
         var response = _db.GetByID(table, id);
         if(response == null){

@@ -1,27 +1,24 @@
-//ListTables
+#variables
+@table=test
+@Timezone=America/Sao_Paulo
+###
+# Save an object
+POST {{VITE_API_HOST}}/{{table}}
+Timezone: {{Timezone}}
+Content-Type: application/json
+
+{
+    "example": 123,
+    "objject": "test"
+}
+###
+# ListTables created
 GET {{VITE_API_HOST}}/ListTables
-
-HTTP/1.1 200  - OK
-server: openresty
-date: Sun, 10 Nov 2024 00:17:03 GMT
-content-type: application/json; charset=utf-8
-transfer-encoding: chunked
-connection: keep-alive
-x-served-by: logcenter.hudsonventura.ddnsgeek.com
 ###
-//Search
-GET {{VITE_API_HOST}}/testekkk
-?datetime1=2024-11-02T04:00:00.000Z
-&datetime2=2024-11-04T01:43:12.089Z
-&timezone=America/Sao_Paulo
-
-HTTP/1.1 200  - OK
-server: openresty
-date: Sun, 10 Nov 2024 00:16:55 GMT
-content-type: application/json; charset=utf-8
-transfer-encoding: chunked
-connection: keep-alive
-x-served-by: logcenter.hudsonventura.ddnsgeek.com
+# Get one object by ID
+GET {{VITE_API_HOST}}/{{table}}/6548173b-7bc0-0000-0000-80dcbf7b0185
+Timezone: {{Timezone}}
 ###
-//Get one object
-GET {{VITE_API_HOST}}/{{table}}/7258874717069639680
+# List objects created in a table by time
+GET {{VITE_API_HOST}}/{{table}}?datetime1=2025-02-19 15:38&datetime2=2025-02-19 23:39
+Timezone: {{Timezone}}

@@ -83,7 +83,7 @@ public class DBRepository : IDisposable
         ValidateTable(table);
 
         string txt_command = @$"CREATE TABLE log_{table} (
-                                id BIGINT PRIMARY KEY,
+                                id UUID PRIMARY KEY,
                                 level SMALLINT CHECK (level >= 0 AND level <= 9),
                                 created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                 description VARCHAR(255) NULL,
@@ -145,18 +145,18 @@ public class DBRepository : IDisposable
 
     }
 
-    public ulong Insert(string table, Level level, string description, string json)
+    public Guid Insert(string table, Level level, string description, string json)
     {
         ValidateTable(table);
 
         // Gera o ID Snowflake
-        ulong id = SnowflakeIDGenerator.GetSnowflake(0).ToUInt64();
+        Guid id = SnowflakeGuid.NewGuid();
 
         // Cria o comando de inserção
         using var command = new NpgsqlCommand($"INSERT INTO log_{table} (id, level, description, content) VALUES (@id, @level, @description, @value::jsonb)", _conn);
 
         // Define o parâmetro 'id' explicitamente como BIGINT
-        command.Parameters.Add(new NpgsqlParameter("id", NpgsqlTypes.NpgsqlDbType.Bigint) { Value = (long)id });
+        command.Parameters.Add(new NpgsqlParameter("id", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = id });
 
         command.Parameters.Add(new NpgsqlParameter("level", NpgsqlTypes.NpgsqlDbType.Integer) { Value = (int)level });
 
@@ -192,13 +192,13 @@ public class DBRepository : IDisposable
         if(query.datetime1 > DateTime.MinValue){
             datetime1 = query.datetime1.Add(-_tz.GetUtcOffset(query.datetime1));
         }
-        command.Parameters.Add(new NpgsqlParameter("datetime1", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime1 });
+        command.Parameters.Add(new NpgsqlParameter("datetime1", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime1.ToUniversalTime() });
 
         DateTime datetime2 = DateTime.UtcNow;
         if(query.datetime2 > DateTime.MinValue){
             datetime2 = query.datetime2.Add(-_tz.GetUtcOffset(query.datetime2));
         }
-        command.Parameters.Add(new NpgsqlParameter("datetime2", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime2 });
+        command.Parameters.Add(new NpgsqlParameter("datetime2", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime2.ToUniversalTime() });
 
 
     command.Parameters.Add(new NpgsqlParameter("take", NpgsqlTypes.NpgsqlDbType.Integer) { Value = query.take });
@@ -219,7 +219,7 @@ public class DBRepository : IDisposable
         // Cria um objeto dinâmico para armazenar os valores da linha
         var record = new Record
         {
-            id = reader.GetInt64(reader.GetOrdinal("id")),
+            id = reader.GetGuid(reader.GetOrdinal("id")),
             level = (Level)reader.GetInt64(reader.GetOrdinal("level")),
             description = reader.IsDBNull(reader.GetOrdinal("description")) ? null : reader.GetString(reader.GetOrdinal("description")),
             created_at = reader.GetDateTime(reader.GetOrdinal("created_at")),
@@ -256,7 +256,7 @@ public class DBRepository : IDisposable
         Console.WriteLine($"Removed {effected} records from table log_{table}");
     }
 
-    internal Record GetByID(string table, long id)
+    internal Record GetByID(string table, Guid id)
     {
         using var command = new NpgsqlCommand(@$"
             SELECT id, level, created_at, description, content 
@@ -264,7 +264,7 @@ public class DBRepository : IDisposable
             WHERE 1=1 
             and id = @id", _conn);
 
-        command.Parameters.Add(new NpgsqlParameter("id", NpgsqlTypes.NpgsqlDbType.Bigint) { Value = id });
+        command.Parameters.Add(new NpgsqlParameter("id", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = id });
 
 
         // Executa o comando e obtém o resultado
@@ -276,7 +276,7 @@ public class DBRepository : IDisposable
             // Cria um objeto dinâmico para armazenar os valores da linha
             var record = new Record
             {
-                id = reader.GetInt64(reader.GetOrdinal("id")),
+                id = reader.GetGuid(reader.GetOrdinal("id")),
                 level = (Level)reader.GetInt64(reader.GetOrdinal("level")),
                 description = reader.IsDBNull(reader.GetOrdinal("description")) ? null : reader.GetString(reader.GetOrdinal("description")),
                 created_at = reader.GetDateTime(reader.GetOrdinal("created_at")),

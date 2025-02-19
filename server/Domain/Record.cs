@@ -7,7 +7,7 @@ public class Record
     /// <summary>
     /// Snowflake id as a primary key
     /// </summary>
-    public long id { get; set; }
+    public Guid id { get; set; } = SnowflakeGuid.NewGuid();
 
     /// <summary>
     /// Represents a type of record
