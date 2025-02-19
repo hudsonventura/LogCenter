@@ -3,6 +3,8 @@ using Npgsql;
 using server.Domain;
 using SnowflakeID;
 
+using Dapper;
+
 namespace server.Repositories;
 
 public class DBRepository : IDisposable
@@ -258,39 +260,16 @@ public class DBRepository : IDisposable
 
     internal Record GetByID(string table, Guid id)
     {
-        using var command = new NpgsqlCommand(@$"
-            SELECT id, level, created_at, description, content 
-            FROM log_{table} 
-            WHERE 1=1 
-            and id = @id", _conn);
+        string query = @$"SELECT * FROM log_{table} WHERE id = @id";
+        Record result = _conn.QueryFirstOrDefault<Record>(query, new { id });
 
-        command.Parameters.Add(new NpgsqlParameter("id", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = id });
-
-
-        // Executa o comando e obtém o resultado
-        using var reader = command.ExecuteReader();
-
-        // Percorre todos os registros retornados
-        while (reader.Read())
+        if (result != null && !string.IsNullOrEmpty(result.content))
         {
-            // Cria um objeto dinâmico para armazenar os valores da linha
-            var record = new Record
-            {
-                id = reader.GetGuid(reader.GetOrdinal("id")),
-                level = (Level)reader.GetInt64(reader.GetOrdinal("level")),
-                description = reader.IsDBNull(reader.GetOrdinal("description")) ? null : reader.GetString(reader.GetOrdinal("description")),
-                created_at = reader.GetDateTime(reader.GetOrdinal("created_at")),
-                content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(reader["content"].ToString())
-            };
-
-            record.created_at = record.created_at.Add(_tz.GetUtcOffset(record.created_at)); //correcting the timezone
-
-            // Adiciona o objeto dinâmico à lista de resultados
-            return record;
+            result.content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(result.content);
         }
 
-        // Retorna a lista de resultados
-        return null;
+        return result;
+
     }
 
 
