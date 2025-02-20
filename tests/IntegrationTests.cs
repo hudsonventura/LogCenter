@@ -47,20 +47,22 @@ public class UnitTest1
             Content = new StringContent(json, Encoding.UTF8, "application/json")
         };
         request.Headers.Add("Level", Level.Debug.ToString());
+        
         var response = await client.SendAsync(request);
-
-        
-
         string responseBody = await response.Content.ReadAsStringAsync();
-        long id = long.Parse(responseBody);
-        _output.WriteLine($"ID: {id}");
-        
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        if(response.IsSuccessStatusCode){
+            Guid id = Guid.Parse(responseBody.Replace("\"", ""));
+            _output.WriteLine($"ID: {id}");
+            
+            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        }else{
+            throw new Exception(responseBody);
+        }  
     }
 
     [Fact]
     public async Task CheckInputLongList(){
-        long id = 7245539150718304256;
+        Guid id = Guid.Parse("65482aa3-ca80-0000-0000-873ea872ec7f");
         var response = await client.GetAsync($"/{table}/{id}");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -80,21 +82,21 @@ public class UnitTest1
         var response = await client.PostAsync($"/{table}/_doc", content);
 
         string responseBody = await response.Content.ReadAsStringAsync();
-        long id = long.Parse(responseBody);
+        Guid id = Guid.Parse(responseBody.Replace("\"", ""));
         _output.WriteLine($"ID: {id}"); 
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
     [Fact]
     public async Task CheckInputLargeObject(){
-        long id = 7245539365034655744;
+        Guid id = Guid.Parse("65482d09-4000-0000-0000-f9d13759d56d");
         var response = await client.GetAsync($"/{table}/{id}");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
     
     [Fact]
     public async Task CheckInputLargeObjectBase64Droped(){
-        long id = 7245539365034655744;
+        Guid id = Guid.Parse("65482d09-4000-0000-0000-f9d13759d56d");
         var response = await client.GetAsync($"/{table}/{id}");
         string responseBody = await response.Content.ReadAsStringAsync();
         if(!responseBody.Contains("Large content was droped")){
@@ -147,7 +149,7 @@ public class UnitTest1
             Level level = (Level)number;
 
             
-            var request = new HttpRequestMessage(HttpMethod.Post, $"/testekkk/_doc") {
+            var request = new HttpRequestMessage(HttpMethod.Post, $"/{table}/_doc") {
                 Content = new StringContent(gerado, Encoding.UTF8, "application/json")
             };
             request.Headers.Add("Level", level.ToString());
@@ -159,7 +161,7 @@ public class UnitTest1
             // Opcional: Log para cada 100.000 inserções
             if (contador % 100 == 0)
             {
-                Console.WriteLine($"{contador} registros gerados ...");
+                _output.WriteLine($"{contador} registros gerados ...");
             }
             contador++;
         }
