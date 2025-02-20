@@ -6,6 +6,11 @@ using Npgsql;
 using server.Repositories;
 using server.BackgroundServices;
 
+AppContext.SetSwitch("System.Globalization.Invariant", true);
+TimeZoneInfo utcZone = TimeZoneInfo.CreateCustomTimeZone("UTC", TimeSpan.Zero, "UTC", "UTC");
+TimeZoneInfo.ClearCachedData();
+TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, utcZone);
+
 
 
 

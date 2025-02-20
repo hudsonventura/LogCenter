@@ -8,7 +8,6 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_PORT: ${DB_PORT}
       PGDATA: /var/lib/postgresql/data/pgdata
     shm_size: '256m' # Necessary to use Postgres VACUUM. You can increment it as you need
     volumes:
@@ -26,13 +25,15 @@ services:
     #image:
     restart: always
     environment:
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
+      DB_HOST: db
+      DB_PORT: 5432
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_LISTEN: http://0.0.0.0:9200
+    depends_on:
+      - db
     networks:
       - logcenter
     ports:

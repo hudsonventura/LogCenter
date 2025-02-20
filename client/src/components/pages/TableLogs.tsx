@@ -297,7 +297,7 @@ export function TableLogs() {
       const data = response.data
         ? response.data.map((item: any) => ({
             ...item,
-            id: BigInt(item.id), // Certifique-se de que `snowflakeId` seja o campo correto
+            id: item.id, // Certifique-se de que `snowflakeId` seja o campo correto
           }))
         : [];
       setData(data);
