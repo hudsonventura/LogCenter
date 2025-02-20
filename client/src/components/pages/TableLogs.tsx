@@ -282,11 +282,17 @@ export function TableLogs() {
 
   const search = async () => {
     try {
-      const from = dateFrom.toISOString();
-      const to = dateTo.toISOString();
-      const queryParams = `tabela=${tabela}&take=1000&datetime1=${from}&datetime2=${to}&timezone=${timezone}${
+      const from = `${dateFrom.getFullYear()}-${padZero(dateFrom.getMonth() + 1)}-${padZero(dateFrom.getDate())} ${padZero(dateFrom.getHours())}:${padZero(dateFrom.getMinutes())}:${padZero(dateFrom.getSeconds())}`;
+      const to = `${dateTo.getFullYear()}-${padZero(dateTo.getMonth() + 1)}-${padZero(dateTo.getDate())} ${padZero(dateTo.getHours())}:${padZero(dateTo.getMinutes())}:${padZero(dateTo.getSeconds())}`;
+      const queryParams = `tabela=${tabela}&take=1000&datetime1=${from}&datetime2=${to}${
         searchTerm ? `&search=${searchTerm}` : ""
       }`;
+      
+
+      function padZero(number: number) {
+        return (number < 10 ? "0" : "") + number;
+      }
+
 
       const response = await api.get(`/${tabela}?${queryParams}`, {
         headers: {

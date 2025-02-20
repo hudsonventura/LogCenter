@@ -166,61 +166,39 @@ public class DBRepository : IDisposable
 
     internal List<Record> Search(string table, SearchObject query)
     {
-    // Cria o comando de consulta com um intervalo de datas
-    using var command = new NpgsqlCommand(@$"
-        SELECT id, level, created_at, description, content 
-        FROM log_{table} 
-        WHERE 1=1 
-        and created_at BETWEEN @datetime1 AND @datetime2
-        and (content::text ILIKE @search OR description::text ILIKE @search)
-        --
-        ORDER BY id
-        LIMIT @take -- Toma 20 registros
-        OFFSET @skip
-        ", _conn);
+        
+        string sql = @$"
+            SELECT id, level, created_at AT TIME ZONE 'UTC' as created_at, description, content 
+            FROM log_{table} 
+            WHERE created_at AT TIME ZONE 'UTC' BETWEEN @datetime1 AND @datetime2
+            AND (content::text ILIKE @search OR description::text ILIKE @search)
+            ORDER BY id DESC
+            LIMIT @take 
+            OFFSET @skip";
 
-    // Define os parâmetros para datetime1 e datetime2
-    DateTime datetime1 = (query.datetime1 == DateTime.MinValue) ? DateTime.UtcNow.AddHours(-1) : datetime1 = query.datetime1.Add(-_tz.GetUtcOffset(query.datetime1));
-    command.Parameters.Add(new NpgsqlParameter("datetime1", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = DateTime.SpecifyKind(datetime1, DateTimeKind.Utc)});
+        DateTime datetime1 = (query.datetime1 == DateTime.MinValue) ? DateTime.UtcNow.AddHours(-1) : datetime1 = query.datetime1.Add(-_tz.GetUtcOffset(query.datetime1));
+        DateTime datetime2 = (query.datetime2 == DateTime.MinValue) ? DateTime.UtcNow : query.datetime2.Add(-_tz.GetUtcOffset(query.datetime2));
 
-    DateTime datetime2 = (query.datetime2 == DateTime.MinValue) ? DateTime.UtcNow : query.datetime2.Add(-_tz.GetUtcOffset(query.datetime2));
-    command.Parameters.Add(new NpgsqlParameter("datetime2", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = DateTime.SpecifyKind(datetime2, DateTimeKind.Utc)});
-
-
-    command.Parameters.Add(new NpgsqlParameter("take", NpgsqlTypes.NpgsqlDbType.Integer) { Value = query.take });
-    command.Parameters.Add(new NpgsqlParameter("skip", NpgsqlTypes.NpgsqlDbType.Integer) { Value = query.skip });
-
-    command.Parameters.Add(new NpgsqlParameter("search", NpgsqlTypes.NpgsqlDbType.Text) { Value = $"%{query.search}%" });
-
-
-    // Executa o comando e obtém o resultado
-    using var reader = command.ExecuteReader();
-
-    // Cria uma lista para armazenar os resultados
-    var results = new List<Record>();
-
-    // Percorre todos os registros retornados
-    while (reader.Read())
-    {
-        // Cria um objeto dinâmico para armazenar os valores da linha
-        var record = new Record
+        var parameters = new
         {
-            id = reader.GetGuid(reader.GetOrdinal("id")),
-            level = (Level)reader.GetInt64(reader.GetOrdinal("level")),
-            description = reader.IsDBNull(reader.GetOrdinal("description")) ? null : reader.GetString(reader.GetOrdinal("description")),
-            created_at = reader.GetDateTime(reader.GetOrdinal("created_at")),
-            content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(reader["content"].ToString())
+            datetime1 = DateTime.SpecifyKind(datetime1, DateTimeKind.Utc),
+            datetime2 = DateTime.SpecifyKind(datetime2, DateTimeKind.Utc),
+            search = $"%{query.search}%",
+            take = query.take,
+            skip = query.skip
         };
 
-        record.created_at = record.created_at.Add(_tz.GetUtcOffset(record.created_at)); //correcting the timezone
+        var results = _conn.Query<Record>(sql, parameters).ToList();
 
-        // Adiciona o objeto dinâmico à lista de resultados
-        results.Add(record);
+        // Ajustando timezone manualmente após a consulta
+        foreach (var record in results)
+        {
+            record.created_at = record.created_at.Add(_tz.GetUtcOffset(record.created_at));
+        }
+
+        // Retorna a lista de resultados
+        return results.OrderByDescending(x => x.id).ToList();
     }
-
-    // Retorna a lista de resultados
-    return results.OrderByDescending(x => x.id).ToList();
-}
 
 
     public void DeleteRecords(string table, DateTime before_date)
