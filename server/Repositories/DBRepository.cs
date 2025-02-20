@@ -180,17 +180,11 @@ public class DBRepository : IDisposable
         ", _conn);
 
     // Define os parâmetros para datetime1 e datetime2
-        DateTime datetime1 = DateTime.UtcNow.AddHours(-1);
-        if(query.datetime1 > DateTime.MinValue){
-            datetime1 = query.datetime1.Add(-_tz.GetUtcOffset(query.datetime1));
-        }
-        command.Parameters.Add(new NpgsqlParameter("datetime1", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime1.ToUniversalTime() });
+    DateTime datetime1 = (query.datetime1 == DateTime.MinValue) ? DateTime.UtcNow.AddHours(-1) : datetime1 = query.datetime1.Add(-_tz.GetUtcOffset(query.datetime1));
+    command.Parameters.Add(new NpgsqlParameter("datetime1", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = DateTime.SpecifyKind(datetime1, DateTimeKind.Utc)});
 
-        DateTime datetime2 = DateTime.UtcNow;
-        if(query.datetime2 > DateTime.MinValue){
-            datetime2 = query.datetime2.Add(-_tz.GetUtcOffset(query.datetime2));
-        }
-        command.Parameters.Add(new NpgsqlParameter("datetime2", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = datetime2.ToUniversalTime() });
+    DateTime datetime2 = (query.datetime2 == DateTime.MinValue) ? DateTime.UtcNow : query.datetime2.Add(-_tz.GetUtcOffset(query.datetime2));
+    command.Parameters.Add(new NpgsqlParameter("datetime2", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = DateTime.SpecifyKind(datetime2, DateTimeKind.Utc)});
 
 
     command.Parameters.Add(new NpgsqlParameter("take", NpgsqlTypes.NpgsqlDbType.Integer) { Value = query.take });
