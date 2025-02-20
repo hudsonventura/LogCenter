@@ -41,39 +41,29 @@ public class DBRepository : IDisposable
     /// <returns></returns>
     public List<string> ListTabels()
     {
-        var tables = new List<string>();
+        string query = @"
+        SELECT substr(table_name, 5) as table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_type = 'BASE TABLE'
+        AND substr(table_name, 0, 5) = 'log_';";
 
-        using var command = new NpgsqlCommand(@"
-            SELECT substr(table_name, 5) as table_name
-            FROM information_schema.tables
-            WHERE table_schema = 'public'
-            AND table_type = 'BASE TABLE'
-            and substr(table_name, 0, 5) = 'log_';", _conn);
-
-        using var reader = command.ExecuteReader();
-
-        while (reader.Read())
-        {
-            // Adiciona o nome da tabela à lista
-            tables.Add(reader.GetString(0));
-        }
-
-        return tables;
+        return _conn.Query<string>(query).ToList();
     }
 
     public bool TableExists(string table)
     {
-        using var command = new NpgsqlCommand(@"
+        string query = @"
             SELECT COUNT(*) 
             FROM information_schema.tables 
             WHERE table_schema = 'public' 
             AND table_type = 'BASE TABLE' 
-            AND table_name = @table", _conn);
+            AND table_name = @table";
 
-        command.Parameters.AddWithValue("table", $"log_{table}");
+        long result = _conn.ExecuteScalar<long>(query, new { table = $"log_{table}" });
 
-        var result = (long)command.ExecuteScalar();
-        if(result == 0){
+        if (result == 0)
+        {
             throw new Exception($"Doesn't exist a table named '{table}'");
         }
 
@@ -329,25 +319,8 @@ public class DBRepository : IDisposable
 
     internal List<ConfigTableObject> GetConfiguredTables()
     {
-        using var command = new NpgsqlCommand("SELECT * FROM config", _conn);
-        using var reader = command.ExecuteReader();
-
-        var tables = new List<ConfigTableObject>();
-        while (reader.Read())
-        {
-            tables.Add(new ConfigTableObject
-            {
-                table_name = reader.GetString(0),
-                delete = reader.GetBoolean(1),
-                delete_input = reader.GetInt32(2),
-                vacuum = reader.GetBoolean(3),
-                vacuum_input = reader.IsDBNull(4) ? null : reader.GetString(4),
-                vacuum_full = reader.GetBoolean(5),
-                vacuum_full_input = reader.IsDBNull(6) ? null : reader.GetString(6),
-            });
-        }
-
-        return tables;
+        string query = "SELECT * FROM config";
+        return _conn.Query<ConfigTableObject>(query).ToList();
     }
 
 
