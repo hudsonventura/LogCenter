@@ -22,7 +22,7 @@ export function ListTables() {
 
   const listTables = async () => {
     try {
-      const response = await api.get("/ListTables");
+      const response = await api.get("/TablesConfig");
       setData(response.data);
     } catch (error) {
       console.log(error);
@@ -35,6 +35,13 @@ export function ListTables() {
 
   const goToConfigsTable = (tabela: string) => {
     navigate(`/table-configs/${tabela}`, { state: { tabela } });
+  };
+  
+  const formatSize = (size: number) => {
+    if (size < 1024) return `${size} Bytes`;
+    const i = Math.floor(Math.log(size) / Math.log(1024));
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    return `${(size / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
   };
 
   return (
@@ -54,7 +61,7 @@ export function ListTables() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56">
                     <DropdownMenuGroup>
-                      <DropdownMenuItem onClick={() => goToConfigsTable(item)}>
+                      <DropdownMenuItem onClick={() => goToConfigsTable(item.table_name)}>
                         Configurations
                       </DropdownMenuItem>
                     </DropdownMenuGroup>
@@ -62,12 +69,13 @@ export function ListTables() {
                 </DropdownMenu>
               </div>
               <CardHeader>
-                <CardTitle>{item || "Tabela sem nome"}</CardTitle>
+                <CardTitle>{item.table_name || "Tabela sem nome"}</CardTitle>
+                Size: {formatSize(item.size)}
               </CardHeader>
               <CardFooter className="flex justify-between gap-2">
                 <Button
                   className="w-full"
-                  onClick={() => consultarTabela(item)}
+                  onClick={() => consultarTabela(item.table_name)}
                 >
                   Consultar Logs
                 </Button>

@@ -38,6 +38,11 @@ public class ConfigTableObject
     /// </summary>
     public string vacuum_full_input { get; set; } = "0 0 1 1 *";
 
+    /// <summary>
+    /// The size of the table in Bytes
+    /// </summary>
+    public decimal size { get; internal set; }
+
     internal void Validate()
     {
         try

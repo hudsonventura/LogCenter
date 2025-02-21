@@ -89,6 +89,20 @@ public class TableController : Controller
 
 
     /// <summary>
+    /// Get table config
+    /// </summary>
+    /// <returns>ConfigTableObject</returns>
+    [HttpGet("/TablesConfig")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ConfigTableObject>))]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public ActionResult<ConfigTableObject> GetConfigTables()
+    {
+        return Ok(_db.GetConfigTables());
+    }
+
+
+
+    /// <summary>
     /// Queue vacuum to a table
     /// </summary>
     /// <param name="table"></param>

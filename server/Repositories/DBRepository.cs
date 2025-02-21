@@ -309,5 +309,18 @@ public class DBRepository : IDisposable
         command.ExecuteNonQuery();
     }
 
+    internal List<ConfigTableObject> GetConfigTables()
+    {
+        string query = @"SELECT 
+                            substr(t.table_name, 5) AS table_name,
+                            pg_total_relation_size(quote_ident(t.table_name)) AS size, c.*
+                        FROM information_schema.tables t
+                        left JOIN config c ON c.table_name = substr(t.table_name, 5)
+                        WHERE table_schema = 'public'
+                        AND table_type = 'BASE TABLE'
+                        AND substr(t.table_name, 0, 5) = 'log_';";
+
+        return _conn.Query<ConfigTableObject>(query).ToList();
+    }
 }
 
