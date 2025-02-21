@@ -4,3 +4,11 @@ fake/bin/*
 fake/obj/*
 tests/bin/*
 tests/obj/*
+nuget/bin/*
+nuget/obj/*
+examples/aspnet/bin/*
+examples/aspnet/obj/*
+examples/aspnet/logs/*.txt
+examples/dotnet/bin/*
+examples/dotnet/obj/*
+logs/*
