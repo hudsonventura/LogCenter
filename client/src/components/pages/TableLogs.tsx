@@ -57,7 +57,7 @@ import HitsHistogram from "../charts/HitsHistogram";
 export type Record = {
   id: bigint;
   level: RecordLevel;
-  description: string;
+  correlation: string;
   content: object;
   created_at: Date;
 };
@@ -125,25 +125,25 @@ export const columns: ColumnDef<Record>[] = [
   },
 
   {
-    accessorKey: "description",
+    accessorKey: "correlation",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Descrição
+          Correlation ID
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
     cell: ({ row }) => (
-      <div className="lowercase">{row.original.description}</div>
+      <div className="lowercase">{row.original.correlation}</div>
     ),
   },
   {
     accessorKey: "created_at",
-    header: () => <div className="text-right">Criado em</div>,
+    header: () => <div className="text-right">Created in</div>,
     cell: ({ row }) => {
       // Formatar a data no formato personalizado
       const formattedDate = format(
@@ -155,7 +155,7 @@ export const columns: ColumnDef<Record>[] = [
   },
   {
     accessorKey: "content",
-    header: () => <div className="text-left">Conteúdo</div>,
+    header: () => <div className="text-left">Content</div>,
     cell: ({ row }) => {
       // Converter o objeto `content` para uma string JSON formatada
       const content = row.original.content;
@@ -410,12 +410,12 @@ export function TableLogs() {
             <Input
               placeholder="Filter table"
               value={
-                (table.getColumn("description")?.getFilterValue() as string) ??
+                (table.getColumn("correlation")?.getFilterValue() as string) ??
                 ""
               }
               onChange={(event) =>
                 table
-                  .getColumn("description")
+                  .getColumn("correlation")
                   ?.setFilterValue(event.target.value)
               }
               className="max-w-sm"

@@ -34,9 +34,9 @@ public class RecordController : ControllerBase
     /// <param name="level">Log level. Default is Info</param>
     /// <returns>uuid</returns>
     [HttpPost("/{table}/_doc")]
-    public ActionResult<Guid> Insert_Doc(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info, [FromHeader] string? description = null)
+    public ActionResult<Guid> Insert_Doc(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info, [FromHeader] string? correlation = null)
     {
-        return Insert(table, obj, level, description);
+        return Insert(table, obj, level, correlation);
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ public class RecordController : ControllerBase
     /// <param name="level">Log level. Default is Info</param>
     /// <returns>uuid</returns>
     [HttpPost("/{table}")]
-    public ActionResult<Guid> Insert(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info, [FromHeader] string? description = null)
+    public ActionResult<Guid> Insert(string table, [FromBody] dynamic obj, [FromHeader] Level level = Level.Info, [FromHeader] string? correlation = null)
     {
         table = table.Replace(" ", "_").ToLower();
         _db.ValidateTable(table);
@@ -68,7 +68,7 @@ public class RecordController : ControllerBase
         {
             //tenta salvar na tabela do meu index.
             //se der certo, 200
-            var id = _db.Insert(table, level, description, json);
+            var id = _db.Insert(table, level, correlation, json);
             return Created(id.ToString(), id);
         }
         catch (System.Exception error1)
@@ -81,8 +81,8 @@ public class RecordController : ControllerBase
                 _db.CreateTable(table);
                 Console.Write("OK! ... ");
 
-                Console.Write($"Creating new DESCRIPTION index ({table}) ... ");
-                _db.CreateDescriptionbIndex(table);
+                Console.Write($"Creating new CORRELATION index ({table}) ... ");
+                _db.CreateCorrelationbIndex(table);
                 Console.Write("OK! ... ");
                 
                 Console.Write($"Creating new JSONB index ({table}) ... ");
@@ -93,7 +93,7 @@ public class RecordController : ControllerBase
                 _db.CreateDateTimeIndex(table);
                 Console.Write("OK! ... ");
 
-                var id = _db.Insert(table, level, description, json);
+                var id = _db.Insert(table, level, correlation, json);
                 return Created($"/{table}/{id}", $"/{table}/{id}");
             }
             catch (System.Exception error2)
