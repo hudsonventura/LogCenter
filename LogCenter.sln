@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "console_example", "examples
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "aspnet_example", "examples\aspnet\aspnet_example.csproj", "{225569CB-AEB0-4E0E-98FF-8D4621F634AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nuget", "nuget\nuget.csproj", "{BD19C0EC-CC8B-4D15-9532-01FF81762FF8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nuget.Logger", "nuget\Logger\Logger.csproj", "{BD19C0EC-CC8B-4D15-9532-01FF81762FF8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

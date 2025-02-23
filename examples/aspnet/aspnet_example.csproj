@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\nuget\nuget.csproj" />
+    <ProjectReference Include="..\..\nuget\Logger\Logger.csproj" />
   </ItemGroup>
 
 </Project>
