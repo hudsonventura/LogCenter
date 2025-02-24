@@ -105,7 +105,7 @@ public sealed class InterceptorMiddleware
             case LogCenterOptions.SaveFormatType.HTTPText: _logger.LogInformation(request.ToString());
             break;
 
-            default: _logger.LogInformation(request.ToString());
+            default: _logger.LogInformation(request);
             break;
         }
 
@@ -143,7 +143,7 @@ public sealed class InterceptorMiddleware
                 case LogCenterOptions.SaveFormatType.HTTPText: _logger.LogInformation(response.ToString());
                 break;
 
-                default: _logger.LogInformation(response.ToString());
+                default: _logger.LogInformation(response);
                 break;
             }
 

@@ -73,6 +73,6 @@ public sealed class Request
         string headers_string = string.Join("\n", Headers.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
 
 
-        return $"{Method} {CompleteURL}\n{headers_string}\n\n{Body}";
+        return $"Request\n{Method} {CompleteURL}\n{headers_string}\n\n{Body}";
     }
 }

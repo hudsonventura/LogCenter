@@ -7,14 +7,26 @@ namespace LogCenter.RequestInterceptor;
 
 public class Response
 {
+    [System.Text.Json.Serialization.JsonPropertyOrder(0)]
     public string Type { get; private set; } = "Response";
+
+    [System.Text.Json.Serialization.JsonPropertyOrder(1)]
     public string SentToAddress { get; private set; }
+
+    [System.Text.Json.Serialization.JsonPropertyOrder(2)]
     public int StatusCode { get; private set; }
+
+    [System.Text.Json.Serialization.JsonPropertyOrder(3)]
     public string ReasonPhrase { get; private set; }
+
+    [System.Text.Json.Serialization.JsonPropertyOrder(4)]
     public Dictionary<string, string> Headers { get; private set; }
+
+    [System.Text.Json.Serialization.JsonPropertyOrder(5)]
     public string Body { get; private set; }
 
-    public Exception Exception  { get; private set; }
+    [System.Text.Json.Serialization.JsonPropertyOrder(6)]
+    public Exception Exception { get; private set; }
 
     internal static async Task<Response> Convert(Microsoft.AspNetCore.Http.HttpContext context, Exception error){
 
@@ -63,6 +75,6 @@ public class Response
         string exception = (Exception is not null) ? $"\n\n{Exception}" : "";
 
 
-        return $"{StatusCode} {ReasonPhrase}\nSent to Address: {SentToAddress}\n{headers_string}{body}{exception}";
+        return $"Response\n{StatusCode} {ReasonPhrase}\nSent to Address: {SentToAddress}\n{headers_string}{body}{exception}";
     }
 }

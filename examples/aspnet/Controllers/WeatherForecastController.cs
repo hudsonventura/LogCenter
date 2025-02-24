@@ -72,12 +72,9 @@ public class WeatherForecastController : ControllerBase
     /// </summary>
     /// <param name="teste"></param>
     /// <returns></returns>
-    [HttpPut(Name = "GetWeatherForecast")]
-    public ActionResult GetException()
+    [HttpPut(Name = "SimulateException")]
+    public ActionResult SimulateException()
     {
-
-
-
         throw new Exception("Test Exception");
     }
 }
