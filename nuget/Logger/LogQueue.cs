@@ -43,6 +43,10 @@ public sealed class LogQueue
         for (int i = 0; i < queue.Count; i++)
         {
             var item = queue[i];
+            if(item.isProcessed == true){
+                continue;
+            }
+            item.isProcessed = true;
             try
             {
                 // Aqui você pode personalizar o envio dos logs para onde quiser
@@ -87,6 +91,8 @@ public sealed class LogQueue
 
 
 class LogItem{
+
+    public bool isProcessed = false;
     public HttpClient client;
 
     public string table;
