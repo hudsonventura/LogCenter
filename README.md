@@ -87,6 +87,17 @@ The response is a simples string with the id of the created object
 # Table Configuration
 
 
+
+
+# Libs, Examples and Use Cases
+| Framework | Example |
+| --- | --- |
+| Dotnet console app | [README-dotnet.md](README-dotnet.md) |
+| Aspnet | [README-aspnet.md](README-aspnet.md) |
+| Python console app | [README-python.md](README-python.md) |
+| Python FastAPI | [README-FastAPI.md](README-FastAPI.md) |
+| Python django | [README-django.md](README-django.md) |
+
 # TODO 
 
  ~~- TODO: Create a way to configure dates for each table in the RecyclingRecords service~~

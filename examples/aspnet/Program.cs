@@ -1,4 +1,3 @@
-using Serilog;
 using LogCenter; //TODO: DOCS
 using LogCenter.RequestInterceptor; //TODO: DOCS
 
@@ -37,7 +36,7 @@ app.UseInterceptor(new LogCenterOptions(){
     table = "example_interceptor",
     formatType = LogCenterOptions.SaveFormatType.HTTPText,
     LogGetRequest = false,
-    hideResponseExceptions = false
+    HideResponseExceptions = false
 });
 
 

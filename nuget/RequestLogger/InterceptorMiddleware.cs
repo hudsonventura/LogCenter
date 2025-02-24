@@ -23,7 +23,6 @@ public sealed class InterceptorMiddleware
     private readonly RequestDelegate _next;
     private LogCenterLogger _logger;
     private LogCenterOptions _options;
-    private bool _should_log = true;
 
     public InterceptorMiddleware(RequestDelegate next, LogCenterOptions options)
     {
@@ -36,7 +35,12 @@ public sealed class InterceptorMiddleware
     {
         Request request = await Request.Convert(context);
 
-        OnReceiveRequest(request);
+        if(_options.LogGetRequest == false && request.Method == "GET"){
+            
+        }else{
+            OnReceiveRequest(request);
+        }
+        
 
         string traceId = Activity.Current?.Id ?? context?.TraceIdentifier;
         context.Response.Headers.Add("traceId", traceId); // Garantir que o header seja adicionado
@@ -62,7 +66,13 @@ public sealed class InterceptorMiddleware
                 context.Response.Body = originalbody;
 
                 Response response = await Response.Convert(context, response_body);
-                OnSendResponse(response);
+
+                if(_options.LogGetRequest == false && request.Method == "GET"){
+            
+                }else{
+                    OnSendResponse(response);
+                }
+                
             }
             catch (Exception e)
             {
@@ -81,7 +91,7 @@ public sealed class InterceptorMiddleware
                 
                 
 
-                if (!_options.hideResponseExceptions)
+                if (!_options.HideResponseExceptions)
                 {
                     await context.Response.WriteAsync(error.ToString());
                 }
@@ -95,10 +105,6 @@ public sealed class InterceptorMiddleware
 
     public async void OnReceiveRequest(Request request)
     {
-        if(_options.LogGetRequest == false && request.Method == "GET"){
-            _should_log = false;
-            return;
-        }
 
         switch (_options.formatType)
         {
@@ -112,11 +118,7 @@ public sealed class InterceptorMiddleware
     }
 
     public async void OnSendResponse(Response response)
-    {
-        if(!_should_log){
-            return;
-        }
-        
+    {      
         try
         {
             string levelString = "Info";

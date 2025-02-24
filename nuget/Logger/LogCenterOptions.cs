@@ -3,7 +3,7 @@ namespace LogCenter;
 //TODO: docs
 public class LogCenterOptions
 {
-    public bool hideResponseExceptions { get ; set; } = false;
+    public bool HideResponseExceptions { get ; set; } = false;
 
     public string url { get ; set; } = "http://localhost:9200";
     public string table { get ; set; } = "desenv";
