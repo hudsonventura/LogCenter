@@ -1,4 +1,4 @@
-namespace nuget;
+namespace LogCenter;
 
 public enum LogLevel
 {

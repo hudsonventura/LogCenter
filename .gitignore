@@ -13,3 +13,5 @@ examples/dotnet/bin/*
 examples/dotnet/obj/*
 logs/*
 
+nuget/RequestLogger/bin/*
+nuget/RequestLogger/obj/*

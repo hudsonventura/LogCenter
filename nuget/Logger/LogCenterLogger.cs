@@ -1,8 +1,8 @@
 
 
-namespace nuget;
+namespace LogCenter;
 
-public class LogCenterLogger : nuget.ILogger
+public class LogCenterLogger : ILogger
 {
     private readonly HttpClient _client;
     private readonly string _url;
@@ -21,7 +21,6 @@ public class LogCenterLogger : nuget.ILogger
         _table = options.table;
         _client = new HttpClient();
         _client.BaseAddress = new Uri(_url);
-        _client.DefaultRequestHeaders.Add("Timezone", options.timezone);
         _client.DefaultRequestHeaders.Add("Correlation", options.correlation.ToString());
     }
 

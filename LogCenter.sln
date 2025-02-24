@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "aspnet_example", "examples\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nuget.Logger", "nuget\Logger\Logger.csproj", "{BD19C0EC-CC8B-4D15-9532-01FF81762FF8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuget", "nuget", "{710EAA45-4750-422A-9959-480833496CD8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequestLogger", "nuget\RequestLogger\RequestLogger.csproj", "{EC870EAD-9E9F-480F-9A24-D823F045EA3F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +47,10 @@ Global
 		{BD19C0EC-CC8B-4D15-9532-01FF81762FF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD19C0EC-CC8B-4D15-9532-01FF81762FF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD19C0EC-CC8B-4D15-9532-01FF81762FF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC870EAD-9E9F-480F-9A24-D823F045EA3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC870EAD-9E9F-480F-9A24-D823F045EA3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC870EAD-9E9F-480F-9A24-D823F045EA3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC870EAD-9E9F-480F-9A24-D823F045EA3F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -51,6 +59,6 @@ Global
 		SolutionGuid = {E699FAAD-3D11-4110-AF68-457DF78BBF24}
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		
+		{EC870EAD-9E9F-480F-9A24-D823F045EA3F} = {710EAA45-4750-422A-9959-480833496CD8}
 	EndGlobalSection
 EndGlobal

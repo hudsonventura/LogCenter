@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace aspnet_example.Controllers;
@@ -12,17 +13,21 @@ public class WeatherForecastController : ControllerBase
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
 
-    private readonly nuget.ILogger _logger;
+    private readonly LogCenter.ILogger _logger;
 
-    public WeatherForecastController(nuget.ILogger logger)
+    public WeatherForecastController(LogCenter.ILogger logger)
     {
         _logger = logger;
     }
 
+
+    /// <summary>
+    /// Test simple 200 Ok
+    /// </summary>
+    /// <returns></returns>
     [HttpGet(Name = "GetWeatherForecast")]
-    public IEnumerable<WeatherForecast> Get()
+    public ActionResult Get()
     {
-        //00-3a30d2b2c73e8a61fceed6060b281b39-5933e5f1b96e134c-00
 
         var test = Enumerable.Range(1, 20).Select(index => new WeatherForecast
         {
@@ -32,13 +37,47 @@ public class WeatherForecastController : ControllerBase
         })
         .ToArray();
 
-        var traceId = HttpContext.Items.FirstOrDefault(x => x.Key == "traceId").Value;
-
-        var testttt = HttpContext;
-        
         _logger.LogInformation("Processing ...");
         _logger.LogInformation(test);
         _logger.LogInformation("Ok ...");
-        return test;
+
+        return Ok(test);
+
+    }
+
+
+    /// <summary>
+    /// Test Badrequest and Post 200 OK
+    /// </summary>
+    /// <param name="teste"></param>
+    /// <returns></returns>
+    [HttpPost(Name = "GetWeatherForecast")]
+    public ActionResult Get([FromQuery] string teste, [FromBody] string body)
+    {
+
+        var test = Enumerable.Range(1, 20).Select(index => new WeatherForecast
+        {
+            Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+            TemperatureC = Random.Shared.Next(-20, 55),
+            Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+        })
+        .ToArray();
+
+
+        return BadRequest(test);
+    }
+
+    /// <summary>
+    /// Test Exception
+    /// </summary>
+    /// <param name="teste"></param>
+    /// <returns></returns>
+    [HttpPut(Name = "GetWeatherForecast")]
+    public ActionResult GetException()
+    {
+
+
+
+        throw new Exception("Test Exception");
     }
 }

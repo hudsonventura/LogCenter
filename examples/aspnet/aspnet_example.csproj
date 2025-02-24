@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\nuget\Logger\Logger.csproj" />
+    <ProjectReference Include="..\..\nuget\RequestLogger\RequestLogger.csproj" />
   </ItemGroup>
 
 </Project>

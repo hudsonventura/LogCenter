@@ -7,7 +7,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Serilog;
 
-namespace nuget;
+namespace LogCenter;
 
 public sealed class LogQueue
 {

@@ -1,14 +1,15 @@
 using Serilog;
-using nuget;
+using LogCenter; //TODO: DOCS
+using LogCenter.RequestInterceptor; //TODO: DOCS
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 ////////////////
-// Configuração
+// Configuração logger //TODO: DOCS
 builder.Services.AddScoped(provider =>
 {
-    nuget.ILogger logger = new nuget.LogCenterLogger(new LogCenterOptions(){
+    LogCenter.ILogger logger = new LogCenterLogger(new LogCenterOptions(){
         url = "http://localhost:9200",
         table = "example",
         //timezone = "timezone", //Default is UTC
@@ -16,7 +17,6 @@ builder.Services.AddScoped(provider =>
     return logger;
 });
   // Adiciona logs no Event Viewer (Windows)
-
 ///////////////
 ///
 
@@ -29,6 +29,18 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+//TODO: DOCS
+
+app.UseInterceptor(new LogCenterOptions(){
+    url = "http://localhost:9200",
+    table = "example_interceptor",
+    formatType = LogCenterOptions.SaveFormatType.HTTPText,
+    LogGetRequest = false,
+    hideResponseExceptions = false
+});
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
