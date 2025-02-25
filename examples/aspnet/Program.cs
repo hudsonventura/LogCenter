@@ -29,14 +29,13 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-//TODO: DOCS
 
-app.UseInterceptor(new LogCenterOptions(){
-    url = "http://localhost:9200",
-    table = "example_interceptor",
-    formatType = LogCenterOptions.SaveFormatType.HTTPText,
-    LogGetRequest = false,
-    HideResponseExceptions = false
+app.UseRequestInterceptor(new InterceptorOptions(){
+    url = "http://localhost:9200",                                  // LogCenter's URL
+    table = "example_interceptor",                                  // Table name 
+    FormatType = InterceptorOptions.SaveFormatType.HTTPText,        // Save in HTTP Text or JSON?
+    HideResponseExceptions = false,                                 // Hide Exceptions when 500 Internal server error is returned to the user?    
+    LogGetRequest = false                                           // Log GET requests?
 });
 
 

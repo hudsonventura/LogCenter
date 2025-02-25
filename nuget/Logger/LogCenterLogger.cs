@@ -21,7 +21,6 @@ public class LogCenterLogger : ILogger
         _table = options.table;
         _client = new HttpClient();
         _client.BaseAddress = new Uri(_url);
-        _client.DefaultRequestHeaders.Add("Correlation", options.correlation.ToString());
     }
 
     public void LogInformation<T>(string message)

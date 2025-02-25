@@ -11,7 +11,7 @@ namespace LogCenter.RequestInterceptor;
 
 public static class InterceptorMiddlewareExtensions
 {
-     public static IApplicationBuilder UseInterceptor(this IApplicationBuilder builder,  LogCenterOptions options)
+     public static IApplicationBuilder UseRequestInterceptor(this IApplicationBuilder builder,  LogCenterOptions options)
     {
         return builder.UseMiddleware<InterceptorMiddleware>(options);
     }
@@ -22,9 +22,9 @@ public sealed class InterceptorMiddleware
 {
     private readonly RequestDelegate _next;
     private LogCenterLogger _logger;
-    private LogCenterOptions _options;
+    private InterceptorOptions _options;
 
-    public InterceptorMiddleware(RequestDelegate next, LogCenterOptions options)
+    public InterceptorMiddleware(RequestDelegate next, InterceptorOptions options)
     {
         _next = next;
         _options = options;
@@ -106,9 +106,9 @@ public sealed class InterceptorMiddleware
     public async void OnReceiveRequest(Request request)
     {
 
-        switch (_options.formatType)
+        switch (_options.FormatType)
         {
-            case LogCenterOptions.SaveFormatType.HTTPText: _logger.LogInformation(request.ToString());
+            case InterceptorOptions.SaveFormatType.HTTPText: _logger.LogInformation(request.ToString());
             break;
 
             default: _logger.LogInformation(request);
@@ -140,9 +140,9 @@ public sealed class InterceptorMiddleware
                 break;
             }
 
-            switch (_options.formatType)
+            switch (_options.FormatType)
             {
-                case LogCenterOptions.SaveFormatType.HTTPText: _logger.LogInformation(response.ToString());
+                case InterceptorOptions.SaveFormatType.HTTPText: _logger.LogInformation(response.ToString());
                 break;
 
                 default: _logger.LogInformation(response);

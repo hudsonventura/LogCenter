@@ -3,23 +3,19 @@ namespace LogCenter;
 //TODO: docs
 public class LogCenterOptions
 {
-    public bool HideResponseExceptions { get ; set; } = false;
-
+    /// <summary>
+    /// LogCenter's URL
+    /// </summary>
     public string url { get ; set; } = "http://localhost:9200";
+
+    /// <summary>
+    /// Table name
+    /// </summary>
     public string table { get ; set; } = "desenv";
-    public Guid correlation { get ; set; } = Guid.NewGuid();
 
+
+    /// <summary>
+    /// Your token. Generate it on web interface on user's preference
+    /// </summary>
     public string token { get; set; }
-
-
-
-
-    public bool LogGetRequest { get; set; } = false;
-    public SaveFormatType formatType { get; set; } = SaveFormatType.Json;
-
-    public enum SaveFormatType
-    {
-        Json,
-        HTTPText
-    }
 }
