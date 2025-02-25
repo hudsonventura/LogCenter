@@ -36,6 +36,24 @@ public sealed class LogQueue
         }
     }
 
+    public async Task EnqueueAsync(HttpClient client, string table, LogLevel level, string message, dynamic data)
+    {
+        queue.Add(new LogItem(){
+            client = client,
+            table = table,
+            level = level,
+            message = message,
+            data = data
+        });
+        newTry:
+        if(!IsWorking){
+            IsWorking = true;
+            await ProcessQueueAsync();
+        }else{
+            await Task.Delay(100);
+            goto newTry;
+        }
+    }
 
 
     private async Task ProcessQueueAsync()
@@ -50,7 +68,7 @@ public sealed class LogQueue
             try
             {
                 // Aqui você pode personalizar o envio dos logs para onde quiser
-                Console.WriteLine($"[LogCenter] {DateTime.Now}: {item.message}");
+                Console.WriteLine($"{DateTime.Now} [{item.level.ToString()}] {item.message}");
 
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, item.table);
                 //request.Headers.Add("Level", logEvent.Level.ToString());
@@ -74,11 +92,8 @@ public sealed class LogQueue
                 //var objSucesso = JsonSerializer.Deserialize<dynamic>(responseBody);
 
                 
+                Console.Write("");
 
-                //Console.WriteLine(objSucesso);
-
-                // Exemplo: Se quiser enviar para uma API, pode fazer algo como:
-                // HttpClient.PostAsync("http://seu-log-center.com/api/logs", new StringContent(json));
             }
             catch (Exception ex)
             {

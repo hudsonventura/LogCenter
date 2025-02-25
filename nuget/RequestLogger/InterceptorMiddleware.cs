@@ -108,10 +108,10 @@ public sealed class InterceptorMiddleware
 
         switch (_options.FormatType)
         {
-            case InterceptorOptions.SaveFormatType.HTTPText: _logger.LogInformation(request.ToString());
+            case InterceptorOptions.SaveFormatType.HTTPText: _logger.Log(request.ToString());
             break;
 
-            default: _logger.LogInformation(request);
+            default: _logger.Log(request);
             break;
         }
 
@@ -142,10 +142,10 @@ public sealed class InterceptorMiddleware
 
             switch (_options.FormatType)
             {
-                case InterceptorOptions.SaveFormatType.HTTPText: _logger.LogInformation(response.ToString());
+                case InterceptorOptions.SaveFormatType.HTTPText: _logger.Log(response.ToString());
                 break;
 
-                default: _logger.LogInformation(response);
+                default: _logger.Log(response);
                 break;
             }
 
