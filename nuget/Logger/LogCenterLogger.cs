@@ -31,7 +31,7 @@ public class LogCenterLogger : ILogger
     /// <param name="data"></param>
     public void Log(LogLevel level, string message, dynamic data = null)
     {
-        Task.WaitAll(Task.Run(() =>Enqueue(LogLevel.Information, message, data))); 
+        Task.WaitAll(Task.Run(() =>Enqueue(level, message, data))); 
     }
 
     
@@ -49,7 +49,7 @@ public class LogCenterLogger : ILogger
     /// <returns></returns>
     public async Task LogAsync(LogLevel level, string message, dynamic data = null)
     {
-        await EnqueueAsync(LogLevel.Information, message, data); 
+        await EnqueueAsync(level, message, data); 
     }
 
     private async Task EnqueueAsync(LogLevel level, string message, dynamic data)

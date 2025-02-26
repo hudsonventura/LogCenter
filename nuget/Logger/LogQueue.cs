@@ -82,7 +82,7 @@ public sealed class LogQueue
                     request.Content = content;
                 }
             
-                Console.WriteLine($"{DateTime.Now.ToString("o")} [{item.level.ToString()}] {item.message}");
+                Console.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{item.level.ToString().ToUpper()}] {item.message}");
                 var response = await item.client.SendAsync(request);
             }
             catch (Exception ex)

@@ -20,5 +20,11 @@ logger.Log(LogLevel.Trace, "Hello World 1");
 
 Console.WriteLine("Cabô");
 
-await logger.LogAsync(LogLevel.Critical, "Hello World 2");
+await logger.LogAsync(LogLevel.Critical, "Hello World 2", new { 
+    nome = "John Doe",
+    idade = 30,
+    cpf = "123.456.789-00",
+    email = "john.doe@example.com",
+    telefone = "11 91234-5678"
+});
 

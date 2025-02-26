@@ -10,12 +10,12 @@ public enum LogLevel
     /// <summary>
     /// Informational messages that represent the normal flow of an application.
     /// </summary>
-    Information = 1,
+    Info = 1,
 
     /// <summary>
     /// Informational messages that represent the normal flow of an application.
     /// </summary>
-    Info = 1,
+    Information = 1,
 
     /// <summary>
     /// Debugging messages used for diagnosing issues.
