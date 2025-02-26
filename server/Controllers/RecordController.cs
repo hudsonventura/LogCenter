@@ -53,7 +53,7 @@ public class RecordController : ControllerBase
         _db.ValidateTable(table);
         
         string json = null;
-        if(!(obj is JsonElement { ValueKind: JsonValueKind.Null }) && obj is null) {
+        if(!(obj is JsonElement { ValueKind: JsonValueKind.Null }) && obj is not null) {
             try
             {
                 dynamic body = Utils.Base64Replacer.ReplaceBase64Content(obj);
