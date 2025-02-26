@@ -52,6 +52,9 @@ import { TimeZoneSelect } from "../TimeZoneSelect";
 
 //Charts
 import NiveisLogsChart from "../charts/NiveisLogsChart";
+import LogBarCharts from "../charts/LogBarCharts";
+import LogLineCharts from "../charts/LogLineCharts";
+import LogPieCharts from "../charts/LogPieCharts";
 import HitsHistogram from "../charts/HitsHistogram";
 
 export type Record = {
@@ -292,7 +295,7 @@ export function TableLogs() {
     try {
       const from = `${dateFrom.getFullYear()}-${padZero(dateFrom.getMonth() + 1)}-${padZero(dateFrom.getDate())} ${padZero(dateFrom.getHours())}:${padZero(dateFrom.getMinutes())}:${padZero(dateFrom.getSeconds())}`;
       const to = `${dateTo.getFullYear()}-${padZero(dateTo.getMonth() + 1)}-${padZero(dateTo.getDate())} ${padZero(dateTo.getHours())}:${padZero(dateTo.getMinutes())}:${padZero(dateTo.getSeconds())}`;
-      const queryParams = `tabela=${tabela}&take=1000&datetime1=${from}&datetime2=${to}${
+      const queryParams = `tabela=${tabela}&take=5000&datetime1=${from}&datetime2=${to}${
         searchTerm ? `&search=${searchTerm}` : ""
       }`;
       
@@ -397,7 +400,15 @@ export function TableLogs() {
     <>
       <h1 className="py-5 mb-4 font-bold text-center">Logs from {tabela}</h1>
 
-      <NiveisLogsChart data={data} />
+      {/*<LogBarCharts rawData={data} />*/}
+      <div className="flex" style={{ margin: "5px" }}>
+        <div className="w-1/2 px-2" >
+          <LogLineCharts rawData={data} />
+        </div>
+        <div className="w-1/2 px-2" >
+          <LogPieCharts rawData={data} />
+        </div>
+      </div>
 
       <div className="w-full">
         <div className="flex items-center py-4">

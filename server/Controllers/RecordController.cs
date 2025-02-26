@@ -36,7 +36,7 @@ public class RecordController : ControllerBase
     [HttpPost("/{table}/_doc")]
     public ActionResult<Guid> Insert_Doc(string table, [FromHeader] string message, [FromBody] dynamic obj = null, [FromHeader] Level level = Level.Info, [FromHeader] string? correlation = null)
     {
-        return Insert(table, obj, message, level, correlation);
+        return Insert(table, message, obj, level, correlation);
     }
 
     /// <summary>
