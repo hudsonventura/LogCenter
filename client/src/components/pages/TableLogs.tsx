@@ -58,6 +58,7 @@ export type Record = {
   id: bigint;
   level: RecordLevel;
   correlation: string;
+  message: object;
   content: object;
   created_at: Date;
 };
@@ -88,28 +89,28 @@ const getCorBadge = (level: RecordLevel) => {
 };
 
 export const columns: ColumnDef<Record>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+  // {
+  //   id: "select",
+  //   header: ({ table }) => (
+  //     <Checkbox
+  //       checked={
+  //         table.getIsAllPageRowsSelected() ||
+  //         (table.getIsSomePageRowsSelected() && "indeterminate")
+  //       }
+  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+  //       aria-label="Select all"
+  //     />
+  //   ),
+  //   cell: ({ row }) => (
+  //     <Checkbox
+  //       checked={row.getIsSelected()}
+  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //       aria-label="Select row"
+  //     />
+  //   ),
+  //   enableSorting: false,
+  //   enableHiding: false,
+  // },
   {
     accessorKey: "level",
     header: "Level",
@@ -143,14 +144,21 @@ export const columns: ColumnDef<Record>[] = [
   },
   {
     accessorKey: "created_at",
-    header: () => <div className="text-right">Created in</div>,
+    header: () => <div className="text-left">Created in</div>,
     cell: ({ row }) => {
       // Formatar a data no formato personalizado
       const formattedDate = format(
         new Date(row.original.created_at),
         "yyyy/MM/dd HH:mm:ss"
       );
-      return <div className="text-right font-medium">{formattedDate}</div>;
+      return <div className="text-left">{formattedDate}</div>;
+    },
+  },
+  {
+    accessorKey: "message",
+    header: () => <div className="text-left">Message</div>,
+    cell: ({ row }) => {
+      return <div className="text-left">{row.original.message}</div>;
     },
   },
   {

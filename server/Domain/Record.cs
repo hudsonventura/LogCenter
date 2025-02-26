@@ -29,6 +29,11 @@ public class Record
     public DateTime created_at { get; set; }
 
     /// <summary>
+    /// A message or title to explain the content
+    /// </summary>
+    public string message { get; set; }
+    
+    /// <summary>
     /// Your content. It can be string or json object
     /// </summary>
     public dynamic content { get; set; }

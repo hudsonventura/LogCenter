@@ -78,7 +78,8 @@ public class DBRepository : IDisposable
                                 id UUID PRIMARY KEY,
                                 level SMALLINT CHECK (level >= 0 AND level <= 9),
                                 created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                correlation VARCHAR(255) NULL,
+                                message VARCHAR(255) NULL,
+                                correlation VARCHAR(100) NULL,
                                 content jsonb
                             );";
         using var command = new NpgsqlCommand(txt_command, _conn);
@@ -103,9 +104,16 @@ public class DBRepository : IDisposable
         command.ExecuteNonQuery();
     }
 
-    public void CreateCorrelationbIndex(string table){
+    public void CreateCorrelationIndex(string table){
         string txt_command = 
-            @$"CREATE INDEX idx_{table}_desc ON log_{table} USING GIN (correlation gin_trgm_ops);";
+            @$"CREATE INDEX idx_{table}_correlation ON log_{table} USING GIN (correlation gin_trgm_ops);";
+        using var command = new NpgsqlCommand(txt_command, _conn);
+        command.ExecuteNonQuery();
+    }
+    
+    public void CreateMessageIndex(string table){
+        string txt_command = 
+            @$"CREATE INDEX idx_{table}_message ON log_{table} USING GIN (mensagem gin_trgm_ops);";
         using var command = new NpgsqlCommand(txt_command, _conn);
         command.ExecuteNonQuery();
     }
@@ -117,13 +125,6 @@ public class DBRepository : IDisposable
         command.ExecuteNonQuery();
     }
 
-    //Not necessary
-    // public void DeleteJsonbIndex(string index)
-    // {
-    //     string txt_command = $"DROP INDEX IF EXISTS idx_{index};";
-    //     using var command = new NpgsqlCommand(txt_command, _conn);
-    //     command.ExecuteNonQuery();
-    // }
 
 
 
@@ -137,7 +138,7 @@ public class DBRepository : IDisposable
 
     }
 
-    public Guid Insert(string table, Level level, string correlation, string json)
+    public Guid Insert(string table, Level level, string correlation, string message, string json)
     {
         ValidateTable(table);
 
@@ -145,14 +146,13 @@ public class DBRepository : IDisposable
         Guid id = SnowflakeGuid.NewGuid();
 
         // Cria o comando de inserção
-        using var command = new NpgsqlCommand($"INSERT INTO log_{table} (id, level, correlation, content) VALUES (@id, @level, @correlation, @value::jsonb)", _conn);
+        using var command = new NpgsqlCommand($"INSERT INTO log_{table} (id, level, correlation, message, content) VALUES (@id, @level, @correlation, @message, @value::jsonb)", _conn);
 
         // Define o parâmetro 'id' explicitamente como BIGINT
         command.Parameters.Add(new NpgsqlParameter("id", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = id });
-
         command.Parameters.Add(new NpgsqlParameter("level", NpgsqlTypes.NpgsqlDbType.Integer) { Value = (int)level });
-
         command.Parameters.Add(new NpgsqlParameter("correlation", NpgsqlTypes.NpgsqlDbType.Text) { Value = correlation ?? (object)DBNull.Value });
+        command.Parameters.Add(new NpgsqlParameter("message", NpgsqlTypes.NpgsqlDbType.Text) { Value = message });
 
         // Adiciona o parâmetro 'value' com o JSON
         command.Parameters.AddWithValue("value", NpgsqlTypes.NpgsqlDbType.Jsonb, json);
@@ -168,10 +168,10 @@ public class DBRepository : IDisposable
     {
         
         string sql = @$"
-            SELECT id, level, created_at AT TIME ZONE 'UTC' as created_at, correlation, content 
+            SELECT id, level, created_at AT TIME ZONE 'UTC' as created_at, correlation, message, content 
             FROM log_{table} 
             WHERE created_at AT TIME ZONE 'UTC' BETWEEN @datetime1 AND @datetime2
-            AND (content::text ILIKE @search OR correlation::text ILIKE @search)
+            AND (content::text ILIKE @search OR correlation::text ILIKE @search OR message::text ILIKE @search)
             ORDER BY id DESC
             LIMIT @take 
             OFFSET @skip";
