@@ -31,7 +31,7 @@ export function ModalObject({
   const getObject = async () => {
     try {
       const response = await api.get(`/${tableName}/${id}`);
-      setData(response.data.content);
+      setData(null !== response.data.content ? response.data.content : "null");
     } catch (error) {
       console.log(error);
     }
@@ -82,11 +82,11 @@ export function ModalObject({
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={handleCopy}>
-            Copiar Conteudo
+            Copy Content
           </Button>
           <DialogClose asChild onClick={() => onOpenChange(false)}>
             <Button type="button" variant="secondary">
-              Fechar
+              Close
             </Button>
           </DialogClose>
         </DialogFooter>

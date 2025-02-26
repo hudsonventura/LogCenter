@@ -12,7 +12,7 @@ LogCenterLogger logger = new LogCenterLogger(new LogCenterOptions(){
 
 
 
-logger.Log("Hello World 2", LogLevel.Trace);
+logger.Log(LogLevel.Trace, "Hello World 1");
 
 
 //prevent.Stop();
@@ -20,5 +20,5 @@ logger.Log("Hello World 2", LogLevel.Trace);
 
 Console.WriteLine("Cabô");
 
-await logger.LogAsync(123);
+await logger.LogAsync(LogLevel.Critical, "Hello World 2");
 

@@ -37,9 +37,9 @@ public class WeatherForecastController : ControllerBase
         })
         .ToArray();
 
-        _logger.Log("Processing ...");
-        _logger.Log(test);
-        _logger.Log("Ok ...");
+        _logger.Log(LogCenter.LogLevel.Debug, "Processing ...");
+        _logger.Log(LogCenter.LogLevel.Debug, "The object", test);
+        _logger.Log(LogCenter.LogLevel.Debug, "Ok ...");
 
         return Ok(test);
 

@@ -78,9 +78,9 @@ public class DBRepository : IDisposable
                                 id UUID PRIMARY KEY,
                                 level SMALLINT CHECK (level >= 0 AND level <= 9),
                                 created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                message VARCHAR(255) NULL,
+                                message VARCHAR(255) NOT NULL,
                                 correlation VARCHAR(100) NULL,
-                                content jsonb
+                                content JSONB NULL
                             );";
         using var command = new NpgsqlCommand(txt_command, _conn);
         command.ExecuteNonQuery();
@@ -113,7 +113,7 @@ public class DBRepository : IDisposable
     
     public void CreateMessageIndex(string table){
         string txt_command = 
-            @$"CREATE INDEX idx_{table}_message ON log_{table} USING GIN (mensagem gin_trgm_ops);";
+            @$"CREATE INDEX idx_{table}_message ON log_{table} USING GIN (message gin_trgm_ops);";
         using var command = new NpgsqlCommand(txt_command, _conn);
         command.ExecuteNonQuery();
     }
@@ -155,7 +155,7 @@ public class DBRepository : IDisposable
         command.Parameters.Add(new NpgsqlParameter("message", NpgsqlTypes.NpgsqlDbType.Text) { Value = message });
 
         // Adiciona o parâmetro 'value' com o JSON
-        command.Parameters.AddWithValue("value", NpgsqlTypes.NpgsqlDbType.Jsonb, json);
+        command.Parameters.Add(new NpgsqlParameter("value", NpgsqlTypes.NpgsqlDbType.Jsonb) { Value = json != null ? json : DBNull.Value });
 
         // Executa o comando
         command.ExecuteNonQuery();

@@ -23,34 +23,37 @@ public class LogCenterLogger : ILogger
 
     }
 
+    /// <summary>
+    /// Start a thread to send the log to LogCenter
+    /// </summary>
+    /// <param name="level"></param>
+    /// <param name="message"></param>
+    /// <param name="data"></param>
+    public void Log(LogLevel level, string message, dynamic data = null)
+    {
+        Task.WaitAll(Task.Run(() =>Enqueue(LogLevel.Information, message, data))); 
+    }
+
     
-    public void Log(string message, LogLevel level = LogLevel.Information)
-    {
-        Task.WaitAll(Task.Run(() =>LogAsync(LogLevel.Information, message, null))); 
-    }
-
-    public async Task LogAsync(string message, LogLevel level = LogLevel.Information)
-    {
-        Task.WaitAll(Task.Run(() =>LogAsync(LogLevel.Information, message, null))); 
-    }
-
-    
-    public void Log(dynamic data, LogLevel level = LogLevel.Information)
-    {
-        Task.WaitAll(Task.Run(() =>LogAsync(LogLevel.Information, null, data))); 
-    }
-
-    private async Task LogAsync(LogLevel level, string message, dynamic data)
+    private async Task Enqueue(LogLevel level, string message, dynamic data)
     {
         _queue.Enqueue(_client, _table, level, message, data);
     }
 
-    public  async Task LogAsync(int teste)
+    /// <summary>
+    /// Send the log to LogCenter, and wait for a response. Use with await
+    /// </summary>
+    /// <param name="level"></param>
+    /// <param name="message"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    public async Task LogAsync(LogLevel level, string message, dynamic data = null)
     {
-        LogLevel level = LogLevel.Information;
-        string message = "Hello World";
-        dynamic data = new {};
+        await EnqueueAsync(LogLevel.Information, message, data); 
+    }
+
+    private async Task EnqueueAsync(LogLevel level, string message, dynamic data)
+    {
         await _queue.EnqueueAsync(_client, _table, level, message, data);
-        Console.WriteLine("Enviado!");
     }
 }

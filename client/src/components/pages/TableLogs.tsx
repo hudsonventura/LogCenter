@@ -230,11 +230,11 @@ export const columns: ColumnDef<Record>[] = [
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Ações</DropdownMenuLabel>
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={copiarId}>Copiar ID</DropdownMenuItem>
+              <DropdownMenuItem onClick={copiarId}>Copy ID</DropdownMenuItem>
               <DropdownMenuItem onClick={() => abrirDetalhes()}>
-                Detalhes
+                Details
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

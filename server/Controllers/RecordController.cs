@@ -34,7 +34,7 @@ public class RecordController : ControllerBase
     /// <param name="level">Log level. Default is Info</param>
     /// <returns>uuid</returns>
     [HttpPost("/{table}/_doc")]
-    public ActionResult<Guid> Insert_Doc(string table, [FromBody] dynamic obj, [FromHeader] string message, [FromHeader] Level level = Level.Info, [FromHeader] string? correlation = null)
+    public ActionResult<Guid> Insert_Doc(string table, [FromHeader] string message, [FromBody] dynamic obj = null, [FromHeader] Level level = Level.Info, [FromHeader] string? correlation = null)
     {
         return Insert(table, obj, message, level, correlation);
     }
@@ -47,21 +47,24 @@ public class RecordController : ControllerBase
     /// <param name="level">Log level. Default is Info</param>
     /// <returns>uuid</returns>
     [HttpPost("/{table}")]
-    public ActionResult<Guid> Insert(string table, [FromBody] dynamic obj, [FromHeader] string message, [FromHeader] Level level = Level.Info, [FromHeader] string? correlation = null)
+    public ActionResult<Guid> Insert(string table, [FromHeader] string message, [FromBody] dynamic obj = null, [FromHeader] Level level = Level.Info, [FromHeader] string? correlation = null)
     {
         table = table.Replace(" ", "_").ToLower();
         _db.ValidateTable(table);
         
-        var json = string.Empty;
-        try
-        {
-            dynamic body = Utils.Base64Replacer.ReplaceBase64Content(obj);
-            json = JsonSerializer.Serialize(body);
+        string json = null;
+        if(!(obj is JsonElement { ValueKind: JsonValueKind.Null })) {
+            try
+            {
+                dynamic body = Utils.Base64Replacer.ReplaceBase64Content(obj);
+                json = JsonSerializer.Serialize(body);
+            }
+            catch (System.Exception)
+            {
+                json = JsonSerializer.Serialize(obj);
+            }
         }
-        catch (System.Exception)
-        {
-            json = JsonSerializer.Serialize(obj);
-        }
+        
         
 
         try

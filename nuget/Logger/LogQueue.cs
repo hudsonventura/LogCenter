@@ -67,33 +67,23 @@ public sealed class LogQueue
             item.isProcessed = true;
             try
             {
-                // Aqui você pode personalizar o envio dos logs para onde quiser
-                Console.WriteLine($"{DateTime.Now} [{item.level.ToString()}] {item.message}");
-
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, item.table);
                 //request.Headers.Add("Level", logEvent.Level.ToString());
                 if(Activity.Current?.Id != null){
                     request.Headers.Add("Correlation", Activity.Current?.Id);
                 }
+
+                request.Headers.Add("Message", item.message);
                 
 
-                string json = JsonSerializer.Serialize(item.message);
                 if(item.data is not null){
-                    json = JsonSerializer.Serialize(item.data);
+                    string json = JsonSerializer.Serialize(item.data);
+                    HttpContent content = new StringContent(json, Encoding.UTF8, "application/json");
+                    request.Content = content;
                 }
             
-                
-                HttpContent content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                request.Content = content;
-
+                Console.WriteLine($"{DateTime.Now.ToString("o")} [{item.level.ToString()}] {item.message}");
                 var response = await item.client.SendAsync(request);
-                //string responseBody = await response.Content.ReadAsStringAsync(); 
-                //var objSucesso = JsonSerializer.Deserialize<dynamic>(responseBody);
-
-                
-                Console.Write("");
-
             }
             catch (Exception ex)
             {
