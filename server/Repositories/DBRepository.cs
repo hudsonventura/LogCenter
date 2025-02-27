@@ -322,5 +322,12 @@ public class DBRepository : IDisposable
 
         return _conn.Query<ConfigTableObject>(query).ToList();
     }
+
+    internal Guid GetMaxID(string table)
+    {
+        string query = $"SELECT id FROM log_{table} ORDER BY id DESC LIMIT 1;";
+
+        return _conn.Query<Guid>(query).FirstOrDefault();
+    }
 }
 

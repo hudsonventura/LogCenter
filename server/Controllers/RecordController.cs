@@ -16,10 +16,12 @@ public class RecordController : ControllerBase
 {
 
     private readonly DBRepository _db;
+    private readonly LastRecordIDRepository _lastID;
 
-    public RecordController(DBRepository db)
+    public RecordController(DBRepository db, LastRecordIDRepository lastID)
     {
         _db = db;
+        _lastID = lastID;
     }
 
 
@@ -73,12 +75,12 @@ public class RecordController : ControllerBase
         }
         
         
-
+        Guid id = Guid.Empty;
         try
         {
             //tenta salvar na tabela do meu index.
             //se der certo, 200
-            var id = _db.Insert(table, level, correlation, message, json);
+            id = _db.Insert(table, level, correlation, message, json);
             return Created(id.ToString(), id);
         }
         catch (System.Exception error1)
@@ -107,13 +109,20 @@ public class RecordController : ControllerBase
                 _db.CreateDateTimeIndex(table);
                 Console.Write("OK! ... ");
 
-                var id = _db.Insert(table, level, correlation, message, json);
+                id = _db.Insert(table, level, correlation, message, json);
                 return Created($"/{table}/{id}", $"/{table}/{id}");
             }
             catch (System.Exception error2)
             {
                 Console.WriteLine(error2.Message);
                 return StatusCode(500, error2.Message);
+            }finally            
+            {
+                if (id != Guid.Empty)
+                {
+                    _lastID.SetMaxID(table, id);
+                }
+
             }
         }
         return StatusCode(500);
@@ -201,5 +210,21 @@ public class RecordController : ControllerBase
             return NoContent();
         }
         return Ok(response);
+    }
+
+
+
+    [HttpGet("/{table}/Last")]
+    public ActionResult<Guid> Last(string table)
+    {
+        try
+        {
+            return Ok(_lastID.GetMaxID(table));
+        }
+        catch (System.Exception error)
+        {
+            return BadRequest(error.Message);
+        }
+        
     }
 }
