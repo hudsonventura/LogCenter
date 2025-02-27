@@ -116,14 +116,15 @@ public class RecordController : ControllerBase
             {
                 Console.WriteLine(error2.Message);
                 return StatusCode(500, error2.Message);
-            }finally            
-            {
-                if (id != Guid.Empty)
-                {
-                    _lastID.SetMaxID(table, id);
-                }
-
             }
+        }
+        finally            
+        {
+            if (id != Guid.Empty)
+            {
+                _lastID.SetMaxID(table, id);
+            }
+
         }
         return StatusCode(500);
     }

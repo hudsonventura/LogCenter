@@ -17,6 +17,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 export function DateTimePicker({
   date,
   setDate,
+  func
 }: {
   date: Date | undefined;
   setDate: React.Dispatch<React.SetStateAction<Date | undefined>>;
@@ -145,6 +146,44 @@ export function DateTimePicker({
                 ))}
               </div>
             </ScrollArea>
+            
+            <div className="flex flex-col items-center p-2">
+              {
+                (func == 'to') ? 
+                  <Button
+                    variant="default"
+                    onClick={() => setDate(new Date())}
+                  >
+                    Now
+                  </Button>
+                  : ''
+              }
+            
+
+              <Button
+                variant="default"
+                onClick={() => {
+                  const now = new Date();
+                  now.setHours(now.getHours() - 1);
+                  setDate(now);
+                }}
+                className="mt-2"
+              >
+                Last 1h
+              </Button>
+
+              <Button
+                variant="default"
+                onClick={() => {
+                  const now = new Date();
+                  now.setDate(now.getDate() - 1);
+                  setDate(now);
+                }}
+                className="mt-2"
+              >
+                Last day
+              </Button>
+            </div>
           </div>
         </div>
       </PopoverContent>

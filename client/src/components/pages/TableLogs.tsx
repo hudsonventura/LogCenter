@@ -257,6 +257,8 @@ export const columns: ColumnDef<Record>[] = [
   },
 ];
 
+
+
 export function TableLogs() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -272,6 +274,7 @@ export function TableLogs() {
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
+  
   const table = useReactTable({
     data,
     columns,
@@ -337,6 +340,38 @@ export function TableLogs() {
   const goToChart = (data) => {
     navigate("/charts", { state: { data } });
   };
+
+  const [lastID, setLastID] = React.useState(null);
+  React.useEffect(() => {
+    loadLastID();
+    const interval = setInterval(loadLastID, 5000);
+    return () => clearInterval(interval);
+  }, []);
+  React.useEffect(() => {
+    console.log("LastID:", lastID);
+    setDateTo(new Date());
+    search();
+  }, [lastID]);
+  const loadLastID = async () => {
+    try {
+      const response = await api.get(`/${tabela}/Last`, {
+        headers: {
+          Timezone: timezone, // Adicione o valor correto aqui
+        },
+      });
+      if(lastID != response.data){
+        setLastID(response.data);
+        console.log("Response:", response.data);
+        
+      }
+      
+      
+    } catch (error) {
+      console.log(error);
+      toast.error("Erro ao carregar LastID");
+    }
+  };
+
 
   const params = new URLSearchParams(location.search);
 
@@ -442,6 +477,7 @@ export function TableLogs() {
           </div>
           <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
             <DateTimePicker
+              func="from"
               date={dateFrom}
               setDate={
                 handleDateFrom as React.Dispatch<
@@ -452,6 +488,7 @@ export function TableLogs() {
           </div>
           <div className="max-w-xs">
             <DateTimePicker
+              func="to"
               date={dateTo}
               setDate={
                 handleDateTo as React.Dispatch<
