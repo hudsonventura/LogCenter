@@ -342,11 +342,20 @@ export function TableLogs() {
   };
 
 
-  const [lastID, setLastID] = React.useState(null);
+  const [lastID, setLastID] = React.useState();
+  const [atualizarHorario, setAtualizarHorario] = React.useState<Date>();
   React.useEffect(() => {
     const interval = setInterval(loadLastID, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  React.useEffect(() => {
+      console.log("Horario atualziadooooooooooooooooooooooooo "+atualizarHorario);
+      const newDateTo = new Date();
+      newDateTo.setMinutes(newDateTo.getMinutes() + 2);
+      setDateTo(atualizarHorario); //AQUI
+  }, [atualizarHorario]);
+
   const loadLastID = async () => {
     try {
       const response = await api.get(`/${tabela}/Last`, {
@@ -354,12 +363,24 @@ export function TableLogs() {
           Timezone: timezone, // Adicione o valor correto aqui
         },
       });
-      if(dateTo >= new Date()){ //atualiza o horario to , se ele foi colocado para o horario atual ou maior.
+      //console.log("Agora: "+ new Date())     
+      //if(dateTo >= new Date()){ //atualiza o horario to , se ele foi colocado para o horario atual ou maior.
         const newDateTo = new Date();
         newDateTo.setMinutes(newDateTo.getMinutes() + 2);
-        setDateTo(newDateTo);
-        console.log("--------------------------------------");
-      }
+        await setAtualizarHorario(newDateTo);
+        //console.log("atualizarHorario: "+atualizarHorario)
+      //}
+      console.log("dateTo: "+dateTo)
+      
+      console.log(".")
+      console.log(".")
+      console.log(".")
+      console.log(".")
+      console.log(".")
+      console.log(".")
+      console.log(".")
+      console.log(".")
+
       if(lastID != response.data){ //se o lastID for diferente, recebeu uma atualização, então buscar atualização
         setLastID(response.data);
         //console.log("Response:", response.data);
@@ -422,7 +443,7 @@ export function TableLogs() {
   const [dateTo, setDateTo] = React.useState<Date>(() => {
     const datetime = params.getAll("datetime2")?.[0];
     const now = new Date();
-    now.setMinutes(now.getMinutes() + 1);
+    now.setMinutes(now.getMinutes() + 2);
     return datetime ? new Date(datetime) : now;
   });
   const handleDateTo = (date: Date) => {
@@ -622,3 +643,4 @@ export function TableLogs() {
     </>
   );
 }
+
