@@ -341,17 +341,12 @@ export function TableLogs() {
     navigate("/charts", { state: { data } });
   };
 
+
   const [lastID, setLastID] = React.useState(null);
   React.useEffect(() => {
-    loadLastID();
-    const interval = setInterval(loadLastID, 5000);
+    const interval = setInterval(loadLastID, 3000);
     return () => clearInterval(interval);
   }, []);
-  React.useEffect(() => {
-    console.log("LastID:", lastID);
-    setDateTo(new Date());
-    search();
-  }, [lastID]);
   const loadLastID = async () => {
     try {
       const response = await api.get(`/${tabela}/Last`, {
@@ -359,18 +354,28 @@ export function TableLogs() {
           Timezone: timezone, // Adicione o valor correto aqui
         },
       });
-      if(lastID != response.data){
-        setLastID(response.data);
-        console.log("Response:", response.data);
-        
+      if(dateTo >= new Date()){ //atualiza o horario to , se ele foi colocado para o horario atual ou maior.
+        const newDateTo = new Date();
+        newDateTo.setMinutes(newDateTo.getMinutes() + 2);
+        setDateTo(newDateTo);
+        console.log("--------------------------------------");
       }
-      
-      
+      if(lastID != response.data){ //se o lastID for diferente, recebeu uma atualização, então buscar atualização
+        setLastID(response.data);
+        //console.log("Response:", response.data);
+      }
     } catch (error) {
-      console.log(error);
+      //console.log(error);
       toast.error("Erro ao carregar LastID");
     }
+
   };
+  React.useEffect(() => {
+    //console.log("LastID:", lastID);
+    
+    search();
+  }, [lastID]);
+
 
 
   const params = new URLSearchParams(location.search);
@@ -417,6 +422,7 @@ export function TableLogs() {
   const [dateTo, setDateTo] = React.useState<Date>(() => {
     const datetime = params.getAll("datetime2")?.[0];
     const now = new Date();
+    now.setMinutes(now.getMinutes() + 1);
     return datetime ? new Date(datetime) : now;
   });
   const handleDateTo = (date: Date) => {
