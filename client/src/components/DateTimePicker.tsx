@@ -152,7 +152,11 @@ export function DateTimePicker({
                 (func == 'to') ? 
                   <Button
                     variant="default"
-                    onClick={() => setDate(new Date())}
+                    onClick={() => {
+                      const now = new Date();
+                      now.setMinutes(now.getMinutes() + 2);
+                      setDate(now);
+                    }}
                   >
                     Now
                   </Button>

@@ -350,13 +350,14 @@ export function TableLogs() {
   }, []);
 
   React.useEffect(() => {
-      console.log("Horario atualziadooooooooooooooooooooooooo "+atualizarHorario);
+    if(dateTo >= new Date()){
       const newDateTo = new Date();
       newDateTo.setMinutes(newDateTo.getMinutes() + 2);
-      setDateTo(atualizarHorario); //AQUI
+      setDateTo(atualizarHorario);
+    }
   }, [atualizarHorario]);
 
-  const loadLastID = async () => {
+  const loadLastID = async () => { //busca o lastID da tabela para ver deve-se atualizar
     try {
       const response = await api.get(`/${tabela}/Last`, {
         headers: {
@@ -370,30 +371,17 @@ export function TableLogs() {
         await setAtualizarHorario(newDateTo);
         //console.log("atualizarHorario: "+atualizarHorario)
       //}
-      console.log("dateTo: "+dateTo)
       
-      console.log(".")
-      console.log(".")
-      console.log(".")
-      console.log(".")
-      console.log(".")
-      console.log(".")
-      console.log(".")
-      console.log(".")
+
 
       if(lastID != response.data){ //se o lastID for diferente, recebeu uma atualização, então buscar atualização
         setLastID(response.data);
-        //console.log("Response:", response.data);
       }
     } catch (error) {
-      //console.log(error);
       toast.error("Erro ao carregar LastID");
     }
-
   };
-  React.useEffect(() => {
-    //console.log("LastID:", lastID);
-    
+  React.useEffect(() => { //nova busca no backend caso o lastID seja modificado
     search();
   }, [lastID]);
 
@@ -537,7 +525,7 @@ export function TableLogs() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="ml-auto">
-                  Colunas <ChevronDown className="ml-2 h-4 w-4" />
+                  Visible Columns <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
 
