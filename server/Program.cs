@@ -1,10 +1,12 @@
 using Microsoft.OpenApi.Models;
 using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 
 using DotNetEnv;
 using Npgsql;
 using server.Repositories;
 using server.BackgroundServices;
+using server.Domain;
 
 AppContext.SetSwitch("System.Globalization.Invariant", true);
 TimeZoneInfo utcZone = TimeZoneInfo.CreateCustomTimeZone("UTC", TimeSpan.Zero, "UTC", "UTC");
@@ -50,6 +52,8 @@ builder.Services.AddHostedService<RecyclingRecords>();
 
 builder.Services.AddSingleton<LastRecordIDRepository>();
 
+//Context for users, token and authorization
+builder.Services.AddDbContext<UserContext>();
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -97,6 +101,26 @@ app.UseCors(builder =>
             .AllowAnyMethod()
             .AllowAnyHeader();
 });
+
+//se o banco não existir, cria
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<UserContext>();
+    dbContext.Database.Migrate();
+
+    var adminUser = dbContext.Users.FirstOrDefault(u => u.email == "admin@logcenter.org");
+    if (adminUser == null)
+    {
+        var admin = new User
+        {
+            name = "admin",
+            email = "admin@logcenter.org",
+        };
+        admin.SetPassword("admin");
+        dbContext.Users.Add(admin);
+        dbContext.SaveChanges();
+    }
+}
 
 
 app.UseHttpsRedirection();

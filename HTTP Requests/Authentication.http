@@ -1,0 +1,9 @@
+# Check if it is logedin
+GET {{VITE_API_HOST}}/Login
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json; charset=utf-8
+date: Sat, 01 Mar 2025 21:12:46 GMT
+server: Kestrel
+transfer-encoding: chunked
