@@ -450,13 +450,22 @@ export function TableLogs() {
     <>
       <h1 className="py-5 mb-4 font-bold text-center">Logs from {tabela}</h1>
 
-      {/*<LogBarCharts rawData={data} />*/}
+
+      
       <div className="flex" style={{ margin: "5px" }}>
         <div className="w-1/2 px-2" >
-          <LogLineCharts rawData={data} />
+          <LogLineCharts rawData={data} dateFrom={dateFrom} dateTo={dateTo} />
         </div>
         <div className="w-1/2 px-2" >
           <LogPieCharts rawData={data} />
+        </div>
+      </div>
+      <div className="flex" style={{ margin: "5px" }}>
+        <div className="w-1/2 px-2" >
+          <LogLineCharts rawData={data} dateFrom={dateFrom} dateTo={dateTo} />
+        </div>
+        <div className="w-1/2 px-2" >
+          <LogBarCharts rawData={data} dateFrom={dateFrom} dateTo={dateTo} />
         </div>
       </div>
 

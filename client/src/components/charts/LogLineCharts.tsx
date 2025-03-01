@@ -24,9 +24,11 @@ type RawDataItem = {
 
 type ComponentProps = {
   rawData: RawDataItem[]
+  dateFrom: Date
+  dateTo: Date
 }
 
-// Define log levels with their corresponding names and colors
+// Definição dos níveis de log
 const logLevels = {
   1: { name: "Debug", color: "hsl(195, 70%, 50%)" },
   2: { name: "Info", color: "hsl(220, 70%, 50%)" },
@@ -35,8 +37,8 @@ const logLevels = {
   5: { name: "Critical", color: "hsl(300, 70%, 50%)" },
 }
 
-export default function Component({ rawData }: ComponentProps) {
-  // Transform and group the data by created_at and level
+export default function Component({ rawData, dateFrom, dateTo }: ComponentProps) {
+  // Transforma os dados e agrupa por tempo
   const chartData = rawData.reduce((acc, item) => {
     const date = new Date(item.created_at)
     const formattedTime = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -54,21 +56,45 @@ export default function Component({ rawData }: ComponentProps) {
     return acc
   }, [] as any[])
 
-  // Sort chartData by time in ascending order
+  // Ordena os dados por horário
   chartData.sort((a, b) => a.originalDate.getTime() - b.originalDate.getTime())
 
-  // Remove the originalDate field as it's no longer needed
+  // Remove campo auxiliar
   chartData.forEach((entry) => delete entry.originalDate)
 
-  // Get unique levels
-  const levels = Array.from(new Set(rawData.map((item) => item.level))).sort()
+  // Gera uma série contínua minuto a minuto
+  const generateCompleteTimeSeries = (start: Date, end: Date) => {
+    const timeSeries = new Map<string, any>()
+    let current = new Date(start)
 
-  // Generate chart config dynamically
+    while (current <= end) {
+      const formattedTime = current.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      timeSeries.set(formattedTime, {
+        time: formattedTime,
+        datetime: current.toISOString().slice(0, 10) + ' '+ current.toISOString().slice(11, 16),
+        ...Object.fromEntries(Object.keys(logLevels).map((level) => [`level${level}`, 0])),
+      })
+      current.setMinutes(current.getMinutes() + 1)
+    }
+    return timeSeries
+  }
+
+  // Preenche os minutos ausentes
+  const timeSeries = generateCompleteTimeSeries(dateFrom, dateTo)
+  chartData.forEach((entry) => {
+    if (timeSeries.has(entry.time)) {
+      timeSeries.set(entry.time, { ...timeSeries.get(entry.time), ...entry })
+    }
+  })
+
+  const completeChartData = Array.from(timeSeries.values())
+
+  // Configuração dinâmica do gráfico
+  const levels = Object.keys(logLevels).map(Number)
   const chartConfig: ChartConfig = levels.reduce((config, level) => {
-    const levelInfo = logLevels[level] || { name: `Nível ${level}`, color: `hsl(${level * 60}, 70%, 50%)` }
     config[`level${level}`] = {
-      label: levelInfo.name,
-      color: levelInfo.color,
+      label: logLevels[level].name,
+      color: logLevels[level].color,
     }
     return config
   }, {} as ChartConfig)
@@ -76,44 +102,43 @@ export default function Component({ rawData }: ComponentProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Dados por Nível de Log</CardTitle>
+        <CardTitle>Logs by time</CardTitle>
         <CardDescription>
-          {new Date(rawData[0]?.created_at).toLocaleDateString("pt-BR", {
+          {new Date(rawData[0]?.created_at).toLocaleDateString("en-US", {
             day: "2-digit",
-            month: "long",
+            month: "numeric",
             year: "numeric",
           })}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="time" tickLine={false} tickMargin={10} axisLine={false} />
-              <YAxis />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <ChartLegend content={<ChartLegendContent />} />
-              {levels.map((level) => (
-                <Line
-                  key={`level${level}`}
-                  type="monotone"
-                  dataKey={`level${level}`}
-                  stroke={logLevels[level]?.color || `hsl(${level * 60}, 70%, 50%)`}
-                  strokeWidth={2}
-                  dot={false}
-                />
-              ))}
-            </LineChart>
-          
+          <LineChart data={completeChartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="datetime" tickLine={false} tickMargin={10} axisLine={false} 
+              
+            />
+            <YAxis />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            {levels.map((level) => (
+              <Line
+                key={`level${level}`}
+                type="monotone"
+                dataKey={`level${level}`}
+                stroke={logLevels[level].color}
+                strokeWidth={2}
+                dot={false}
+              />
+            ))}
+          </LineChart>
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 font-medium leading-none">
-        Total records: {rawData.length} <TrendingUp className="h-4 w-4" />
+          Total records: {rawData.length} <TrendingUp className="h-4 w-4" />
         </div>
       </CardFooter>
     </Card>
   )
 }
-
