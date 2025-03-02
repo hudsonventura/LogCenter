@@ -1,11 +1,3 @@
-#variables
-@table=integration_tests
-@Timezone=America/Sao_Paulo
-@token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5AbG9nY2VudGVyLm9yZyIsInRhYmxlIjoiaW50ZXJmYWNlIiwiZXhwIjoxNzQxMDIzMjQzLCJpc3MiOiJTZXVJc3N1ZXIiLCJhdWQiOiJTZXVBdWRpZW5jZSJ9.USAZOr_FItH0iE9wkp48_7z3YtCc-bSqLnAsVOxts2g
-@table_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5AbG9nY2VudGVyLm9yZyIsInRhYmxlcyI6WyJ1c2VycyIsIm9yZGVycyIsInByb2R1Y3RzIl0sImV4cCI6MTc3MjM2NjQwMCwiaXNzIjoiU2V1SXNzdWVyIiwiYXVkIjoiU2V1QXVkaWVuY2UifQ.NVVtxi09jw-2orjLCQQzYElxrTiqyCytqRC1S9F6E4A
-
-
-###
 # Do the login
 POST {{VITE_API_HOST}}/Login
 Content-Type: application/json
@@ -17,14 +9,15 @@ Content-Type: application/json
 ###
 # Check token validation
 GET {{VITE_API_HOST}}/CheckToken
-Authorization: Bearer {{table_token}}
+Authorization: Bearer {{integration_token}}
 ###
 # Generate token to access the tables
 POST {{VITE_API_HOST}}/GenerateToken
-Authorization: Bearer {{token}}
+Authorization: Bearer {{interface_token}}
 Content-Type: application/json
 
 {
   "expires": "2026-03-01T12:00:00Z",
+  "owner": "sistem X", 
   "tables": ["users", "orders", "products"]
 }

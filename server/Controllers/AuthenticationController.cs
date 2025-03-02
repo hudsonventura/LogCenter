@@ -50,7 +50,7 @@ public class AuthenticationController : ControllerBase
                 Domain.User.LoginOrPasswordIncorrect();
             }
 
-            return Ok(_tokenRepository.GenerateToken(dto.expires, user.email, dto.tables));
+            return Ok(_tokenRepository.GenerateToken(dto.expires, user.email, dto.owner, dto.tables));
         }
         catch (System.Exception error)
         {
@@ -79,4 +79,4 @@ public class AuthenticationController : ControllerBase
 
 public record LoginDTO(string email, string password);
 
-public record GenerateTokenDTO(DateTime expires, List<string> tables);
+public record GenerateTokenDTO(DateTime expires, string owner, List<string> tables);

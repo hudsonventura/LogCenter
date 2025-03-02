@@ -13,21 +13,22 @@ public class TokenRepository
         string secretJWTKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? throw new Exception("JWT_KEY not found");
         _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretJWTKey));
     }
-    public string GenerateToken(DateTime expires, string username, string roles)
+    public string GenerateToken(DateTime expires, string email, string roles)
     {
         var role = new List<string> { roles };
-        return GenerateToken(expires, username, role);
+        return GenerateToken(expires, email, email, role);
     }
 
-    public string GenerateToken(DateTime expires, string username, List<string> roles)
+    public string GenerateToken(DateTime expires, string email, string owner, List<string> roles)
     {
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, username),
+            new Claim(ClaimTypes.Name, email),
+            new Claim("owner", owner),
         };
         foreach (var role in roles)
         {
-            claims.Add(new Claim("tables", role)); // Adiciona o claim "role" com o valor
+            claims.Add(new Claim("tables", role));
         }
 
         var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256);
