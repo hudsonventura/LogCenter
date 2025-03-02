@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using server.Domain;
 using server.Repositories;
@@ -7,6 +8,7 @@ namespace server.Controllers;
 /// <summary>
 /// Operations under a table
 /// </summary>
+[Authorize]
 [Route("[controller]")]
 public class TableController : Controller
 {

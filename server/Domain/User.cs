@@ -22,10 +22,21 @@ public class User
     {
         return this.password == HashPassword(password);
     }
+    
     private string HashPassword(string password){
+        return HashPassword(id, password);
+    }
+
+    public static string HashPassword(Guid id, string password){
         var passwordWithId = id.ToString() + password + id.ToString();
         var bytes = System.Text.Encoding.UTF8.GetBytes(passwordWithId);
         var hash = System.Security.Cryptography.SHA512.HashData(bytes);
         return Convert.ToBase64String(hash);
     }
+
+    internal static void LoginOrPasswordIncorrect()
+    {
+        throw new Exception("Email or password is incorrect");
+    }
+    
 }

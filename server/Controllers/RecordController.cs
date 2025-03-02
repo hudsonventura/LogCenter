@@ -5,12 +5,14 @@ using Npgsql;
 using server.Repositories;
 using System.Text.Json.Nodes;
 using server.Domain;
+using Microsoft.AspNetCore.Authorization;
 
 namespace server.Controllers;
 
 /// <summary>
 /// DOC 1
 /// </summary>
+[Authorize]
 [ApiController]
 public class RecordController : ControllerBase
 {

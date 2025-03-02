@@ -7,6 +7,10 @@ using Npgsql;
 using server.Repositories;
 using server.BackgroundServices;
 using server.Domain;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Text.Json;
 
 AppContext.SetSwitch("System.Globalization.Invariant", true);
 TimeZoneInfo utcZone = TimeZoneInfo.CreateCustomTimeZone("UTC", TimeSpan.Zero, "UTC", "UTC");
@@ -51,6 +55,7 @@ builder.Services.AddScoped<DBRepository>();
 builder.Services.AddHostedService<RecyclingRecords>();
 
 builder.Services.AddSingleton<LastRecordIDRepository>();
+builder.Services.AddSingleton<TokenRepository>();
 
 //Context for users, token and authorization
 builder.Services.AddDbContext<UserContext>();
@@ -70,6 +75,62 @@ builder.Services.AddControllers();
 
 string listen = Environment.GetEnvironmentVariable("ASPNETCORE_LISTEN") ?? "http://localhost:9200";
 builder.WebHost.UseUrls(listen);
+
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        string secretJWTKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? throw new Exception("JWT_KEY not found");
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            //ValidateIssuer = true,
+            //ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "SeuIssuer",
+            ValidAudience = "SeuAudience",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretJWTKey))
+        };
+		options.Events = new JwtBearerEvents
+        {
+            OnChallenge = async context =>
+            {
+                // Impede que a resposta padrão do OnChallenge seja executada
+                context.HandleResponse();
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/json";
+                var errorResponse = new
+                {
+                    StatusCode = StatusCodes.Status401Unauthorized,
+                    Message = "Bearer token is missing or invalid. Check your header Authorization or generate a new token",
+                    Timestamp = DateTime.UtcNow
+                };
+
+                await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse));
+            },
+            OnAuthenticationFailed = async context =>
+            {
+                if (context.Exception is SecurityTokenExpiredException)
+                {
+                    //context.HandleResponse();
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    context.Response.ContentType = "application/json";
+                    var errorResponse = new
+                    {
+                        StatusCode = StatusCodes.Status401Unauthorized,
+                        Message = "Token de autenticação ausente ou inválido.",
+                        Timestamp = DateTime.UtcNow
+                    };
+
+                    //await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse));
+                    await Task.CompletedTask;
+                }
+            },
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 
 var app = builder.Build();
@@ -124,6 +185,10 @@ using (var scope = app.Services.CreateScope())
 
 
 app.UseHttpsRedirection();
+
+// Ativar autenticação e autorização
+app.UseAuthentication();
+app.UseAuthorization();
 
 
 app.MapControllers();
