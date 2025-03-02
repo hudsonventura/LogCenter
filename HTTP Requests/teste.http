@@ -1,24 +1,32 @@
 #variables
-@table=test
+@table=orders
 @Timezone=America/Sao_Paulo
+@table_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5AbG9nY2VudGVyLm9yZyIsInRhYmxlcyI6WyJ1c2VycyIsIm9yZGVycyIsInByb2R1Y3RzIl0sImV4cCI6MTc3MjM2NjQwMCwiaXNzIjoiU2V1SXNzdWVyIiwiYXVkIjoiU2V1QXVkaWVuY2UifQ.NVVtxi09jw-2orjLCQQzYElxrTiqyCytqRC1S9F6E4A
 ###
 # Save an object
 POST {{VITE_API_HOST}}/{{table}}
+Authorization: Bearer {{table_token}}
 Timezone: {{Timezone}}
 Content-Type: application/json
+Message: Just a test
+Correlation: apenas um teste
+Level: 1
 
 {
-    "example": 123,
-    "objject": "test"
+    "teste": "aohbah 5"
 }
 ###
 # ListTables created
 GET {{VITE_API_HOST}}/ListTables
 ###
 # Get one object by ID
-GET {{VITE_API_HOST}}/{{table}}/6548173b-7bc0-0000-0000-80dcbf7b0185
+GET {{VITE_API_HOST}}/{{table}}/654fe454-7740-0000-0000-7b7946d82ffe
 Timezone: {{Timezone}}
 ###
 # List objects created in a table by time
-GET {{VITE_API_HOST}}/{{table}}?datetime1=2025-02-19 15:38&datetime2=2025-02-19 23:39
+GET {{VITE_API_HOST}}/{{table}}?datetime1=2025-02-19 15:38&datetime2=2025-03-19 23:39
+Timezone: {{Timezone}}
+###
+# ListTables created
+GET {{VITE_API_HOST}}/{{table}}/Last
 Timezone: {{Timezone}}

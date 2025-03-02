@@ -1,9 +1,30 @@
-# Check if it is logedin
-GET {{VITE_API_HOST}}/Login
+#variables
+@table=integration_tests
+@Timezone=America/Sao_Paulo
+@token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5AbG9nY2VudGVyLm9yZyIsInRhYmxlIjoiaW50ZXJmYWNlIiwiZXhwIjoxNzQxMDIzMjQzLCJpc3MiOiJTZXVJc3N1ZXIiLCJhdWQiOiJTZXVBdWRpZW5jZSJ9.USAZOr_FItH0iE9wkp48_7z3YtCc-bSqLnAsVOxts2g
+@table_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5AbG9nY2VudGVyLm9yZyIsInRhYmxlcyI6WyJ1c2VycyIsIm9yZGVycyIsInByb2R1Y3RzIl0sImV4cCI6MTc3MjM2NjQwMCwiaXNzIjoiU2V1SXNzdWVyIiwiYXVkIjoiU2V1QXVkaWVuY2UifQ.NVVtxi09jw-2orjLCQQzYElxrTiqyCytqRC1S9F6E4A
 
-HTTP/1.1 200  - OK
-connection: close
-content-type: application/json; charset=utf-8
-date: Sat, 01 Mar 2025 21:12:46 GMT
-server: Kestrel
-transfer-encoding: chunked
+
+###
+# Do the login
+POST {{VITE_API_HOST}}/Login
+Content-Type: application/json
+
+{
+    "email": "admin@logcenter.org",
+    "password": "admin"
+}
+###
+# Check token validation
+GET {{VITE_API_HOST}}/CheckToken
+Authorization: Bearer {{table_token}}
+###
+# Generate token to access the tables
+POST {{VITE_API_HOST}}/GenerateToken
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "expires": "2026-03-01T12:00:00Z",
+  "tables": ["users", "orders", "products"]
+}

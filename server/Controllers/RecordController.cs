@@ -19,11 +19,13 @@ public class RecordController : ControllerBase
 
     private readonly DBRepository _db;
     private readonly LastRecordIDRepository _lastID;
+    private readonly TokenRepository _token;
 
-    public RecordController(DBRepository db, LastRecordIDRepository lastID)
+    public RecordController(DBRepository db, LastRecordIDRepository lastID, TokenRepository token)
     {
         _db = db;
         _lastID = lastID;
+        _token = token;
     }
 
 
@@ -55,6 +57,10 @@ public class RecordController : ControllerBase
     {
         table = table.Replace(" ", "_").ToLower();
         _db.ValidateTable(table);
+
+        if(!_token.CheckTableAccess(User, table)){
+            return Unauthorized();
+        }
         
         string json = null;
         if(!(obj is JsonElement { ValueKind: JsonValueKind.Null }) && obj is not null) {
@@ -151,6 +157,9 @@ public class RecordController : ControllerBase
         {
             table = table.Replace(" ", "_").ToLower();
             _db.TableExists(table);
+            if(!_token.CheckTableAccess(User, table)){
+                return Unauthorized();
+            }
         }
         catch (System.Exception error)
         {

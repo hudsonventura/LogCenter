@@ -13,13 +13,22 @@ public class TokenRepository
         string secretJWTKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? throw new Exception("JWT_KEY not found");
         _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretJWTKey));
     }
-    public string GenerateToken(string username, string role)
+    public string GenerateToken(DateTime expires, string username, string roles)
     {
-        var claims = new[]
+        var role = new List<string> { roles };
+        return GenerateToken(expires, username, role);
+    }
+
+    public string GenerateToken(DateTime expires, string username, List<string> roles)
+    {
+        var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, username),
-            new Claim(ClaimTypes.Role, role)
         };
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim("tables", role)); // Adiciona o claim "role" com o valor
+        }
 
         var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256);
 
@@ -27,10 +36,34 @@ public class TokenRepository
             issuer: "SeuIssuer",
             audience: "SeuAudience",
             claims: claims,
-            expires: DateTime.Now,
+            expires: expires,
             signingCredentials: creds
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    public bool CheckTableAccess(ClaimsPrincipal User, string table){
+        var tables = GetAccess(User);
+        if(tables.Contains(table)){
+            return true;
+        }
+        return false;
+    }
+
+    public List<string> GetAccess(ClaimsPrincipal User){
+        return User.Claims.Where(c => c.Type == "tables").ToList().Select(x => x.Value).ToList();
+    }
+
+    internal DateTime GetExpiration(ClaimsPrincipal User)
+    {
+        var expClaim = User.Claims.FirstOrDefault(c => c.Type == "exp")?.Value;
+        if (expClaim != null && long.TryParse(expClaim, out var expUnix))
+        {
+            DateTime expirationTime  = DateTimeOffset.FromUnixTimeSeconds(expUnix).UtcDateTime;
+            return expirationTime;
+        }
+        return DateTime.MinValue;
+    }
 }
+

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using server.Domain;
 using server.Repositories;
 
@@ -17,19 +18,19 @@ public class AuthenticationController : ControllerBase
         _tokenRepository = tokenRepository;
     }
 
-    [HttpGet("/Login")]
-    public IActionResult Login([FromBody] LoginDTO loginDTO)
+    [HttpPost("/Login")]
+    public IActionResult Login([FromBody] LoginDTO dto)
     {
         try
         {
-            User user = _userContext.Users.Where(x => x.email == loginDTO.email).FirstOrDefault();
+            User user = _userContext.Users.Where(x => x.email == dto.email).FirstOrDefault();
             if(user is null){
                 Domain.User.LoginOrPasswordIncorrect();
             }
-            if(!user.CheckPassword(loginDTO.password)){
+            if(!user.CheckPassword(dto.password)){
                 Domain.User.LoginOrPasswordIncorrect();
             }
-            return Ok(_tokenRepository.GenerateToken(user.email, "teste"));
+            return Ok(_tokenRepository.GenerateToken(DateTime.UtcNow.AddDays(1), user.email, "interface"));
         }
         catch (System.Exception error)
         {
@@ -38,14 +39,44 @@ public class AuthenticationController : ControllerBase
         
     }
 
+
     [Authorize]
-    [HttpGet("/Logged")]
-    public IActionResult Logged(){
-        var username = User.Identity.Name;
-        var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-        return Ok(username);
+    [HttpPost("/generateToken")]
+    public IActionResult GenerateToken([FromBody] GenerateTokenDTO dto){
+        try
+        {
+            User user = _userContext.Users.Where(x => x.email == User.Identity.Name).FirstOrDefault();
+            if(user is null){
+                Domain.User.LoginOrPasswordIncorrect();
+            }
+
+            return Ok(_tokenRepository.GenerateToken(dto.expires, user.email, dto.tables));
+        }
+        catch (System.Exception error)
+        {
+            return BadRequest(error.Message);
+        }
+    }
+
+    [Authorize]
+    [HttpGet("/CheckToken")]
+    public IActionResult CheckToken(){
+        var email = User.Identity.Name;
+        var tables = _tokenRepository.GetAccess(User);
+        var expClaim = _tokenRepository.GetExpiration(User); 
+        if (expClaim != DateTime.MinValue && expClaim > DateTime.UtcNow)
+        {
+            return Ok(new {
+                exp = expClaim,
+                tables = tables
+            });
+        }
+
+        return BadRequest();
     }
 
 }
 
 public record LoginDTO(string email, string password);
+
+public record GenerateTokenDTO(DateTime expires, List<string> tables);
