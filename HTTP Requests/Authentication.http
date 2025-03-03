@@ -19,5 +19,5 @@ Content-Type: application/json
 {
   "expires": "2026-03-01T12:00:00Z",
   "owner": "sistem X", 
-  "tables": ["users", "orders", "products"]
+  "tables": ["integration_tests", "orders", "products"]
 }

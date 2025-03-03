@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "@/services/api";
+import EnsureLogin from "../EnsureLogin";
 
 const FormSchema = z.object({
   delete: z.boolean().default(false),
@@ -88,6 +89,7 @@ export function TableConfigs() {
   return (
     <Form {...form}
     >
+      <EnsureLogin />
       <h1 className="text-3xl font-bold mb-4 text-center mt-5">
         Table {tableName.toUpperCase()} Configs{" "}
       </h1>

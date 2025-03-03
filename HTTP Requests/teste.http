@@ -1,20 +1,15 @@
-#variables
-@table=orders
-@Timezone=America/Sao_Paulo
-@table_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5AbG9nY2VudGVyLm9yZyIsInRhYmxlcyI6WyJ1c2VycyIsIm9yZGVycyIsInByb2R1Y3RzIl0sImV4cCI6MTc3MjM2NjQwMCwiaXNzIjoiU2V1SXNzdWVyIiwiYXVkIjoiU2V1QXVkaWVuY2UifQ.NVVtxi09jw-2orjLCQQzYElxrTiqyCytqRC1S9F6E4A
-###
 # Save an object
 POST {{VITE_API_HOST}}/{{table}}
-Authorization: Bearer {{table_token}}
-Timezone: {{Timezone}}
+Authorization: Bearer {{integration_token}}
+Timezone: {{timezone}}
 Content-Type: application/json
 Message: Just a test
 Correlation: apenas um teste
 Level: 1
 
 {
-    "teste": "aohbah 5"
-}
+    "teste": "aohbah 1/2"
+} 
 ###
 # ListTables created
 GET {{VITE_API_HOST}}/ListTables

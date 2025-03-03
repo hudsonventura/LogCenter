@@ -11,8 +11,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
+import   HeaderBar  from "@/components/HeaderBar";
+import EnsureLogin from "../EnsureLogin";
 
-export function ListTables() {
+export function Tables() {
   const [data, setData] = useState([]);
   const navigate = useNavigate();
 
@@ -46,7 +48,13 @@ export function ListTables() {
 
   return (
     <>
-      <h1 className="font-bold mb-5 text-center mt-5">Tabelas</h1>
+      <EnsureLogin />
+      <HeaderBar />
+      <h1 className="font-bold mb-5 text-center mt-5">Tables</h1>
+      
+      
+      
+
       <div className="flex flex-col items-center justify-center h-full">
         <div className="flex flex-wrap gap-4 text-center ">
           {data.map((item, index) => (
@@ -77,7 +85,7 @@ export function ListTables() {
                   className="w-full"
                   onClick={() => consultarTabela(item.table_name)}
                 >
-                  Consultar Logs
+                  See Logs
                 </Button>
               </CardFooter>
             </Card>

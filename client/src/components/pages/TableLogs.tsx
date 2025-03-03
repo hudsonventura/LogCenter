@@ -56,6 +56,8 @@ import LogBarCharts from "../charts/LogBarCharts";
 import LogLineCharts from "../charts/LogLineCharts";
 import LogPieCharts from "../charts/LogPieCharts";
 import HitsHistogram from "../charts/HitsHistogram";
+import   HeaderBar  from "@/components/HeaderBar";
+import EnsureLogin from "../EnsureLogin";
 
 export type Record = {
   id: bigint;
@@ -448,11 +450,13 @@ export function TableLogs() {
 
   return (
     <>
+      <HeaderBar />
+      <EnsureLogin />
       <h1 className="py-5 mb-4 font-bold text-center">Logs from {tabela}</h1>
 
-
       
-      <div className="flex" style={{ margin: "5px" }}>
+      
+      {/* <div className="flex" style={{ margin: "5px" }}>
         <div className="w-1/2 px-2" >
           <LogLineCharts rawData={data} dateFrom={dateFrom} dateTo={dateTo} />
         </div>
@@ -467,7 +471,7 @@ export function TableLogs() {
         <div className="w-1/2 px-2" >
           <LogBarCharts rawData={data} dateFrom={dateFrom} dateTo={dateTo} />
         </div>
-      </div>
+      </div> */}
 
       <div className="w-full">
         <div className="flex items-center py-4">
