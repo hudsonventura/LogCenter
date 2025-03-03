@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { useEffect, useState } from "react";
+import { ModalTokenGeneration } from "./ModalTokenGeneration";
 
 export default function HeaderBar() {
   const navigate = useNavigate();
@@ -10,6 +12,26 @@ export default function HeaderBar() {
   const handleLogoff = () => {
     navigate("/logoff"); // Redireciona sem recarregar a página
   };
+
+  const [userData, setUserData] = useState(null);
+  const decodeJWT = (token) => {
+    try {
+      const base64Url = token.split(".")[1]; // Pegando a parte do payload
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      return JSON.parse(atob(base64));
+    } catch (error) {
+      console.error("Erro ao decodificar o JWT:", error);
+      return null;
+    }
+  };
+  useEffect(() => {
+    const token = sessionStorage.getItem("token"); // Obtendo do sessionStorage
+    if (token) {
+      const decodedData = decodeJWT(token);
+      setUserData(decodedData);
+      //console.log("Dados do JWT:", decodedData.owner);
+    }
+  }, []);
 
   return (
     <header className="bg-white shadow-md p-4 flex items-center justify-between">
@@ -30,14 +52,17 @@ export default function HeaderBar() {
         <PopoverContent className="min-w-[200px]">
           <div>
             <div className="space-y-1">
-              <h4 className="text-sm font-medium leading-none">My name</h4>
-              <p className="text-sm text-muted-foreground">
+              <h2>Logged as </h2>
+              <h4 className="text-sm font-medium leading-none">
+                {userData !== null ? userData.owner : ""}
+              </h4>
+              {/* <p className="text-sm text-muted-foreground">
                 An open-source UI component library.
-              </p>
+              </p> */}
             </div>
             <Separator className="my-4" />
             <div className="flex h-5 items-center space-x-4 text-sm">
-              <div>Profile</div>
+              <ModalTokenGeneration />
               <Separator orientation="vertical" />
               <div>Docs</div>
               <Separator orientation="vertical" />
