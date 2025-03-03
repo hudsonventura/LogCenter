@@ -115,10 +115,15 @@ export function ModalTokenGeneration() {
           </Button>
         </div>
         <div className="flex items-center gap-2" style={{ wordBreak: "break-word" }}>
-          {tokenGerated}
-          <Button variant="default" onClick={handleCopy}>
-            Copiar
-          </Button>
+          {tokenGerated && (
+            <>
+                <Button variant="default" onClick={handleCopy}>
+                    Copy
+                </Button>
+                {tokenGerated.slice(0, 80)}...
+              
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
