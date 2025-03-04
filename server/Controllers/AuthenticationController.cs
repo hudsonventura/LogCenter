@@ -75,6 +75,21 @@ public class AuthenticationController : ControllerBase
         return BadRequest();
     }
 
+    [Authorize]
+    [HttpPost("/ResetPassword")]
+    public IActionResult ResetPassword([FromBody] ResetPasswordDTO dto){
+        var email = User.Identity.Name;
+        var user = _userContext.Users.Where(x => x.email == email).FirstOrDefault();
+        if(user is null){
+            return BadRequest("User not found");
+        }
+        user.SetPassword(dto.password);
+        _userContext.SaveChanges();
+        return Ok();
+    }
+
+    public record ResetPasswordDTO(string password);
+    
 }
 
 public record LoginDTO(string email, string password);

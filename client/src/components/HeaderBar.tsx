@@ -5,6 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
 import { ModalTokenGeneration } from "./ModalTokenGeneration";
+import { ModalResetPassword } from "./ModalResetPassword";
 
 export default function HeaderBar() {
   const navigate = useNavigate();
@@ -64,7 +65,13 @@ export default function HeaderBar() {
             <div className="flex h-5 items-center space-x-4 text-sm">
               <ModalTokenGeneration />
               <Separator orientation="vertical" />
-              <div>Docs</div>
+              <Separator orientation="vertical" />
+              <ModalResetPassword />
+            </div>
+            <Separator className="my-4" />
+            <div className="flex h-5 items-center space-x-4 text-sm">
+              <Separator orientation="vertical" />
+              <a href="https://github.com/hudsonventura/LogCenter" target="_blank" rel="noopener noreferrer">Docs</a>
               <Separator orientation="vertical" />
               <button onClick={handleLogoff} className="text-sm text-red-500">
                 Logoff
