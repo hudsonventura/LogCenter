@@ -30,16 +30,20 @@ public class AuthenticationController : ControllerBase
             if(!user.CheckPassword(dto.password)){
                 Domain.User.LoginOrPasswordIncorrect();
             }
-            return Ok(_tokenRepository.GenerateToken(DateTime.UtcNow.AddDays(1), user.email, "interface"));
+            return Ok(_tokenRepository.GenerateToken(DateTime.UtcNow.AddDays(1), user.email, user.name, "interface"));
         }
         catch (System.Exception error)
         {
             return BadRequest(error.Message);
-        }
-        
+        } 
     }
+    public record LoginDTO(string email, string password);
 
-
+    /// <summary>
+    /// Generate  a token to a sistem. Here you are logged and genrating a token to a system log here
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
     [Authorize]
     [HttpPost("/generateToken")]
     public IActionResult GenerateToken([FromBody] GenerateTokenDTO dto){
@@ -50,13 +54,16 @@ public class AuthenticationController : ControllerBase
                 Domain.User.LoginOrPasswordIncorrect();
             }
 
-            return Ok(_tokenRepository.GenerateToken(dto.expires, user.email, dto.owner, dto.tables));
+            return Ok(_tokenRepository.GenerateToken(dto.expires, user.email, dto.name, dto.tables));
         }
         catch (System.Exception error)
         {
             return BadRequest(error.Message);
         }
     }
+    public record GenerateTokenDTO(DateTime expires, string name, List<string> tables);
+
+
 
     [Authorize]
     [HttpGet("/CheckToken")]
@@ -76,8 +83,8 @@ public class AuthenticationController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost("/ResetPassword")]
-    public IActionResult ResetPassword([FromBody] ResetPasswordDTO dto){
+    [HttpPost("/ChangePassword")]
+    public IActionResult ChangePassword([FromBody] ChangePasswordDTO dto){
         var email = User.Identity.Name;
         var user = _userContext.Users.Where(x => x.email == email).FirstOrDefault();
         if(user is null){
@@ -87,11 +94,22 @@ public class AuthenticationController : ControllerBase
         _userContext.SaveChanges();
         return Ok();
     }
+    public record ChangePasswordDTO(string password);
 
-    public record ResetPasswordDTO(string password);
+
+
+    [Authorize]
+    [HttpPost("/CreateUser")]
+    public IActionResult ChangeEmail([FromBody] CreateUserDTO dto){
+        User newUser = new User(){
+            email = dto.email,
+            name = dto.name
+        };
+        newUser.SetPassword(dto.password);
+        _userContext.Users.Add(newUser);
+        _userContext.SaveChanges();
+        return Ok();
+    }
+    public record CreateUserDTO(string email, string name, string password);
     
 }
-
-public record LoginDTO(string email, string password);
-
-public record GenerateTokenDTO(DateTime expires, string owner, List<string> tables);

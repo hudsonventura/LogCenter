@@ -9,12 +9,12 @@ import { useState } from "react"
 import api from "@/services/api"
 import { toast } from "sonner"
 
-export function ModalResetPassword() {
+export function ModalChangePassword() {
 	const [isOpen, setIsOpen] = useState(false)
 	const [password, setPassword] = useState("")
 	const [confirmPassword, setConfirmPassword] = useState("")
 
-	const handleResetPassword = async () => {
+	const handleChangePassword = async () => {
 		if (!password || !confirmPassword) {
 			alert("Please fill in all fields.")
 			return
@@ -26,26 +26,26 @@ export function ModalResetPassword() {
 		}
 
 		try {
-			const response = await api.post("/ResetPassword", {
+			const response = await api.post("/ChangePassword", {
 				password,
 			})
 
 			if (response.status === 200) {
-				toast.success("Password reset successfully!")
+				toast.success("Password changed successfully!")
 				setIsOpen(false)
 			} else {
-				alert("Error resetting password. Please try again.")
+				alert("Error changing password. Please try again.")
 			}
 		} catch (error) {
-			console.error("Error resetting password:", error)
-			alert("Error resetting password. Please try again.")
+			console.error("Error changing password:", error)
+			alert("Error changing password. Please try again.")
 		}
 	}
 
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
-				<span style={{ cursor: "pointer" }}>Reset Password</span>
+				<span style={{ cursor: "pointer" }}>Change Password</span>
 			</PopoverTrigger>
 			<PopoverContent className="p-4">
 				<div className="grid gap-4 py-4">
@@ -77,8 +77,8 @@ export function ModalResetPassword() {
 				</div>
 				<div className="flex justify-end gap-4">
 					<Button onClick={() => setIsOpen(false)}>Cancel</Button>
-					<Button variant="default" onClick={handleResetPassword}>
-						Reset
+					<Button variant="default" onClick={handleChangePassword}>
+						Change!
 					</Button>
 				</div>
 			</PopoverContent>

@@ -13,18 +13,18 @@ public class TokenRepository
         string secretJWTKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? throw new Exception("JWT_KEY not found");
         _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretJWTKey));
     }
-    public string GenerateToken(DateTime expires, string email, string roles)
+    public string GenerateToken(DateTime expires, string email, string name, string roles)
     {
         var role = new List<string> { roles };
-        return GenerateToken(expires, email, email, role);
+        return GenerateToken(expires, email, name, role);
     }
 
-    public string GenerateToken(DateTime expires, string email, string owner, List<string> roles)
+    public string GenerateToken(DateTime expires, string email, string name, List<string> roles)
     {
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, email),
-            new Claim("owner", owner),
+            new Claim("name", name),
         };
         foreach (var role in roles)
         {

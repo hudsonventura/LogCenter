@@ -5,7 +5,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
 import { ModalTokenGeneration } from "./ModalTokenGeneration";
-import { ModalResetPassword } from "./ModalResetPassword";
+import { ModalUserCreation } from "./ModalUserCreation";
+import { ModalChangePassword } from "./ModalChangePassword";
 
 export default function HeaderBar() {
   const navigate = useNavigate();
@@ -29,8 +30,11 @@ export default function HeaderBar() {
     const token = sessionStorage.getItem("token"); // Obtendo do sessionStorage
     if (token) {
       const decodedData = decodeJWT(token);
+      decodedData.email = decodedData["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
       setUserData(decodedData);
-      //console.log("Dados do JWT:", decodedData.owner);
+      //console.log(decodedData["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"]);
+      
+      //console.log("Dados do JWT:", decodedData);
     }
   }, []);
 
@@ -53,9 +57,9 @@ export default function HeaderBar() {
         <PopoverContent className="min-w-[200px]">
           <div>
             <div className="space-y-1">
-              <h2>Logged as </h2>
+              <h2>{userData !== null ? userData.name : ""} <p className="text-sm text-muted-foreground">{userData !== null ? userData.email : ""}</p> </h2>
               <h4 className="text-sm font-medium leading-none">
-                {userData !== null ? userData.owner : ""}
+
               </h4>
               {/* <p className="text-sm text-muted-foreground">
                 An open-source UI component library.
@@ -65,8 +69,9 @@ export default function HeaderBar() {
             <div className="flex h-5 items-center space-x-4 text-sm">
               <ModalTokenGeneration />
               <Separator orientation="vertical" />
+              <ModalUserCreation />
               <Separator orientation="vertical" />
-              <ModalResetPassword />
+              <ModalChangePassword />
             </div>
             <Separator className="my-4" />
             <div className="flex h-5 items-center space-x-4 text-sm">

@@ -4,25 +4,21 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useEffect, useState } from "react"
-import { Calendar } from "@/components/ui/calendar"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
+import { useState } from "react"
+
 import api from "@/services/api"
 import { toast } from "sonner"
-import { FormControl } from "./ui/form"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@radix-ui/react-select"
+
 import { ComboBoxTimeExpiration } from "./ComboBoxTimeExpiration"
 
 export function ModalTokenGeneration() {
 	const [isOpen, setIsOpen] = useState(false)
 	const [tables, setTables] = useState("")
+	const [name, setName] = useState("")
 	const [date, setDate] = useState<Date | undefined>(new Date());
-	const [year, setYear] = useState(new Date().getFullYear());
 
 
 
-	const [isCalendarOpen, setIsCalendarOpen] = useState(false)
 	const [generatedToken, setGeneratedToken] = useState("")
 	const [tokenGerated, setTokenGerated] = useState(false)
 
@@ -36,7 +32,7 @@ export function ModalTokenGeneration() {
 
 		try {
 			const response = await api.post("/generateToken", {
-				owner: "sistem X",
+				name: name,
 				tables: tables.split(","),
 				expires: date!.toISOString(),
 			})
@@ -71,6 +67,17 @@ export function ModalTokenGeneration() {
 			<PopoverContent className="p-4">
 				<div className="grid gap-4 py-4">
 					<div className="grid grid-cols-4 items-center gap-4">
+						<Label htmlFor="tables" className="text-right">
+							Name
+						</Label>
+						<Input
+							id="name"
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+							className="col-span-3"
+							placeholder="Set system's name"
+						/>
+						
 						<Label htmlFor="tables" className="text-right">
 							Tables
 						</Label>
