@@ -329,5 +329,11 @@ public class DBRepository : IDisposable
 
         return _conn.Query<Guid>(query).FirstOrDefault();
     }
+
+    internal ConfigTableObject GetConfigTable(string table)
+    {
+        var result = GetConfigTables();
+        return result.FirstOrDefault(x => x.table_name == table);
+    }
 }
 

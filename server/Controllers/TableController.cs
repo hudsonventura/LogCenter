@@ -81,7 +81,14 @@ public class TableController : Controller
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public ActionResult<ConfigTableObject> ConfigTable([FromBody]ConfigTableObject configs, string table)
     {
-        configs.Validate();
+        try
+        {
+            configs.Validate();
+        }
+        catch (System.Exception error)
+        {
+            return BadRequest(error.Message);
+        }
         table = table.Replace(" ", "_").ToLower();
         _db.TableExists(table);
         _db.UpsertConfig(table, configs);
@@ -91,7 +98,7 @@ public class TableController : Controller
 
 
     /// <summary>
-    /// Get table config
+    /// Get tables configs (all tables)
     /// </summary>
     /// <returns>ConfigTableObject</returns>
     [HttpGet("/TablesConfig")]
@@ -100,6 +107,18 @@ public class TableController : Controller
     public ActionResult<ConfigTableObject> GetConfigTables()
     {
         return Ok(_db.GetConfigTables());
+    }
+
+    /// <summary>
+    /// Get table config
+    /// </summary>
+    /// <returns>ConfigTableObject</returns>
+    [HttpGet("/TablesConfig/{table}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ConfigTableObject>))]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public ActionResult<ConfigTableObject> GetConfigTables([FromRoute]string table)
+    {
+        return Ok(_db.GetConfigTable(table));
     }
 
 

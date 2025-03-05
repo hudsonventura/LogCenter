@@ -64,6 +64,11 @@ export function TableConfigs() {
 	useEffect(() => {
 		const tableName = pathname.split("/")[2];
 		setTableName(tableName);
+
+		api.get(`/TablesConfig/${tableName}`).then(({ data }) => {
+			form.reset(data);
+			console.log(data);
+		});
 	}, []);
 
 	const form = useForm<z.infer<typeof FormSchema>>({
@@ -187,11 +192,19 @@ export function TableConfigs() {
 															</Button>
 														</TooltipTrigger>
 														<TooltipContent>
-															Refere-se à remoção de registros de um banco de
-															dados tabela que é mais antiga que um horário
-															especificado ou data, normalmente com base em uma
-															coluna de carimbo de data/hora criado_em. Isso
-															geralmente é usado para limpeza de dados.
+															<div className="max-w-xs">
+																<p>
+																	Delete is a way to remove rows from a table.
+																</p>
+																<p>
+																	Delete will remove the rows from the table and also remove the index.
+																</p>
+																<p>
+																	<span className="text-red-500">
+																		You can set the number of days to delete, but data cannot be recovered.
+																	</span>
+																</p>
+															</div>
 														</TooltipContent>
 													</Tooltip>
 												</TooltipProvider>
@@ -199,7 +212,7 @@ export function TableConfigs() {
 										</div>
 										<FormControl className="mb-5 mt-5">
 											<Label htmlFor="delete">
-												DELETE linhas tabela anterior a{" "}
+												Remove rows older than days
 											</Label>
 										</FormControl>
 
@@ -267,9 +280,10 @@ export function TableConfigs() {
 															</Button>
 														</TooltipTrigger>
 														<TooltipContent>
-															VACUUM no PostgreSQL limpa linhas mortas,
-															liberando espaço para reutilização e melhoria de
-															desempenho.
+															<p>VACUUM is a database maintenance operation that reclaims storage occupied by dead tuples.</p>
+															<p>When updates or deletes occur on a table, the old versions of rows are retained to support transactional features.</p>
+															<p>Over time, these dead rows can accumulate and lead to wasted space and degraded performance.</p>
+															<p>By running VACUUM, the database cleans up these dead rows, thus freeing up space and optimizing database performance by allowing the reused space for new data insertion.</p>
 														</TooltipContent>
 													</Tooltip>
 												</TooltipProvider>
@@ -277,8 +291,7 @@ export function TableConfigs() {
 										</div>
 										<FormControl className="mt-5 mb-2">
 											<Label htmlFor="vacuum">
-												Tabela VACUUM para remover linhas excluídas e reutilizar
-												o espaço{" "}
+												VACUUM cleans dead rows,freeing up space for reuse and improving performance
 											</Label>
 										</FormControl>
 										<FormField
@@ -356,12 +369,27 @@ export function TableConfigs() {
 															</Button>
 														</TooltipTrigger>
 														<TooltipContent>
-															VACUUM FULL, a mesa está totalmente compactada,
-															recuperando espaço em disco, mas requer
-															exclusividade acesso, tornando-o mais intensivo.
+															VACUUM FULL ANALYZE is a PostgreSQL operation that performs two key actions: 
 															<p>
-																It is going to LOCK THE TABLE and no data can be
-																written or read.
+																it compacts the table to reclaim disk space
+															</p>
+															<p>
+																and analyzes the table to update statistics
+															</p>
+															<p>
+																This process is resource-intensive as it requires exclusive access, meaning the table is locked, preventing any read or write operations during the process.
+															</p>
+															<p>
+																The compaction helps in reducing the physical disk space usage,
+															</p>
+															<p>
+																while the analysis updates statistics that the query planner uses to optimize query execution plans.
+															</p>
+															<p>
+																It is crucial for maintaining database performance but should be used with caution as it can temporarily halt access to the table.
+															</p>
+															<p>
+																Note: The table will be locked, and no data can be read or written during this operation.
 															</p>
 														</TooltipContent>
 													</Tooltip>
@@ -370,8 +398,12 @@ export function TableConfigs() {
 										</div>
 										<FormControl className="mb-2 mt-2">
 											<Label htmlFor="vacuum_full">
-												Table VACUUM FULL ANALYZE para remover linhas excluídas
-												e reivindicar espaço livre no disco
+												Compacts the table, reclaiming disk space, but requires
+												exclusive access. 
+												<p className="text-destructive">
+													It is going to LOCK THE TABLE and no data can be
+													written or read until finished
+												</p>
 											</Label>
 										</FormControl>
 										<FormField
