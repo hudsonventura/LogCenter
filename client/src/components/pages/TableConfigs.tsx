@@ -156,6 +156,21 @@ export function TableConfigs() {
 		});
 	}
 
+	function runDropTable(): void {
+		api.delete(`/Drop/${tableName}`, {
+		}).then((res) => {
+			if (res.status === 200) {
+				toast("Dropped!", {
+					description: `Table ${tableName.toUpperCase()} was dropped`,
+				});
+			} else {
+				toast("Error!", {
+					description: `Error dropping table ${tableName.toUpperCase()}`,
+				});
+			}
+		});
+	}
+
 	return (
 		<Form {...form}
 		>
@@ -180,7 +195,7 @@ export function TableConfigs() {
 									<div className="flex flex-col">
 										<div className="flex items-center justify-between">
 											<FormControl>
-												<Switch id="delete" onCheckedChange={field.onChange} />
+												<Switch id="delete" onCheckedChange={field.onChange} checked={field.value} />
 											</FormControl>
 											<h1 className="text-2xl font-bold mb-2">DELETE</h1>
 											<FormLabel>
@@ -268,7 +283,7 @@ export function TableConfigs() {
 									<div className="flex flex-col">
 										<div className="flex items-center justify-between">
 											<FormControl>
-												<Switch id="vacuum" onCheckedChange={field.onChange} />
+												<Switch id="vacuum" onCheckedChange={field.onChange} checked={field.value} />
 											</FormControl>
 											<h1 className="text-2xl font-bold mb-2">VACUUM</h1>
 											<FormLabel>
@@ -353,6 +368,7 @@ export function TableConfigs() {
 												<Switch
 													id="vacuum_full"
 													onCheckedChange={field.onChange}
+													checked={field.value}
 												/>
 											</FormControl>
 
@@ -453,11 +469,36 @@ export function TableConfigs() {
 								</FormItem>
 							)}
 						/>
+
+						
 					</div>
+
+					
 				</div>
 
 				{/* Botões no final da página */}
 				<div className="flex items-center justify-center mt-5 gap-5 mb-5">
+						<AlertDialog>
+							<AlertDialogTrigger>
+								<Button type="button" className="text-destructive">
+									DROP TABLE
+								</Button>
+							</AlertDialogTrigger>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+									<AlertDialogDescription>
+										<p className="text-red-500">
+											This action will DROP the table. It will delete whole the table and no data could be recovered. PLEASE, PAY ATTENTION!
+										</p>
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter>
+									<AlertDialogCancel>Cancel</AlertDialogCancel>
+									<AlertDialogAction className="text-red-500" onClick={() => runDropTable()}>I got it and go ahead!</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
 					<Button type="button" onClick={() => window.history.back()}>
 						Voltar
 					</Button>

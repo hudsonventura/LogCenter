@@ -237,7 +237,7 @@ public class DBRepository : IDisposable
 
     public void SetTimezone(string timezone)
     {
-        _tz = TimeZoneInfo.FindSystemTimeZoneById(timezone);
+            _tz = TimeZoneInfo.FindSystemTimeZoneById(timezone);
     }
 
         /// <summary>
@@ -320,7 +320,7 @@ public class DBRepository : IDisposable
                         AND table_type = 'BASE TABLE'
                         AND substr(t.table_name, 0, 5) = 'log_';";
 
-        return _conn.Query<ConfigTableObject>(query).ToList();
+        return _conn.Query<ConfigTableObject>(query).OrderBy(x => x.table_name).ToList();
     }
 
     internal Guid GetMaxID(string table)
