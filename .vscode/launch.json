@@ -32,12 +32,12 @@
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
-            // "serverReadyAction": {
-            //     "action": "openExternally",
-            //     "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-            //     "uriFormat": "%s/docs/swagger/index.html"
-            //     //"uriFormat": "%s/api-docs"
-            // },
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+                "uriFormat": "%s/scalar/v1"
+                //"uriFormat": "%s/api-docs"
+            },
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
             },
@@ -66,7 +66,17 @@
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/Views"
             }
+        },
+        {
+            "name": "Example dotnet",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "dotnet: build",
+            "program": "${workspaceFolder}/examples/dotnet/bin/Debug/net8.0/dotnet_example.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
         }
-
     ]
 }

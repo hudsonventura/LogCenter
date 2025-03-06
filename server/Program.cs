@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
+using Scalar.AspNetCore;
 
 AppContext.SetSwitch("System.Globalization.Invariant", true);
 TimeZoneInfo utcZone = TimeZoneInfo.CreateCustomTimeZone("UTC", TimeSpan.Zero, "UTC", "UTC");
@@ -63,6 +64,7 @@ builder.Services.AddDbContext<UserContext>();
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+//builder.Services.AddOpenApi(); //net8.0 or higher
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "LogCenter", Version = "1.0" });
@@ -161,13 +163,19 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) //use swagger in dev
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
+    // app.UseSwagger();
+    // app.UseSwaggerUI(c =>
+    // {
+    //     // Definindo o prefixo swagger para evitar conflitos
+    //     c.SwaggerEndpoint("/swagger/v1/swagger.json", "LogCenter V1");
+    //     c.RoutePrefix = "docs/swagger"; // Define o prefixo da rota do Swagger
+    // });
+    app.UseSwagger(options =>
     {
-        // Definindo o prefixo swagger para evitar conflitos
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "LogCenter V1");
-        c.RoutePrefix = "docs/swagger"; // Define o prefixo da rota do Swagger
+        options.RouteTemplate = "/openapi/{documentName}.json";
     });
+    app.MapScalarApiReference();
+
 }else{
     app.UseSwagger();
 
