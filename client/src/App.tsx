@@ -1,5 +1,5 @@
 //import "./App.css";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { TableLogs } from "./components/pages/TableLogs";
 import { Toaster } from "@/components/ui/sonner";
 import { Tables } from "./components/pages/Tables";
@@ -15,8 +15,8 @@ export default function App() {
       <div className="App">
         <Toaster />
         <Routes>
-        <Route path="/login" element={<LoginPage />} /> {/* Página de logs */}
-
+          <Route path="/" element={<Navigate to="/login" />} /> 
+          <Route path="/login" element={<LoginPage />} /> {/* Página de logs */}
           <Route path="/tables" element={<Tables />} /> {/* Página inicial */}
           <Route path="/table-logs" element={<TableLogs />} /> {/* Página de logs */}
           <Route path="/table-configs/:tableId" element={<TableConfigs />} /> {/* Página de logs */}
