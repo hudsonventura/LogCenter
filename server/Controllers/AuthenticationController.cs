@@ -7,6 +7,10 @@ using server.Repositories;
 
 namespace server.Controllers;
 
+
+/// <summary>
+/// An explanation here //TODO: Document!!!
+/// </summary>
 [Route("[controller]")]
 public class AuthenticationController : ControllerBase
 {
@@ -18,6 +22,12 @@ public class AuthenticationController : ControllerBase
         _tokenRepository = tokenRepository;
     }
 
+
+    /// <summary>
+    /// //TODO: Document!!!
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
     [HttpPost("/Login")]
     public IActionResult Login([FromBody] LoginDTO dto)
     {

@@ -67,7 +67,24 @@ builder.Services.AddEndpointsApiExplorer();
 //builder.Services.AddOpenApi(); //net8.0 or higher
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "LogCenter", Version = "1.0" });
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "LogCenter Docs",
+        Version = "1.0",
+        Description = @"LogCenter API - Log Store and <br>
+        <img src='https://github.com/hudsonventura/LogCenter/blob/main/logo.png?raw=true' alt='LogCenter Logo' width='230px'>
+        <p>
+            Respoitory: <a href='https://github.com/hudsonventura/LogCenter'>https://github.com/hudsonventura/LogCenter</a>
+        </p>
+        <p>
+            Thanks for <a href='https://github.com/LucasLuann'>https://github.com/LucasLuann</a>
+        </p>",
+        Contact = new OpenApiContact
+        {
+            Name = "LogCenter",
+            Url = new Uri("https://github.com/hudsonventura/LogCenter")
+        }
+    });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -160,32 +177,23 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment()) //use swagger in dev
+//Use Scalar API Docs
+app.UseSwagger(options =>
 {
-    // app.UseSwagger();
-    // app.UseSwaggerUI(c =>
-    // {
-    //     // Definindo o prefixo swagger para evitar conflitos
-    //     c.SwaggerEndpoint("/swagger/v1/swagger.json", "LogCenter V1");
-    //     c.RoutePrefix = "docs/swagger"; // Define o prefixo da rota do Swagger
-    // });
-    app.UseSwagger(options =>
-    {
-        options.RouteTemplate = "/openapi/{documentName}.json";
-    });
-    app.MapScalarApiReference();
+    options.RouteTemplate = "/openapi/{documentName}.json";
+});
+app.MapScalarApiReference(options =>
+{
 
-}else{
-    app.UseSwagger();
+    // Object initializer
+    options.Title = "Docs LogCenter API";
+    options.ShowSidebar = true;
+    options.WithTitle("LogCenter Docs");
 
-    app.UseReDoc(c =>
-    {
-        c.DocumentTitle = "LogCenter";
-        c.SpecUrl = "/swagger/v1/swagger.json";
-        c.RoutePrefix = "docs/swagger/redoc"; // Define o prefixo para o ReDoc
-    });
-}
+    options.Favicon = "https://github.com/hudsonventura/LogCenter/blob/main/logo.png?raw=true";
+});
+
+
 
 app.UseCors(builder =>
 {
