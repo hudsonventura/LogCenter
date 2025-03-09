@@ -5,7 +5,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Serilog;
 
 namespace LogCenter;
 
@@ -21,12 +20,13 @@ public sealed class LogQueue
     private bool IsWorking = false;
 
 
-    public async Task Enqueue(HttpClient client, string table, LogLevel level, string message, dynamic data)
+    public async Task Enqueue(HttpClient client, string table, LogLevel level, string traceId, string message, dynamic data)
     {
         queue.Add(new LogItem(){
             client = client,
             table = table,
             level = level,
+            TraceID = traceId,
             message = message,
             data = data
         });
@@ -36,12 +36,13 @@ public sealed class LogQueue
         }
     }
 
-    public async Task EnqueueAsync(HttpClient client, string table, LogLevel level, string message, dynamic data)
+    public async Task EnqueueAsync(HttpClient client, string table, LogLevel level, string traceId, string message, dynamic data)
     {
         queue.Add(new LogItem(){
             client = client,
             table = table,
             level = level,
+            TraceID = traceId,
             message = message,
             data = data
         });
@@ -68,9 +69,14 @@ public sealed class LogQueue
             try
             {
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, item.table);
-                //request.Headers.Add("Level", logEvent.Level.ToString());
+                request.Headers.Add("Level", item.level.ToString());
                 if(Activity.Current?.Id != null){
-                    request.Headers.Add("Correlation", Activity.Current?.Id);
+                    request.Headers.Add("TraceID", Activity.Current?.Id);
+                }
+
+                if(item.TraceID is not null){
+                    request.Headers.Add("TraceID", item.TraceID);
+
                 }
 
                 request.Headers.Add("Message", item.message);
@@ -84,10 +90,14 @@ public sealed class LogQueue
             
                 Console.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{item.level.ToString().ToUpper()}] {item.message}");
                 var response = await item.client.SendAsync(request);
+                if(!response.IsSuccessStatusCode){
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"It was falled to send log to LogCenter: {responseBody}");
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao processar requisição: {ex.Message}");
+                Console.WriteLine($"It was falled to send log to LogCenter: {ex.Message}");
             }
         }
         IsWorking = false;
@@ -104,4 +114,6 @@ class LogItem{
     public LogLevel level;
     public string message;
     public dynamic data;
+
+    public string TraceID = null;
 }

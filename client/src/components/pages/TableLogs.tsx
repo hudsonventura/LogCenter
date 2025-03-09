@@ -62,7 +62,7 @@ import EnsureLogin from "../EnsureLogin";
 export type Record = {
   id: bigint;
   level: RecordLevel;
-  correlation: string;
+  traceId: string;
   message: object;
   content: object;
   created_at: Date;
@@ -131,20 +131,20 @@ export const columns: ColumnDef<Record>[] = [
   },
 
   {
-    accessorKey: "correlation",
+    accessorKey: "traceId",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Correlation ID
+          TraceId
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
     cell: ({ row }) => (
-      <div className="lowercase">{row.original.correlation}</div>
+      <div className="lowercase">{row.original.traceId}</div>
     ),
   },
   {
@@ -492,12 +492,12 @@ export function TableLogs() {
             <Input
               placeholder="Filter table"
               value={
-                (table.getColumn("correlation")?.getFilterValue() as string) ??
+                (table.getColumn("traceId")?.getFilterValue() as string) ??
                 ""
               }
               onChange={(event) =>
                 table
-                  .getColumn("correlation")
+                  .getColumn("traceId")
                   ?.setFilterValue(event.target.value)
               }
               className="max-w-sm"

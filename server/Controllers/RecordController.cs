@@ -40,9 +40,9 @@ public class RecordController : ControllerBase
     /// <param name="level">Log level. Default is Info</param>
     /// <returns>uuid</returns>
     [HttpPost("/{table}/_doc")]
-    public ActionResult<Guid> Insert_Doc(string table, [FromHeader] string message, [FromBody] dynamic obj = null, [FromHeader] Level level = Level.Info, [FromHeader] string? correlation = null)
+    public ActionResult<Guid> Insert_Doc(string table, [FromHeader] string message, [FromBody] dynamic obj = null, [FromHeader] Level level = Level.Info, [FromHeader] string? TraceId = null)
     {
-        return Insert(table, message, obj, level, correlation);
+        return Insert(table, message, obj, level, TraceId);
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ public class RecordController : ControllerBase
     /// <param name="level">Log level. Default is Info</param>
     /// <returns>uuid</returns>
     [HttpPost("/{table}")]
-    public ActionResult<Guid> Insert(string table, [FromHeader] string message, [FromBody] dynamic obj = null, [FromHeader] Level level = Level.Info, [FromHeader] string? correlation = null)
+    public ActionResult<Guid> Insert(string table, [FromHeader] string message, [FromBody] dynamic obj = null, [FromHeader] Level level = Level.Info, [FromHeader] string? TraceId = null)
     {
         table = table.Replace(" ", "_").ToLower();
         _db.ValidateTable(table);
@@ -88,7 +88,7 @@ public class RecordController : ControllerBase
         {
             //tenta salvar na tabela do meu index.
             //se der certo, 200
-            id = _db.Insert(table, level, correlation, message, json);
+            id = _db.Insert(table, level, TraceId, message, json);
             return Created(id.ToString(), id);
         }
         catch (System.Exception error1)
@@ -101,8 +101,8 @@ public class RecordController : ControllerBase
                 _db.CreateTable(table);
                 Console.Write("OK! ... ");
 
-                Console.Write($"Creating new CORRELATION index ({table}) ... ");
-                _db.CreateCorrelationIndex(table);
+                Console.Write($"Creating new TRACEID index ({table}) ... ");
+                _db.CreateTraceIdIndex(table);
                 Console.Write("OK! ... ");
 
                 Console.Write($"Creating new MESSAGE index ({table}) ... ");
@@ -117,7 +117,7 @@ public class RecordController : ControllerBase
                 _db.CreateDateTimeIndex(table);
                 Console.Write("OK! ... ");
 
-                id = _db.Insert(table, level, correlation, message, json);
+                id = _db.Insert(table, level, TraceId, message, json);
                 return Created($"/{table}/{id}", $"/{table}/{id}");
             }
             catch (System.Exception error2)

@@ -15,7 +15,7 @@ import {
 
 type RawDataItem = {
   content: string | null
-  correlation: null
+  traceId: null
   created_at: string
   id: string
   level: number
