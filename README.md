@@ -14,12 +14,12 @@ In `Details` you can see whole object that you sent.
 
 # Getting Started
 
-## How can I start LogCente?
+## How can I start LogCenter?
 
 Edit the `.env` file as your reality:
 
 ```
-DB_HOST=localhost
+DB_HOST=db
 DB_PORT=5432
 DB_NAME=logcenter
 DB_USER=logcenter
@@ -56,7 +56,7 @@ You can use an existing libraries listed below. Simply configure it and start us
 | Python with FastAPI       | [README.md](Pypi/Logger/README.md)  |
 
 
-## How can I do a Request with out a lib?
+## How can I do a Request without a lib?
 
 Go to backend docs at `http://localhost:9200/scalar/v1`
 
@@ -65,7 +65,7 @@ Go to backend docs at `http://localhost:9200/scalar/v1`
 `POST` /{YOUR_TABLE_NAME}/
 
 Headers:
- - `Authorization` -> **Required**  Bearer {{token}}
+ - `Authorization` -> **Required**  Bearer {{token}} #your token generate on step [Generating a token](#generating-a-token)
  - `level` -> Optional. Default is `Info`. It could be:
     - Trace
     - Info
@@ -74,13 +74,13 @@ Headers:
     - Error
     - Critical
     - Success
- - `message` -> *Required*. Your message log.
+ - `message` -> *Required*. Your log message.
  - `timezone` -> Optional. Default is `UTC`. Your can use UNIX timezones like `America/New_York`.
  - `traceID` -> **Optional, but highly recomended**. Use this to tag your log message or a group of messages with the same identifier. This allows you to filter by traceID in the web interface and view all related messages in a sequence.
  
 
 Body:  
-The body could be your json object to save, or a list of objects.
+The body must be a json object, or a list of objects.
 ```json
 {
     "nome": "João",
@@ -100,7 +100,7 @@ The body could be your json object to save, or a list of objects.
 }
 ```
 
- > If you upload a file encoded in base64 that exceeds 1024 characters, the base64 string will be truncated. A message will indicate that the content has been shortened due to size limitations.
+ > If you upload a file encoded in base64 and that exceeds 1024 characters, the base64 string will be truncated. A message will indicate that the content has been shortened due to size limitations.
 
 
 ##### Response
