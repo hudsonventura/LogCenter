@@ -35,6 +35,11 @@ public enum LogLevel
     /// <summary>
     /// Critical issues causing an application to crash or terminate.
     /// </summary>
-    Critical = 5
+    Critical = 5,
+
+    /// <summary>
+    /// Success messages indicating a successful operation.
+    /// </summary>
+    Success = 6
 
 }
