@@ -6,8 +6,11 @@
 
 `LogCenter` is a custom solution for log store and querying, debug and audit log, similar to ElasticSearch — which is widely used for storing, searching, but not analyzing data logs (yet). However, LogCenter utilizes PostgreSQL as the underlying database for storing and querying logs.  
 
+The main functionality is to provide a robust and efficient way to store and query logs, making it easier to debug and troubleshoot applications.
 ![Web Interface](resources/image3.png)
 
+In `Details` you can see whole object that you sent.
+![Details](resources/image4.png)
 
 # Getting Started
 
