@@ -11,7 +11,7 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     shm_size: '256m' # Necessary to use Postgres VACUUM. You can increment it as you need
     volumes:
-      - /temp/db/:/var/lib/postgresql/data/
+      - ./data/db/:/var/lib/postgresql/data/
     networks:
       - logcenter
     #ports:

@@ -39,7 +39,7 @@ export function ModalTokenGeneration() {
 
 			if (response.status === 200) {
 				setGeneratedToken(response.data.token)
-				toast.success("Token gerado com sucesso!")
+				toast.success("Token successfully generated!")
 				setTokenGerated(response.data);
 			} else {
 				alert("Erro ao gerar token. Por favor, tente novamente.")

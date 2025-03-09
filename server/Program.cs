@@ -208,13 +208,13 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<UserContext>();
     dbContext.Database.Migrate();
 
-    var adminUser = dbContext.Users.FirstOrDefault(u => u.email == "admin@logcenter.org");
+    var adminUser = dbContext.Users.FirstOrDefault(u => u.email == "admin@admin.com");
     if (adminUser == null)
     {
         var admin = new User
         {
             name = "admin",
-            email = "admin@logcenter.org",
+            email = "admin@admin.com",
         };
         admin.SetPassword("admin");
         dbContext.Users.Add(admin);
