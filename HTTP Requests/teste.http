@@ -4,11 +4,11 @@ Authorization: Bearer {{integration_token}}
 Timezone: {{timezone}}
 Content-Type: application/json
 Message: Just a test
-Correlation: apenas um teste
+TraceId: apenas um teste
 Level: 1
 
 {
-    "teste": "aohbah 1/2"
+    "teste": "aohbah 3"
 } 
 ###
 # ListTables created

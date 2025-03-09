@@ -19,10 +19,10 @@ app.UseInterceptor(new LogCenterOptions(){
 
 ```
 
-### Correlation ID
-Using this lib, it'ill add the responde header `traceId` in every single reponse. Thath is the same as aspnet tracerId, when a status code 400 is responded. It is saved on LogCenter. It can be used to localize the error that happend with your API clients.
+### TraceId
+Using this lib, it'ill add the responde header `TraceId` in every single reponse. Thath is the same as aspnet TracerId, when a status code 400 is responded. It is saved on LogCenter. It can be used to localize the error that happend with your API clients.
 ```
-traceId: 00-4cda521494d8bf2337774936370e2cd3-3cec96b6ee169636-00
+TraceId: 00-4cda521494d8bf2337774936370e2cd3-3cec96b6ee169636-00
 ```  
 
 

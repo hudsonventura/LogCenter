@@ -69,11 +69,13 @@ export type Record = {
 };
 
 export enum RecordLevel {
+  Trace = 0,
   Info = 1,
   Debug = 2,
   Warning = 3,
   Error = 4,
   Critical = 5,
+  Success = 6
 }
 
 const getCorBadge = (level: RecordLevel) => {
@@ -88,6 +90,8 @@ const getCorBadge = (level: RecordLevel) => {
       return "bg-red-200 text-red-800";
     case RecordLevel.Critical:
       return "bg-red-700 text-white";
+    case RecordLevel.Success:
+      return "bg-green-700 text-white";
     default:
       return "bg-gray-200 text-gray-800";
   }
@@ -173,20 +177,18 @@ export const columns: ColumnDef<Record>[] = [
       // Converter o objeto `content` para uma string JSON formatada
       const content = row.original.content;
       if (typeof content === "string") {
-        return <div className="text-left font-medium">{content}</div>;
+        return (
+          <div className="text-left" style={{ whiteSpace: "pre-wrap" }}>
+            {content.substring(0, 230) + (content.length > 230 ? "..." : "")}
+          </div>
+        );
       }
 
       const jsonStr = JSON.stringify(content);
-      const lines = jsonStr.split(/\r?\n/);
-      const truncatedLines = lines
-        .slice(0, 2)
-        .map((line) => line.slice(0, 120));
+
       return (
-        <div
-          className="text-left font-medium"
-          style={{ whiteSpace: "pre-wrap" }}
-        >
-          {truncatedLines.join("\n")}
+        <div className="text-left" style={{ whiteSpace: "pre-wrap" }}>
+          {jsonStr.substring(0, 230) + (jsonStr.length > 230 ? "..." : "")}
         </div>
       );
     },
