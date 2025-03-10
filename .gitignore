@@ -16,3 +16,5 @@ logs/*
 nuget/RequestLogger/bin/*
 nuget/RequestLogger/obj/*
 .vscode/settings.json
+examples/fastapi/venv/*
+examples/fastapi/__pycache__/*
