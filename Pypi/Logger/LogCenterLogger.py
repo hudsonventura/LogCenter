@@ -14,17 +14,23 @@ class LogCenterLogger:
         self.token = options.token
         self.trace_id = str(uuid.uuid4())
        
-
     def log(self, level, message, data=None):
-        payload = {
+
+        payload = None
+        if data is not None:
+            payload = data
+
+
+        headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
             "trace_id": self.trace_id,
             "level": level,
-            "message": message,
-            "data": data or {}
+            "message": message
         }
-        response = requests.post(f"{self.url}/logs", #headers=self.headers, 
+        response = requests.post(f"{self.url}/{self.table}", headers=headers, 
                                  data=json.dumps(payload))
-        if response.status_code != 200:
+        if response.status_code not in range(200, 300):
             logging.error(f"Failed to log: {response.text}")
 
     async def log_async(self, level, message, data=None):

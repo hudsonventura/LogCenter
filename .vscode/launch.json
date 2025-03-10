@@ -77,6 +77,13 @@
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
-        }
+        },
+        {
+            "name": "Example Python",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/examples/python/main.py",
+            "console": "integratedTerminal",
+        },
     ]
 }
