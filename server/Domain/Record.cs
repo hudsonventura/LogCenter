@@ -26,7 +26,7 @@ public class Record
     /// <summary>
     /// Record created at a datetime
     /// </summary>
-    public DateTime created_at { get; set; }
+    public DateTime timestamp { get; set; }
 
     /// <summary>
     /// A message or title to explain the content

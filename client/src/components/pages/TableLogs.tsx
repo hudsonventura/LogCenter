@@ -65,7 +65,7 @@ export type Record = {
   traceId: string;
   message: object;
   content: object;
-  created_at: Date;
+  timestamp: Date;
 };
 
 export enum RecordLevel {
@@ -142,7 +142,7 @@ export const columns: ColumnDef<Record>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          TraceId
+          Trace ID
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -152,12 +152,12 @@ export const columns: ColumnDef<Record>[] = [
     ),
   },
   {
-    accessorKey: "created_at",
-    header: () => <div className="text-left">Created in</div>,
+    accessorKey: "timestamp",
+    header: () => <div className="text-left">Timestamp</div>,
     cell: ({ row }) => {
       // Formatar a data no formato personalizado
       const formattedDate = format(
-        new Date(row.original.created_at),
+        new Date(row.original.timestamp),
         "yyyy/MM/dd HH:mm:ss"
       );
       return <div className="text-left">{formattedDate}</div>;

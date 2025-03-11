@@ -32,18 +32,7 @@ public class RecordController : ControllerBase
     
 
 
-    /// <summary>
-    /// Save a message string or object json to table log. Returns a snowflake id
-    /// </summary>
-    /// <param name="table">Table name</param>
-    /// <param name="obj">Message string or object json</param>
-    /// <param name="level">Log level. Default is Info</param>
-    /// <returns>uuid</returns>
-    [HttpPost("/{table}/_doc")]
-    public ActionResult<Guid> Insert_Doc(string table, [FromHeader] string message, [FromBody] dynamic obj = null, [FromHeader] Level level = Level.Info, [FromHeader] string? TraceId = null)
-    {
-        return Insert(table, message, obj, level, TraceId);
-    }
+
 
     /// <summary>
     /// Save a message string or object json to table log. Returns a snowflake id
@@ -53,8 +42,17 @@ public class RecordController : ControllerBase
     /// <param name="level">Log level. Default is Info</param>
     /// <returns>uuid</returns>
     [HttpPost("/{table}")]
-    public ActionResult<Guid> Insert(string table, [FromHeader] string message, [FromBody] dynamic obj = null, [FromHeader] Level level = Level.Info, [FromHeader] string? TraceId = null)
+    public ActionResult<Guid> Insert(
+        string table, 
+        [FromHeader] string message, 
+        [FromHeader] DateTime? timestamp = null,
+        [FromHeader] Level level = Level.Info, 
+        [FromHeader] string? TraceId = null,
+        [FromBody] dynamic obj = null)
     {
+        if(timestamp == null){
+            timestamp = DateTime.UtcNow;
+        }
         table = table.Replace(" ", "_").ToLower();
         _db.ValidateTable(table);
 
@@ -88,7 +86,7 @@ public class RecordController : ControllerBase
         {
             //tenta salvar na tabela do meu index.
             //se der certo, 200
-            id = _db.Insert(table, level, TraceId, message, json);
+            id = _db.Insert(table, level, TraceId, message, json, timestamp);
             return Created(id.ToString(), id);
         }
         catch (System.Exception error1)
@@ -117,7 +115,7 @@ public class RecordController : ControllerBase
                 _db.CreateDateTimeIndex(table);
                 Console.Write("OK! ... ");
 
-                id = _db.Insert(table, level, TraceId, message, json);
+                id = _db.Insert(table, level, TraceId, message, json, timestamp);
                 return Created($"/{table}/{id}", $"/{table}/{id}");
             }
             catch (System.Exception error2)
