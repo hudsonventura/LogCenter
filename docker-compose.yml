@@ -48,8 +48,8 @@ services:
       context: ./client
       dockerfile: Dockerfile
     environment:
-      VITE_API_HOST: ${VITE_API_HOST}
-      #TIMEZONE -> THE SERVER MUST BE ON UTC+0
+      VITE_API_HOST: ${SERVER_BACKEND_URL}
+      #TZ -> THE SERVER MUST BE ON UTC+0
     ports:
       - "5173:5173"
     depends_on:

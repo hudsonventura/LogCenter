@@ -77,7 +77,7 @@ public class DBRepository : IDisposable
         string txt_command = @$"CREATE TABLE log_{table} (
                                 id UUID PRIMARY KEY,
                                 level SMALLINT CHECK (level >= 0 AND level <= 9),
-                                created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                 message VARCHAR(255) NOT NULL,
                                 traceid VARCHAR(100) NULL,
                                 content JSONB NULL
@@ -120,7 +120,7 @@ public class DBRepository : IDisposable
 
     public void CreateDateTimeIndex(string table){
         string txt_command = 
-            @$"CREATE INDEX idx_{table}_created_at ON log_{table} (created_at);";
+            @$"CREATE INDEX idx_{table}_timestamp ON log_{table} (timestamp);";
         using var command = new NpgsqlCommand(txt_command, _conn);
         command.ExecuteNonQuery();
     }
@@ -138,7 +138,7 @@ public class DBRepository : IDisposable
 
     }
 
-    public Guid Insert(string table, Level level, string TraceId, string message, string json)
+    public Guid Insert(string table, Level level, string TraceId, string message, string json, DateTime? timestamp)
     {
         ValidateTable(table);
 
@@ -146,13 +146,14 @@ public class DBRepository : IDisposable
         Guid id = SnowflakeGuid.NewGuid();
 
         // Cria o comando de inserção
-        using var command = new NpgsqlCommand($"INSERT INTO log_{table} (id, level, traceid, message, content) VALUES (@id, @level, @traceid, @message, @value::jsonb)", _conn);
+        using var command = new NpgsqlCommand($"INSERT INTO log_{table} (id, level, traceid, message, timestamp, content) VALUES (@id, @level, @traceid, @message, @timestamp, @value::jsonb)", _conn);
 
         // Define o parâmetro 'id' explicitamente como BIGINT
         command.Parameters.Add(new NpgsqlParameter("id", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = id });
         command.Parameters.Add(new NpgsqlParameter("level", NpgsqlTypes.NpgsqlDbType.Integer) { Value = (int)level });
         command.Parameters.Add(new NpgsqlParameter("traceid", NpgsqlTypes.NpgsqlDbType.Text) { Value = TraceId ?? (object)DBNull.Value });
         command.Parameters.Add(new NpgsqlParameter("message", NpgsqlTypes.NpgsqlDbType.Text) { Value = message });
+        command.Parameters.Add(new NpgsqlParameter("timestamp", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = timestamp });
 
         // Adiciona o parâmetro 'value' com o JSON
         command.Parameters.Add(new NpgsqlParameter("value", NpgsqlTypes.NpgsqlDbType.Jsonb) { Value = json != null ? json : DBNull.Value });
@@ -168,9 +169,9 @@ public class DBRepository : IDisposable
     {
         
         string sql = @$"
-            SELECT id, level, created_at AT TIME ZONE 'UTC' as created_at, traceid, message, content 
+            SELECT id, level, timestamp AT TIME ZONE 'UTC' as created_at, traceid, message, content
             FROM log_{table} 
-            WHERE created_at AT TIME ZONE 'UTC' BETWEEN @datetime1 AND @datetime2
+            WHERE timestamp AT TIME ZONE 'UTC' BETWEEN @datetime1 AND @datetime2
             AND (content::text ILIKE @search OR traceid::text ILIKE @search OR message::text ILIKE @search)
             ORDER BY id DESC
             LIMIT @take 
@@ -193,7 +194,7 @@ public class DBRepository : IDisposable
         // Ajustando timezone manualmente após a consulta
         foreach (var record in results)
         {
-            record.created_at = record.created_at.Add(_tz.GetUtcOffset(record.created_at));
+            record.timestamp = record.timestamp.Add(_tz.GetUtcOffset(record.timestamp));
         }
 
         // Retorna a lista de resultados
