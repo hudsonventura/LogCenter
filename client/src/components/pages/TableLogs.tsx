@@ -158,7 +158,7 @@ export const columns: ColumnDef<Record>[] = [
       // Formatar a data no formato personalizado
       const formattedDate = format(
         new Date(row.original.timestamp),
-        "yyyy/MM/dd HH:mm:ss"
+        "yyyy/MM/dd HH:mm:ss.SSS"
       );
       return <div className="text-left">{formattedDate}</div>;
     },
@@ -324,7 +324,7 @@ export function TableLogs() {
             id: item.id, // Certifique-se de que `snowflakeId` seja o campo correto
           }))
         : [];
-      setData(data);
+      setData(data.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
 
       // Update the URL query parameters
       const url = new URL(window.location.href);
