@@ -4,9 +4,7 @@ import sys
 import uuid
 
 sys.path.append(os.path.abspath("Pypi/Logger"))
-#sys.path.append('../')
 
-print(f"Dir atual: {os.getcwd()}")
 
 from LogCenterOptions import LogCenterOptions
 from LogCenterLogger import LogCenterLogger
@@ -24,16 +22,17 @@ options = LogCenterOptions(
 logger = LogCenterLogger(options)
 
 # Logs síncronos
-logger.log(LogLevel.INFO, "Hello World - Info")
-logger.log(LogLevel.WARNING, "Hello World - Warning")
-logger.log(LogLevel.TRACE, "Hello World - Trace")
-logger.log(LogLevel.DEBUG, "Hello World - Debug")
-logger.log(LogLevel.SUCCESS, "Hello World - Success")
-logger.log(LogLevel.ERROR, "Hello World - Error")
-logger.log(LogLevel.CRITICAL, "Hello World - Critical")
+logger.log_async(LogLevel.INFO, "Hello World - 1")
+logger.log_async(LogLevel.WARNING, "Hello World - 2")
+logger.log_async(LogLevel.TRACE, "Hello World - 3")
+logger.log_async(LogLevel.DEBUG, "Hello World - 4")
+logger.log_async(LogLevel.SUCCESS, "Hello World - 5")
+logger.log_async(LogLevel.ERROR, "Hello World - 6")
+logger.log(LogLevel.CRITICAL, "Hello World - 7")
 
-# Log assíncrono
-asyncio.run(logger.log_async(LogLevel.CRITICAL, "Hello World 2", {
+
+
+logger.log_async(LogLevel.CRITICAL, "Hello World 8", {
     "nome": "John Doe Jr. da Silva",
     "idade": 30,
     "cpf": "123.456.789-00",
@@ -48,9 +47,10 @@ asyncio.run(logger.log_async(LogLevel.CRITICAL, "Hello World 2", {
     "dataDeNascimento": str(uuid.uuid4()),  # Simulação de data
     "altura": 1.80,
     "peso": 70.5,
-    "descricao": "Lorem ipsum dolor sit amet...",
-    "observacoes": "Lorem ipsum dolor sit amet...",
-    "comentarios": "Lorem ipsum dolor sit amet...",
-    "historico": "Lorem ipsum dolor sit amet...",
-    "detalhesTecnicos": "Lorem ipsum dolor sit amet..."
-}))
+    "descricao": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
+    "observacoes": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
+    "comentarios": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
+    "historico": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
+    "detalhesTecnicos": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
+})
+logger.log(LogLevel.SUCCESS, "Hello World - 9")
