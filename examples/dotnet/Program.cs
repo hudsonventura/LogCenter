@@ -22,6 +22,7 @@ logger.Log(LogLevel.Debug, "Hello World - Debug");
 logger.Log(LogLevel.Success, "Hello World - Success");
 logger.Log(LogLevel.Error, "Hello World - Error");
 logger.Log(LogLevel.Critical, "Hello World - Critical");
+logger.Log(LogLevel.Fatal, "Hello World - Fatal");
 
 
 

@@ -51,6 +51,8 @@ export default function NiveisLogsChart({ data }) {
     3: "Warning",
     4: "Error",
     5: "Critical",
+    6: "Success",
+    7: "Fatal",
   };
 
   // Transformando os dados no formato esperado

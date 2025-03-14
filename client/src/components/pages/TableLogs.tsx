@@ -75,7 +75,8 @@ export enum RecordLevel {
   Warning = 3,
   Error = 4,
   Critical = 5,
-  Success = 6
+  Success = 6,
+  Fatal = 7
 }
 
 const getCorBadge = (level: RecordLevel) => {
@@ -89,6 +90,8 @@ const getCorBadge = (level: RecordLevel) => {
     case RecordLevel.Error:
       return "bg-red-200 text-red-800";
     case RecordLevel.Critical:
+      return "bg-red-700 text-white";
+    case RecordLevel.Fatal:
       return "bg-red-700 text-white";
     case RecordLevel.Success:
       return "bg-green-700 text-white";

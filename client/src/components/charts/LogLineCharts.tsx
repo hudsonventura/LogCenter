@@ -35,6 +35,8 @@ const logLevels = {
   3: { name: "Warning", color: "hsl(45, 70%, 50%)" },
   4: { name: "Error", color: "hsl(0, 70%, 50%)" },
   5: { name: "Critical", color: "hsl(300, 70%, 50%)" },
+  6: { name: "Success", color: "hsl(106, 70.20%, 50.00%)" },
+  7: { name: "Fatal", color: "hsl(300, 70%, 50%)" },
 }
 
 export default function Component({ rawData, dateFrom, dateTo }: ComponentProps) {

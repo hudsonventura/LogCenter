@@ -44,6 +44,11 @@ public enum Level
     /// Critical issues causing an application to crash or terminate.
     /// </summary>
     Critical = 5,
+    
+    /// <summary>
+    /// Fatal issues causing an application to crash or terminate.
+    /// </summary>
+    Fatal = 7,
 
     /// <summary>
     /// Success messages indicating a successful operation.

@@ -73,6 +73,7 @@ Headers:
     - Warning
     - Error
     - Critical
+    - Fatal
     - Success
  - `message` -> *Required*. Your log message.
  - `timezone` -> Optional. Default is `UTC`. Your can use UNIX timezones like `America/New_York`.
