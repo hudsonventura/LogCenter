@@ -1,14 +1,13 @@
-import asyncio
 import os
 import sys
 import uuid
 
-sys.path.append(os.path.abspath("Pypi/Logger"))
+
+sys.path.append(os.path.abspath("Pypi/Logger/src")) # Just for API development
 
 
-from LogCenterOptions import LogCenterOptions
-from LogCenterLogger import LogCenterLogger
-from LogLevel import LogLevel
+from LogCenter import LogCenterOptions,LogCenterLogger, LogLevel
+
 
 
 
@@ -22,20 +21,21 @@ options = LogCenterOptions(
 logger = LogCenterLogger(options)
 
 # Logs síncronos
-logger.log_async(LogLevel.INFO, "Hello World - 1")
-logger.log_async(LogLevel.WARNING, "Hello World - 2")
-logger.log_async(LogLevel.TRACE, "Hello World - 3")
-logger.log_async(LogLevel.DEBUG, "Hello World - 4")
-logger.log_async(LogLevel.SUCCESS, "Hello World - 5")
-logger.log_async(LogLevel.ERROR, "Hello World - 6")
-logger.log(LogLevel.CRITICAL, "Hello World - 7")
+logger.LogAsync(LogLevel.INFO, "Hello World - 1")
+logger.LogAsync(LogLevel.WARNING, "Hello World - 2")
+logger.LogAsync(LogLevel.TRACE, "Hello World - 3")
+logger.LogAsync(LogLevel.DEBUG, "Hello World - 4")
+logger.LogAsync(LogLevel.SUCCESS, "Hello World - 5")
+logger.LogAsync(LogLevel.ERROR, "Hello World - 6")
+logger.Log(LogLevel.CRITICAL, "Hello World - 7")
+logger.Log(LogLevel.FATAL, "Hello World - 7,5")
 
 
 
-logger.log_async(LogLevel.CRITICAL, "Hello World 8", {
+logger.LogAsync(LogLevel.CRITICAL, "Hello World 8", {
     "nome": "John Doe Jr. da Silva",
     "idade": 30,
-    "cpf": "123.456.789-00",
+    "CPF": "123.456.789-00",
     "email": "john.doe.jr@example.com",
     "telefone": "11 91234-5678",
     "cep": "04545-000",
@@ -53,4 +53,4 @@ logger.log_async(LogLevel.CRITICAL, "Hello World 8", {
     "historico": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
     "detalhesTecnicos": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
 })
-logger.log(LogLevel.SUCCESS, "Hello World - 9")
+logger.Log(LogLevel.SUCCESS, "Hello World - 9")
