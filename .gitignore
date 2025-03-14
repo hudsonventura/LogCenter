@@ -19,3 +19,7 @@ nuget/RequestLogger/obj/*
 examples/fastapi/venv/*
 examples/fastapi/__pycache__/*
 Pypi/Logger/__pycache__/*
+examples/python/main.py
+Pypi/Logger/src/LogCenter/__pycache__/*
+Pypi/Logger/dist/*
+Pypi/Logger/src/LogCenter.egg-info/*

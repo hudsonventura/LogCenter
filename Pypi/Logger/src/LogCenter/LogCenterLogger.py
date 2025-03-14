@@ -1,13 +1,10 @@
 from datetime import datetime, timezone
 import logging
-import random
 import threading
 import uuid
 import json
 import requests
-import asyncio
-import LogLevel
-import LogCenterOptions
+
 
 
 class LogCenterLogger:
@@ -37,13 +34,16 @@ class LogCenterLogger:
         if response.status_code not in range(200, 300):
             logging.error(f"Failed to log: {response.text}")
 
-    def log(self, level, message, data=None):
-        timestamp = datetime.now(timezone.utc).isoformat()
+
+
+    def Log(self, level, message, data=None):
+        """Start a thread to send the log to LogCenter"""
+        timestamp = datetime.now(timezone.utc).isoformat(timespec='microseconds')
         self._log_private(level, message, data, timestamp)
 
-    def log_async(self, level, message, data=None):
-        
-        timestamp = datetime.now(timezone.utc).isoformat()
+    def LogAsync(self, level, message, data=None):
+        """Send the log to LogCenter, and wait for a response. Use with await"""
+        timestamp = datetime.now(timezone.utc).isoformat(timespec='microseconds')
 
         def chamar_log():
             self._log_private(level, message, data, timestamp)
