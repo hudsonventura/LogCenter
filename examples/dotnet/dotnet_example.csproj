@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\nuget\Logger\Logger.csproj" />
+    <ProjectReference Include="..\..\src\libs\nuget\Logger\Logger.csproj" />
   </ItemGroup>
 
 </Project>

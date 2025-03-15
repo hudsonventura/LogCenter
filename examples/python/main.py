@@ -3,7 +3,7 @@ import sys
 import uuid
 
 
-sys.path.append(os.path.abspath("Pypi/Logger/src")) # Just for API development
+sys.path.append(os.path.abspath("src/libs/Pypi/Logger/src")) # Just for API development
 
 
 from LogCenter import LogCenterOptions,LogCenterLogger, LogLevel

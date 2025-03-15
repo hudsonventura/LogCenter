@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "server", "server\server.csproj", "{3B483AAE-02FB-47C2-B2A2-29514BBF1E29}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "server", "src/server\server.csproj", "{3B483AAE-02FB-47C2-B2A2-29514BBF1E29}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tests", "tests\tests.csproj", "{B5CFEC35-D5B7-46A9-90ED-659E38BECC5D}"
 EndProject
@@ -11,11 +11,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "console_example", "examples
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "aspnet_example", "examples\aspnet\aspnet_example.csproj", "{225569CB-AEB0-4E0E-98FF-8D4621F634AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nuget.Logger", "nuget\Logger\Logger.csproj", "{BD19C0EC-CC8B-4D15-9532-01FF81762FF8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nuget.Logger", "src/libs/nuget\Logger\Logger.csproj", "{BD19C0EC-CC8B-4D15-9532-01FF81762FF8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuget", "nuget", "{710EAA45-4750-422A-9959-480833496CD8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequestLogger", "nuget\RequestLogger\RequestLogger.csproj", "{EC870EAD-9E9F-480F-9A24-D823F045EA3F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RequestLogger", "src/libs/nuget\RequestLogger\RequestLogger.csproj", "{EC870EAD-9E9F-480F-9A24-D823F045EA3F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

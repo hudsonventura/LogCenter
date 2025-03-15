@@ -29,10 +29,13 @@ class LogCenterLogger:
             "timestamp": timestamp
         }
         
-        response = requests.post(f"{self.url}/{self.table}", headers=headers, 
+        try:
+            response = requests.post(f"{self.url}/{self.table}", headers=headers, 
                                  data=json.dumps(payload))
-        if response.status_code not in range(200, 300):
-            logging.error(f"Failed to log: {response.text}")
+            if response.status_code not in range(200, 300):
+                logging.error(f"Failed to log: {response.text}")
+        except Exception as e:
+          logging.error(f"Failed to log: {str(e)}")
 
 
 
@@ -42,7 +45,7 @@ class LogCenterLogger:
         self._log_private(level, message, data, timestamp)
 
     def LogAsync(self, level, message, data=None):
-        """Send the log to LogCenter, and wait for a response. Use with await"""
+        """Send the log to LogCenter, and wait for a response"""
         timestamp = datetime.now(timezone.utc).isoformat(timespec='microseconds')
 
         def chamar_log():
