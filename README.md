@@ -50,10 +50,10 @@ You can use an existing libraries listed below. Simply configure it and start us
 
 | Lang                      | Docs                                   |
 |---------------------------|---------------------------------------|
-| Dotnet Core console app   | [README.md](nuget/Logger/README.md)  |
-| Aspnet Core               | [README.md](nuget/RequestLogger/README.md)  |
-| Python console app        | [README.md](Pypi/Logger/README.md)  |
-| Python with FastAPI       | [README.md](Pypi/Logger/README.md)  |
+| Dotnet Core console app   | [README.md](libs/nuget/Logger/README.md)  |
+| Aspnet Core               | [README.md](libs/nuget/RequestLogger/README.md)  |
+| Python console app        | [README.md](libs/Pypi/Logger/README.md)  |
+| Python with FastAPI       | [README.md](libs/Pypi/Logger/README.md)  |
 
 
 ## How can I do a Request without a lib?
