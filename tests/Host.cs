@@ -10,7 +10,7 @@ public class Host : WebApplicationFactory<Program>
     protected override IHost CreateHost(IHostBuilder builder)
     {
         Environment.SetEnvironmentVariable("DB_HOST", "localhost");
-        Environment.SetEnvironmentVariable("DB_PORT", "5435");
+        Environment.SetEnvironmentVariable("DB_PORT", "5432");
         Environment.SetEnvironmentVariable("DB_NAME", "logcenter");
         Environment.SetEnvironmentVariable("DB_USER", "logcenter");
         Environment.SetEnvironmentVariable("DB_PASSWORD", "MyS3cr3tP@ssw0rd");

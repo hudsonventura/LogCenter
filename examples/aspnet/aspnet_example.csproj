@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\nuget\Logger\Logger.csproj" />
-    <ProjectReference Include="..\..\nuget\RequestLogger\RequestLogger.csproj" />
+    <ProjectReference Include="..\..\src\libs\nuget\Logger\Logger.csproj" />
+    <ProjectReference Include="..\..\src\libs\nuget\RequestLogger\RequestLogger.csproj" />
   </ItemGroup>
 
 </Project>

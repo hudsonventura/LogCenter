@@ -11,4 +11,6 @@ const api: AxiosInstance = axios.create({
   timeout: 5000, // Tempo limite para requisi es (em milissegundos),
 });
 
+
+
 export default api;

@@ -28,7 +28,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet: build",
-            "program": "${workspaceFolder}/server/bin/Debug/net8.0/server.dll",
+            "program": "${workspaceFolder}/src/server/bin/Debug/net8.0/server.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
