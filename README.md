@@ -55,7 +55,6 @@ You can use an existing libraries listed below. Simply configure it and start us
 | Python console app        | [README.md](src/libs/Pypi/Logger/README.md)  |
 | Python with FastAPI       | [README.md](src/libs/Pypi/Logger/README.md)  |
 
-
 ## How can I do a Request without a lib?
 
 Go to backend docs at `http://localhost:9200/scalar/v1`
