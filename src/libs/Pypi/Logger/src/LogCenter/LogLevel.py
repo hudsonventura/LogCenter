@@ -1,0 +1,10 @@
+class LogLevel:
+    INFO = "Info"
+    INFORMATION = "Info"
+    WARNING = "Warning"
+    TRACE = "Trace"
+    DEBUG = "Debug"
+    SUCCESS = "Success"
+    ERROR = "Error"
+    CRITICAL = "Critical"
+    FATAL = "Fatal"

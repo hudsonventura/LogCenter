@@ -1,0 +1,23 @@
+# Do the login
+POST {{VITE_API_HOST}}/Login
+Content-Type: application/json
+
+{
+    "email": "admin@logcenter.org",
+    "password": "admin"
+}
+###
+# Check token validation
+GET {{VITE_API_HOST}}/CheckToken
+Authorization: Bearer {{integration_token}}
+###
+# Generate token to access the tables
+POST {{VITE_API_HOST}}/GenerateToken
+Authorization: Bearer {{interface_token}}
+Content-Type: application/json
+
+{
+  "expires": "2026-03-01T12:00:00Z",
+  "owner": "sistem X", 
+  "tables": ["integration_tests", "orders", "products"]
+}

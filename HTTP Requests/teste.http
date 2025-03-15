@@ -1,24 +1,27 @@
-#variables
-@table=test
-@Timezone=America/Sao_Paulo
-###
 # Save an object
 POST {{VITE_API_HOST}}/{{table}}
-Timezone: {{Timezone}}
+Authorization: Bearer {{integration_token}}
+Timezone: {{timezone}}
 Content-Type: application/json
+Message: Just a test
+TraceId: apenas um teste
+Level: 1
 
 {
-    "example": 123,
-    "objject": "test"
-}
+    "teste": "aohbah 3"
+} 
 ###
 # ListTables created
 GET {{VITE_API_HOST}}/ListTables
 ###
 # Get one object by ID
-GET {{VITE_API_HOST}}/{{table}}/6548173b-7bc0-0000-0000-80dcbf7b0185
+GET {{VITE_API_HOST}}/{{table}}/654fe454-7740-0000-0000-7b7946d82ffe
 Timezone: {{Timezone}}
 ###
 # List objects created in a table by time
-GET {{VITE_API_HOST}}/{{table}}?datetime1=2025-02-19 15:38&datetime2=2025-02-19 23:39
+GET {{VITE_API_HOST}}/{{table}}?datetime1=2025-02-19 15:38&datetime2=2025-03-19 23:39
+Timezone: {{Timezone}}
+###
+# ListTables created
+GET {{VITE_API_HOST}}/{{table}}/Last
 Timezone: {{Timezone}}

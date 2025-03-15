@@ -28,23 +28,62 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet: build",
-            "program": "${workspaceFolder}/server/bin/Debug/net8.0/server.dll",
+            "program": "${workspaceFolder}/src/server/bin/Debug/net8.0/server.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
-            // "serverReadyAction": {
-            //     "action": "openExternally",
-            //     "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-            //     "uriFormat": "%s/docs/swagger/index.html"
-            //     //"uriFormat": "%s/api-docs"
-            // },
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+                "uriFormat": "%s/scalar/v1"
+                //"uriFormat": "%s/api-docs"
+            },
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
             },
             "sourceFileMap": {
                 "/Views": "${workspaceFolder}/Views"
             }
-        }
-
+        },
+        {
+            "name": "Example aspnet",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "dotnet: build",
+            "program": "${workspaceFolder}/examples/aspnet/bin/Debug/net8.0/aspnet_example.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+                "uriFormat": "%s/swagger/index.html"
+                //"uriFormat": "%s/api-docs"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
+            "name": "Example dotnet",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "dotnet: build",
+            "program": "${workspaceFolder}/examples/dotnet/bin/Debug/net8.0/dotnet_example.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        },
+        {
+            "name": "Example Python",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/examples/python/main.py",
+            "console": "integratedTerminal",
+        },
     ]
 }

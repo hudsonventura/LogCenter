@@ -11,11 +11,11 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     shm_size: '256m' # Necessary to use Postgres VACUUM. You can increment it as you need
     volumes:
-      - /temp/db/:/var/lib/postgresql/data/
+      - ./data/db/:/var/lib/postgresql/data/
     networks:
       - logcenter
-    ports:
-      - "${DB_PORT}:5432"
+    #ports:
+    #  - "${DB_PORT}:5432" # by default, the port isn't exposed
 
     
 
@@ -26,12 +26,13 @@ services:
     restart: always
     environment:
       DB_HOST: db
-      DB_PORT: 5432
+      DB_PORT: ${DB_PORT}
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_LISTEN: http://0.0.0.0:9200
+      JWT_KEY: ${JWT_KEY}
     depends_on:
       - db
     networks:
@@ -47,8 +48,8 @@ services:
       context: ./client
       dockerfile: Dockerfile
     environment:
-      VITE_API_HOST: ${VITE_API_HOST}
-      #TIMEZONE -> THE SERVER MUST BE ON UTC+0
+      VITE_API_HOST: ${SERVER_BACKEND_URL}
+      #TZ -> THE SERVER MUST BE ON UTC+0
     ports:
       - "5173:5173"
     depends_on:
