@@ -192,7 +192,7 @@ public class RecordController : ControllerBase
         if(response.Count() == 0){
             return NoContent();
         }
-        return Ok(response);
+        return Ok(response.OrderByDescending(x => x.timestamp).ToList());
     }
 
 

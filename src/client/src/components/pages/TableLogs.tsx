@@ -158,14 +158,22 @@ export const columns: ColumnDef<Record>[] = [
     accessorKey: "timestamp",
     header: () => <div className="text-left">Timestamp</div>,
     cell: ({ row }) => {
-      // Formatar a data no formato personalizado
-      const formattedDate = format(
-        new Date(row.original.timestamp),
-        "yyyy/MM/dd HH:mm:ss.SSS"
-      );
-      return <div className="text-left">{formattedDate}</div>;
+      const timestamp = String(row.original.timestamp); // Garantir que seja string
+  
+      // Separar data e microssegundos
+      const [datePart, microPart = "000000"] = timestamp.split(".");
+  
+      // Criar um objeto Date
+      const formattedDate = format(new Date(datePart), "yyyy/MM/dd HH:mm:ss");
+  
+      // Garantir que sempre tenha 6 casas decimais
+      const fixedMicro = microPart.padEnd(6, "0");
+  
+      return <div className="text-left">{`${formattedDate}.${fixedMicro}`}</div>;
     },
   },
+  
+  
   {
     accessorKey: "message",
     header: () => <div className="text-left">Message</div>,
@@ -327,7 +335,13 @@ export function TableLogs() {
             id: item.id, // Certifique-se de que `snowflakeId` seja o campo correto
           }))
         : [];
-      setData(data.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+
+        //Organiza os logs em ordem decrescente da real execução
+        setData(data);
+        
+        
+        
+        
 
       // Update the URL query parameters
       const url = new URL(window.location.href);
@@ -385,7 +399,8 @@ export function TableLogs() {
         setLastID(response.data);
       }
     } catch (error) {
-      toast.error("Erro ao carregar LastID");
+      //toast.error("Erro ao carregar LastID");
+      console.log("Erro ao carregar LastID");
     }
   };
   React.useEffect(() => { //nova busca no backend caso o lastID seja modificado

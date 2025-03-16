@@ -26,8 +26,10 @@ using LogCenter;
 
 LogCenterLogger logger = new LogCenterLogger(new LogCenterOptions(){
     url = "http://localhost:9200",
-    table = "example dotnet console", //the spaces will be converted to _ (underscore).
-    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....", //Generate this on LogCenter inteface, on you profile photo.
+    table = "example dotnet console",                   //the spaces will be converted to _ (underscore).
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....", // Generate this on LogCenter inteface, on you profile photo.
+    consoleLog = true,                                   // Log the message on the console as a comon Console.WriteLine(). Default is true
+    consoleLogEntireObject = true                        // Log the entire objeti to the Console.WriteLine(). Default is false
 });
 ```
 

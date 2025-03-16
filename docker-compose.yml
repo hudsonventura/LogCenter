@@ -20,7 +20,7 @@ services:
     
 
   server:
-    build: ./server
+    build: ./src/server
     container_name: logcenter_server
     #image:
     restart: always
@@ -42,10 +42,9 @@ services:
 
   client:
     container_name: logcenter_client
-    #image:
     restart: always
     build:
-      context: ./client
+      context: ./src/client
       dockerfile: Dockerfile
     environment:
       VITE_API_HOST: ${SERVER_BACKEND_URL}

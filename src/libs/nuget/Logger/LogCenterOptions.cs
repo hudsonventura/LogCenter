@@ -18,4 +18,14 @@ public class LogCenterOptions
     /// Your token. Generate it on web interface on user's preference //TODO: Put link of the documentation here
     /// </summary>
     public string token { get; set; }
+    
+    /// <summary>
+    /// Log the message on the console as a comon Console.WitreLine()
+    /// </summary>
+    public bool consoleLog { get; set; } = true;
+    
+    /// <summary>
+    /// Log the entry on the console as a comon Console.WitreLine()
+    /// </summary>
+    public bool consoleLogEntireObject { get; set; } = false;
 }
