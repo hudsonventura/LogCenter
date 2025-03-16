@@ -7,15 +7,17 @@ LogCenterLogger logger = new LogCenterLogger(
         url = "http://localhost:9200",
         table = "teste",
         token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5AbG9nY2VudGVyLm9yZyIsIm5hbWUiOiJ0ZXN0ZSIsInRhYmxlcyI6InRlc3RlIiwiZXhwIjoyMDU2ODM4ODY3LCJpc3MiOiJTZXVJc3N1ZXIiLCJhdWQiOiJTZXVBdWRpZW5jZSJ9.MNkYByqeXTNYngEzpDx0NXXsDPQBT6oSy-ESKyACJmU",
-    }, 
-    Guid.NewGuid() //or a string. It's optional. If empty, it will generate a new one Guid
+        consoleLog = true,
+        consoleLogEntireObject = true
+    } 
+    //, Guid.NewGuid() //or a string. It's optional. If empty, it will generate a new one Guid, else, you can you your own traceId, Guid or string
 );
 
 
 
 
-
-logger.Log(LogLevel.Info, "Hello World - Info");
+// Log asynchronously. Start a threat to send log to log center.
+logger.Log(LogLevel.Info, "Hello World - Info", Guid.NewGuid());
 logger.Log(LogLevel.Warning, "Hello World - Warning");
 logger.Log(LogLevel.Trace, "Hello World - Trace");
 logger.Log(LogLevel.Debug, "Hello World - Debug");
@@ -26,8 +28,8 @@ logger.Log(LogLevel.Fatal, "Hello World - Fatal");
 
 
 
-
-await logger.LogAsync(LogLevel.Critical, "Hello World 2", new { 
+// Log asynchronously
+logger.LogAsync(LogLevel.Critical, "Hello World 2", new { 
     nome = "John Doe Jr. da Silva",
     idade = 30,
     cpf = "123.456.789-00",
@@ -49,3 +51,5 @@ await logger.LogAsync(LogLevel.Critical, "Hello World 2", new {
     detalhesTecnicos = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet nulla auctor, vestibulum magna sed, convallis ex. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla facilisi. In hac habitasse platea dictumst. Vivamus nec sapien euismod, facilisis lectus at, ultrices ipsum. Nullam malesuada, odio ut euismod congue, nisi lorem tincidunt nisi, at convallis nulla erat sed ex."
 });
 
+// Log asynchronously and wait for confirmation
+logger.LogAsync(LogLevel.Critical, "Hello World 3");

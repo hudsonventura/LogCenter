@@ -2,13 +2,38 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <Title>Lib to abstract communication with LogCenter</Title>
+		<Description>Lib to abstract communication with LogCenter. Handles logging and message exchange efficiently.</Description>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <PackageTags>Log;Logs;LogCenter;</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+		<EnableNETAnalyzers>True</EnableNETAnalyzers>
+		<AnalysisLevel>latest-all</AnalysisLevel>
+		<VersionPrefix>0.1.0</VersionPrefix>
+    <PackageId>LogCenter.Logger</PackageId>
+    <Version>$(VersionPrefix)</Version>
+		<!--Version>$(VersionPrefix).$(VersionSuffix)</Version-->
+		<PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
+		<Deterministic>True</Deterministic>
+		<LangVersion>latest</LangVersion>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<PackageProjectUrl>https://github.com/hudsonventura/LogCenter</PackageProjectUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.2" />
-    <PackageReference Include="Serilog" Version="4.2.1-dev-02340" />
+    <None Include="README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+
+
   </ItemGroup>
 
 </Project>
