@@ -3,8 +3,7 @@ import sys
 import uuid
 
 
-sys.path.append(os.path.abspath("src/libs/Pypi/Logger/src")) # Just for API development
-
+#sys.path.append(os.path.abspath("src/libs/Pypi/Logger/src")) # Just for API development
 
 from LogCenter import LogCenterOptions,LogCenterLogger, LogLevel
 
@@ -16,9 +15,13 @@ options = LogCenterOptions(
     url="http://localhost:9200",
     table="teste",
     token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5AbG9nY2VudGVyLm9yZyIsIm5hbWUiOiJ0ZXN0ZSIsInRhYmxlcyI6InRlc3RlIiwiZXhwIjoyMDU2ODM4ODY3LCJpc3MiOiJTZXVJc3N1ZXIiLCJhdWQiOiJTZXVBdWRpZW5jZSJ9.MNkYByqeXTNYngEzpDx0NXXsDPQBT6oSy-ESKyACJmU",
+    consoleLog = True,                                # Log the message on the console as a comon Console.WriteLine(). Default is true
+    consoleLogEntireObject = True                     # Log the entire objeti to the Console.WriteLine(). Default is false
 )
 
-logger = LogCenterLogger(options)
+logger = LogCenterLogger(options, 
+                         #trace_id = str(uuid.uuid4()) # It's optional. If empty, it will generate a new one Guid, else, you can you your own traceId, Guid or string
+                         )
 
 # Logs síncronos
 logger.LogAsync(LogLevel.INFO, "Hello World - 1")
@@ -53,4 +56,5 @@ logger.LogAsync(LogLevel.CRITICAL, "Hello World 8", {
     "historico": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
     "detalhesTecnicos": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
 })
+
 logger.Log(LogLevel.SUCCESS, "Hello World - 9")

@@ -2,9 +2,8 @@
 
 This lib will help you to send your app's logs to LogCenter.  
 
-<p align="center">
-  <img src="https://github.com/hudsonventura/LogCenter/blob/main/logo.png?raw=true" alt="Descrição da imagem" width="230px">
-</p>
+![Descrição da imagem](https://raw.githubusercontent.com/hudsonventura/LogCenter/main/logo.png)
+
 
 Each log entry is queued and will be sent in order, following a FIFO (First In, First Out) approach.  
 This ensures that logs are processed sequentially, maintaining the correct logging sequence.  
@@ -16,7 +15,7 @@ This ensures that logs are processed sequentially, maintaining the correct loggi
 ### Basic usage
 First install the lib from Nuget
 ``` bash
-dotnet add package LogCenter.Logger --version 1.*
+dotnet add package LogCenter.Logger
 ```
 
 

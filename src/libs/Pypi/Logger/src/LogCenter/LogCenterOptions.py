@@ -9,9 +9,10 @@ class LogCenterOptions:
     token: str
     trace_id: str = None
 
-    def __init__(self, url: str, table: str, token: str, trace_id: str = None):
-        """Configura es para conex o com o LogCenter."""
+    def __init__(self, url: str, table: str, token: str, consoleLog: bool = True, consoleLogEntireObject: bool = False):
+        """Configura conexão com o LogCenter."""
         self.url = url
         self.table = table
         self.token = token
-        self.trace_id = trace_id if trace_id is not None else str(uuid.uuid4())
+        self.consoleLog = consoleLog
+        self.consoleLogEntireObject = consoleLogEntireObject

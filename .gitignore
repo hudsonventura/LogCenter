@@ -27,3 +27,5 @@ src/libs/Pypi/Logger/src/LogCenter.egg-info/*
 src/client/package-lock.json
 
 
+src/libs/Pypi/Logger/src/LogCenter/venv/*
+examples/python/venv/*
