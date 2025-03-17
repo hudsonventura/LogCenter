@@ -1,3 +1,14 @@
+# LogCenter.RequestLogger
+
+This lib will help you to send your app's request and responses from aspnet to LogCenter. See https://github.com/hudsonventura/LogCenter  
+
+<p align="center">
+  <img src="https://github.com/hudsonventura/LogCenter/blob/main/logo.png?raw=true" alt="Descrição da imagem" width="230px">
+</p>
+
+
+
+### Getting Started
 
 
 

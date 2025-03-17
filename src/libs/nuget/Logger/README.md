@@ -1,12 +1,11 @@
 # LogCenter.Logger
 
-This lib will help you to send your app's logs to LogCenter.  
+This lib will help you to send your app's logs to LogCenter. See https://github.com/hudsonventura/LogCenter  
 
-![Descrição da imagem](https://raw.githubusercontent.com/hudsonventura/LogCenter/main/logo.png)
+<p align="center">
+  <img src="https://github.com/hudsonventura/LogCenter/blob/main/logo.png?raw=true" alt="Descrição da imagem" width="230px">
+</p>
 
-
-Each log entry is queued and will be sent in order, following a FIFO (First In, First Out) approach.  
-This ensures that logs are processed sequentially, maintaining the correct logging sequence.  
 
 
 ### Getting Started
