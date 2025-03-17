@@ -64,7 +64,7 @@ public class WeatherForecastController : ControllerBase
         .ToArray();
 
 
-        return BadRequest(test);
+        return Ok(test);
     }
 
     /// <summary>

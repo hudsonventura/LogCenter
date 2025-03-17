@@ -170,10 +170,6 @@ public class LogCenterLogger : ILogger
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, _table);
             request.Headers.Add("Level", level.ToString());
 
-            //Add traceId from aspnet execution
-            if(Activity.Current?.Id != null){
-                request.Headers.Add("TraceID", Activity.Current?.Id);
-            }
 
             //Add traceId from Log or LogAsync method call
             if(traceId is not null){
@@ -198,12 +194,12 @@ public class LogCenterLogger : ILogger
             var response = await _client.SendAsync(request);
             if(!response.IsSuccessStatusCode){
                 var responseBody = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"It was falled to send log to LogCenter: {responseBody}");
+                Console.WriteLine($"It was failled to send log to LogCenter: {responseBody}");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"It was falled to send log to LogCenter: {ex.Message}");
+            Console.WriteLine($"It was failled to send log to LogCenter: {ex.Message}");
         }
 
     }

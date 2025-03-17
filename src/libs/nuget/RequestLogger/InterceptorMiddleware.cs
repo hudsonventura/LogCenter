@@ -34,16 +34,16 @@ public sealed class InterceptorMiddleware
     public async Task Invoke(HttpContext context)
     {
         Request request = await Request.Convert(context);
+        string traceId = Activity.Current?.Id ?? context?.TraceIdentifier;
 
         if(_options.LogGetRequest == false && request.Method == "GET"){
             
         }else{
-            OnReceiveRequest(request);
+            OnReceiveRequest(request, traceId);
         }
         
 
-        string traceId = Activity.Current?.Id ?? context?.TraceIdentifier;
-        context.Response.Headers.Add("traceId", traceId); // Garantir que o header seja adicionado
+        context.Response.Headers.Add(_options.TraceIdReponseHeader, traceId); // Garantir que o header seja adicionado
 
         // Salva o body original da response
         Stream originalbody = context.Response.Body;
@@ -70,7 +70,7 @@ public sealed class InterceptorMiddleware
                 if(_options.LogGetRequest == false && request.Method == "GET"){
             
                 }else{
-                    OnSendResponse(response);
+                    OnSendResponse(response, traceId);
                 }
                 
             }
@@ -85,7 +85,7 @@ public sealed class InterceptorMiddleware
                 context.Response.StatusCode = 500;
 
                 Response response = await Response.Convert(context, e);
-                OnSendResponse(response);
+                OnSendResponse(response, traceId);
 
                 // 🔹 Define o status code antes de lançar a exceção
                 
@@ -103,12 +103,12 @@ public sealed class InterceptorMiddleware
 
 
 
-    public async void OnReceiveRequest(Request request)
+    public async void OnReceiveRequest(Request request, string traceId)
     {
 
         switch (_options.FormatType)
         {
-            case InterceptorOptions.SaveFormatType.HTTPText: _logger.Log(LogLevel.Trace, "Request", request.ToString());
+            case InterceptorOptions.SaveFormatType.HTTPText: _logger.Log(LogLevel.Trace, "Request", traceId, request.ToString());
             break;
 
             default: _logger.Log(LogLevel.Trace, "Request", request);
@@ -117,35 +117,35 @@ public sealed class InterceptorMiddleware
 
     }
 
-    public async void OnSendResponse(Response response)
+    public async void OnSendResponse(Response response, string traceId)
     {      
         try
         {
-            string levelString = "Info";
+            LogLevel level = LogLevel.Information;
             switch (response.StatusCode.ToString().Substring(0, 1))
             {
-                case "2": levelString = "Info";
+                case "2": level = LogLevel.Success;
                 break;
 
-                case "3": levelString = "Warning";
+                case "3": level = LogLevel.Warning;
                 break;
 
-                case "4": levelString = "Warning";
+                case "4": level = LogLevel.Error;
                 break;
 
-                case "5": levelString = "Error";
+                case "5": level = LogLevel.Fatal;
                 break;
 
-                default: levelString = "Error";
+                default: level = LogLevel.Information;
                 break;
             }
 
             switch (_options.FormatType)
             {
-                case InterceptorOptions.SaveFormatType.HTTPText: _logger.Log(LogLevel.Trace, "Request", response.ToString());
+                case InterceptorOptions.SaveFormatType.HTTPText: _logger.Log(level, "Response", traceId, response.ToString());
                 break;
 
-                default: _logger.Log(LogLevel.Trace, "Request", response);
+                default: _logger.Log(level, "Response", response);
                 break;
             }
 

@@ -71,10 +71,10 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "LogCenter Docs",
         Version = "1.0",
-        Description = @"LogCenter API - Log Store and <br>
+        Description = @"LogCenter API - Log Store and Trace<br>
         <img src='https://github.com/hudsonventura/LogCenter/blob/main/logo.png?raw=true' alt='LogCenter Logo' width='230px'>
         <p>
-            Respoitory: <a href='https://github.com/hudsonventura/LogCenter'>https://github.com/hudsonventura/LogCenter</a>
+            Repository: <a href='https://github.com/hudsonventura/LogCenter'>https://github.com/hudsonventura/LogCenter</a>
         </p>
         <p>
             Thanks for <a href='https://github.com/LucasLuann'>https://github.com/LucasLuann</a>
