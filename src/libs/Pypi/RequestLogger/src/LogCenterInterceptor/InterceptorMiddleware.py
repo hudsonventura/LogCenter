@@ -11,7 +11,11 @@ logging.basicConfig(level=logging.INFO)
 
 trace_id_var: ContextVar[str] = ContextVar("trace_id", default="")
 
-class LogMiddleware(BaseHTTPMiddleware):
+class InterceptorMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, options):
+        super().__init__(app)  # Chama o construtor da classe base
+        self.options = options  # Agora options pode ser usado na classe
+
     async def dispatch(self, request: Request, call_next):
         # Gera um TraceId único para a requisição
         trace_id = str(uuid.uuid4())
