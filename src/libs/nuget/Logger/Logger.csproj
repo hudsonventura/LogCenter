@@ -13,7 +13,7 @@
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
 		<EnableNETAnalyzers>True</EnableNETAnalyzers>
 		<AnalysisLevel>latest-all</AnalysisLevel>
-		<VersionPrefix>0.1.0</VersionPrefix>
+		<VersionPrefix>0.1.1</VersionPrefix>
     <PackageId>LogCenter.Logger</PackageId>
     <Version>$(VersionPrefix)</Version>
 		<!--Version>$(VersionPrefix).$(VersionSuffix)</Version-->
