@@ -2,7 +2,7 @@
 
 
 ``` bash
-COMANDO PARA INSTALAÇÃO
+dotnet add package LogCenter.RequestLogger
 ```
 
 ``` C#
@@ -10,24 +10,26 @@ using LogCenter;
 using LogCenter.RequestInterceptor;
 
 app.UseInterceptor(new LogCenterOptions(){
-    url = "http://localhost:9200",
-    table = "example_interceptor",
-    formatType = LogCenterOptions.SaveFormatType.HTTPText, // * See below
-    LogGetRequest = false,  //
-    HideResponseExceptions = false //Can hide the response if an Exception is return with StatusCode 500 Internal Server Error
+    url = "http://localhost:9200",                                  // LogCenter's URL
+    table = "example_interceptor",                                  // Table name 
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",              // Generate this on LogCenter inteface, on you profile photo.
+    FormatType = InterceptorOptions.SaveFormatType.HTTPText,        // Save in HTTP Text or JSON?
+    HideResponseExceptions = false,                                 // Hide Exceptions when 500 Internal server error is returned to the user?    
+    LogGetRequest = false,                                          // Log GET requests?
+    TraceIdReponseHeader = "X-Trace-Id",                            // TraceId header name OPTIONAL. Default is X-Trace-Id
 });
 
 ```
 
 ### TraceId
-Using this lib, it'ill add the responde header `TraceId` in every single reponse. Thath is the same as aspnet TracerId, when a status code 400 is responded. It is saved on LogCenter. It can be used to localize the error that happend with your API clients.
+Using this lib, it'ill add the responde header `TraceIdReponseHeader` (see above) in every single reponse. That is the same as aspnet TracerId, when a status code 400 is responded. It is saved on LogCenter. It can be used to localize the error that happend with your API clients.
 ```
 TraceId: 00-4cda521494d8bf2337774936370e2cd3-3cec96b6ee169636-00
 ```  
 
 
 #### About LogCenterOptions.SaveFormatType
-If `HTTPText`, it'll save something like this on the LogCenter. It's better to read, **don't work with jsonb search**.  
+If `HTTPText`, it'll save something like this on the LogCenter. It's better to read, but **it doesn't work with jsonb search**.  
 
 Request:
 ```
@@ -79,7 +81,7 @@ traceId: 00-4cda521494d8bf2337774936370e2cd3-3cec96b6ee169636-00
 }
 ```
 
-If `Json` it'll save the request and response in json format, like this on LogCenter. It's bad to read, but **it works very well with jsonb search**.  
+If `Json` it'll save the request and response in json format, like this on LogCenter. It's not so good to read as a simples HTTPText, but **it works very well with jsonb search**.  
 
 Request:
 ``` json

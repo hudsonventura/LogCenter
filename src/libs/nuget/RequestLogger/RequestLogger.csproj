@@ -3,7 +3,28 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Title>Lib to abstract communication with LogCenter</Title>
+		<Description>Send the request and response to LogCenter. Handles logging and message exchange efficiently.</Description>
+    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <PackageTags>Log;Logs;LogCenter;</PackageTags>
+		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+		<EnableNETAnalyzers>True</EnableNETAnalyzers>
+		<AnalysisLevel>latest-all</AnalysisLevel>
+		<VersionPrefix>0.1.0</VersionPrefix>
+    <PackageId>LogCenter.RequestLogger</PackageId>
+    <Version>$(VersionPrefix)</Version>
+		<!--Version>$(VersionPrefix).$(VersionSuffix)</Version-->
+		<PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
+		<Deterministic>True</Deterministic>
+		<LangVersion>latest</LangVersion>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<PackageProjectUrl>https://github.com/hudsonventura/LogCenter</PackageProjectUrl>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<PackageIcon>logo.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,6 +32,17 @@
   </ItemGroup>
 
   <ItemGroup>
+
+    <None Include="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+	
+	<None Include="../../../../logo.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+
     <ProjectReference Include="..\Logger\Logger.csproj" />
   </ItemGroup>
 

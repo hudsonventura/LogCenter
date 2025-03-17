@@ -25,13 +25,19 @@
 		<PackageProjectUrl>https://github.com/hudsonventura/LogCenter</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<PackageIcon>logo.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="README.md">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
+		<Pack>True</Pack>
+		<PackagePath>\</PackagePath>
+	</None>
+
+	<None Include="../../../../logo.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
 
 
   </ItemGroup>
