@@ -30,3 +30,4 @@ src/client/package-lock.json
 src/libs/Pypi/Logger/src/LogCenter/venv/*
 examples/python/venv/*
 src/libs/Pypi/RequestLogger/src/LogCenterInterceptor/__pycache__/*
+examples/venv/*
