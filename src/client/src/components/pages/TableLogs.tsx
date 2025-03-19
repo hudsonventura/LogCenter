@@ -350,7 +350,7 @@ export function TableLogs() {
     } catch (error) {
       console.log(error);
       setData([]);
-      toast.error("Erro ao carregar dados");
+      toast.error("Error on load data from table");
     }
   };
 
@@ -440,6 +440,7 @@ export function TableLogs() {
     const now = new Date();
     now.setHours(now.getHours() - 1);
 
+
     return datetime ? new Date(datetime) : now;
   });
   const handleDateFrom = (date: Date) => {
@@ -454,6 +455,7 @@ export function TableLogs() {
     const datetime = params.getAll("datetime2")?.[0];
     const now = new Date();
     now.setMinutes(now.getMinutes() + 2);
+    
     return datetime ? new Date(datetime) : now;
   });
   const handleDateTo = (date: Date) => {
