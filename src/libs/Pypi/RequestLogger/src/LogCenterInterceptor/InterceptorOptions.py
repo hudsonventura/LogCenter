@@ -4,8 +4,8 @@ from enum import Enum
 
 
 
-sys.path.append(os.path.abspath("../../src/libs/Pypi/Logger/src"))
-
+sys.path.append(os.path.abspath("../../src/libs/Pypi/Logger/src")) #Used on debug
+sys.path.append("/home/hudsonventura/source/LogCenter/src/libs/Pypi/Logger/src")  #Used on debug
 from LogCenter import LogCenterOptions
 
 

@@ -79,11 +79,18 @@
             "console": "internalConsole"
         },
         {
-            "name": "Example Python",
-            "type": "debugpy",
+            "name": "Example FastAPI",
+            "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/examples/python/main.py",
-            "console": "integratedTerminal",
+            "module": "uvicorn",
+            "args": ["main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"],
+            //"console": "integratedTerminal",
+            "jinja": true,
+            "python": "${workspaceFolder}/examples/fastapi/venv/bin/python3",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/examples/fastapi/"
+            },
         },
+
     ]
 }
