@@ -19,9 +19,6 @@ logging.basicConfig(level=logging.INFO)
 # Cria uma variável de contexto para o TraceID
 trace_id_var: ContextVar[str] = ContextVar("trace_id", default="")
 
-class TraceId():
-    def Get():
-        return trace_id_var.get(None)
 
 
 

@@ -12,13 +12,13 @@ This ensures that logs are processed sequentially, maintaining the correct loggi
 
 
 ### Basic usage
-First install the lib from Nuget
+First install the lib from Pypi
 ``` bash
 pip install LogCenter --no-cache-dir
 ```
 
 
-Initialize the logger with you LogCenter configs
+Initialize the logger configs
 ``` python
 from LogCenter import LogCenterOptions,LogCenterLogger, LogLevel
 
