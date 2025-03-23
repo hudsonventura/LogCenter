@@ -15,6 +15,9 @@ class SaveFormatType(Enum):
 
 
 class InterceptorOptions(LogCenterOptions):
+
+    LogGetRequest: bool
+
     def __init__(
         self,
         url: str,
@@ -22,13 +25,14 @@ class InterceptorOptions(LogCenterOptions):
         token: str,
         consoleLog: bool = True,
         consoleLogEntireObject: bool = False,
-        TraceIdReponseHeader: str = "X-Trace-Id",
+        TraceIdReponseHeader: str = "X-Trace-Id", # TODO: Ajustar isso
         FormatType: SaveFormatType = SaveFormatType.HTTPText,
         HideResponseExceptions: bool = False,
         LogGetRequest: bool = False,
     ):
-        super().__init__(
-            url, table, token, consoleLog, consoleLogEntireObject
-        )
-
-
+        super().__init__(url, table, token, consoleLog, consoleLogEntireObject)
+        
+        self.TraceIdReponseHeader = TraceIdReponseHeader
+        self.FormatType = FormatType
+        self.HideResponseExceptions = HideResponseExceptions
+        self.LogGetRequest = LogGetRequest

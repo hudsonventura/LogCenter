@@ -18,20 +18,27 @@ class LogCenterLogger:
         self.consoleLogEntireObject = options.consoleLogEntireObject
 
 
-    def _log_private(self, level, message, data=None, timestamp=None):
+    def _log_private(self, level, message, data=None, timestamp=None, traceId:str=None):
 
         payload = None
         if data is not None:
             payload = data
 
+        
+
         headers = {
             "Authorization": f"Bearer {self.token}",
             "Content-Type": "application/json",
-            "TraceId": self.trace_id,
+            "traceID": self.trace_id,
             "level": level,
             "message": message,
             "timestamp": timestamp
         }
+
+
+        if(traceId != None):
+            headers["traceID"] = traceId
+
         
         try:
             response = requests.post(f"{self.url}/{self.table}", headers=headers, 
@@ -51,18 +58,18 @@ class LogCenterLogger:
         else:
             print(f"{timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')} [{level.upper()}] {message}")
 
-    def Log(self, level, message, data=None):
+    def Log(self, level, message, data=None,traceId:str=None):
         """Start a thread to send the log to LogCenter"""
         timestamp = datetime.now(timezone.utc)
         self._ConsoleLog(level, message, data, timestamp)
         self._log_private(level, message, data, timestamp.isoformat(timespec='microseconds'))
 
-    def LogAsync(self, level, message, data=None):
+    def LogAsync(self, level, message, data=None, traceId:str=None):
         """Send the log to LogCenter, and wait for a response"""
         timestamp = datetime.now(timezone.utc)
         self._ConsoleLog(level, message, data, timestamp)
         def chamar_log():
-            self._log_private(level, message, data, timestamp.isoformat(timespec='microseconds'))
+            self._log_private(level, message, data, timestamp.isoformat(timespec='microseconds'), traceId)
 
         # Criar e iniciar a thread
         thread = threading.Thread(target=chamar_log)
