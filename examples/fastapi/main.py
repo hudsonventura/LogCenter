@@ -1,13 +1,15 @@
+import contextvars
 import os
 import sys
-from fastapi import FastAPI
+import uuid
+from fastapi import Depends, FastAPI
 from fastapi.responses import JSONResponse
 
 
 
 sys.path.append(os.path.abspath("../../src/libs/Pypi/RequestLogger/src"))  #Used on debug
 sys.path.append("/home/hudsonventura/source/LogCenter/src/libs/Pypi/RequestLogger/src")  #Used on debug
-from LogCenterInterceptor import InterceptorMiddleware, InterceptorOptions, SaveFormatType
+from LogCenterInterceptor import InterceptorMiddleware, InterceptorOptions, SaveFormatType, TraceId
 
 sys.path.append(os.path.abspath("../../src/libs/Pypi/Logger/src"))  #Used on debug
 sys.path.append("/home/hudsonventura/source/LogCenter/src/libs/Pypi/Logger/src")  #Used on debug
@@ -23,14 +25,21 @@ options = InterceptorOptions(
     FormatType=SaveFormatType.Json,
     HideResponseExceptions=True,
     LogGetRequest=True,
-    TraceIdReponseHeader="X-Trace-Id"
+    TraceIdReponseHeader="X-Trace-Id",
 )
 app.add_middleware(InterceptorMiddleware, options=options)
 
 
+#Logger
+logger = LogCenterLogger(options=options)
+def get_logger():
+    return logger
+
+
 
 @app.get("/")
-async def root():
+async def root(logger=Depends(get_logger)):
+    logger.LogAsync(LogLevel.WARNING, "Hellooooo World", None, TraceId.Get())
     return {"message": "Hello, FastAPI!"}
 
 @app.post("/echo")

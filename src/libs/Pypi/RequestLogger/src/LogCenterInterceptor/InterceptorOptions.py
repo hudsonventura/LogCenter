@@ -25,7 +25,7 @@ class InterceptorOptions(LogCenterOptions):
         token: str,
         consoleLog: bool = True,
         consoleLogEntireObject: bool = False,
-        TraceIdReponseHeader: str = "X-Trace-Id", # TODO: Ajustar isso
+        TraceIdReponseHeader: str = "X-Trace-Id", 
         FormatType: SaveFormatType = SaveFormatType.HTTPText,
         HideResponseExceptions: bool = False,
         LogGetRequest: bool = False,
