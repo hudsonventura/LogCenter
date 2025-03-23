@@ -6,7 +6,7 @@ from enum import Enum
 
 sys.path.append(os.path.abspath("../../src/libs/Pypi/Logger/src")) #Used on debug
 sys.path.append("/home/hudsonventura/source/LogCenter/src/libs/Pypi/Logger/src")  #Used on debug
-from LogCenter import LogCenterOptions
+from LogCenter import LogCenterLogger, LogCenterOptions
 
 
 class SaveFormatType(Enum):
@@ -35,4 +35,4 @@ class InterceptorOptions(LogCenterOptions):
         self.TraceIdReponseHeader = TraceIdReponseHeader
         self.FormatType = FormatType
         self.HideResponseExceptions = HideResponseExceptions
-        self.LogGetRequest = LogGetRequest
+        self.LogGetRequest = LogGetRequest,

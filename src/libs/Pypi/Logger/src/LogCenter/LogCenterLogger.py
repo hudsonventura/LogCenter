@@ -16,6 +16,8 @@ class LogCenterLogger:
         self.trace_id = trace_id
         self.consoleLog = options.consoleLog
         self.consoleLogEntireObject = options.consoleLogEntireObject
+        self.trace_id = str(uuid.uuid4())
+
 
 
     def _log_private(self, level, message, data=None, timestamp=None, traceId:str=None):

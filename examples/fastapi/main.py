@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 sys.path.append(os.path.abspath("../../src/libs/Pypi/RequestLogger/src"))  #Used on debug
 sys.path.append("/home/hudsonventura/source/LogCenter/src/libs/Pypi/RequestLogger/src")  #Used on debug
-from LogCenterInterceptor import InterceptorMiddleware, InterceptorOptions, SaveFormatType, TraceId
+from LogCenterInterceptor import InterceptorMiddleware, InterceptorOptions, LoggerFactory, SaveFormatType, TraceId
 
 sys.path.append(os.path.abspath("../../src/libs/Pypi/Logger/src"))  #Used on debug
 sys.path.append("/home/hudsonventura/source/LogCenter/src/libs/Pypi/Logger/src")  #Used on debug
@@ -27,19 +27,17 @@ options = InterceptorOptions(
     LogGetRequest=True,
     TraceIdReponseHeader="X-Trace-Id",
 )
-app.add_middleware(InterceptorMiddleware, options=options)
+factory = LoggerFactory(options)
+logger = factory.GetLogger()
+get_logger = factory.GetLogger
+app.add_middleware(InterceptorMiddleware, options=options, logger=logger)
 
-
-#Logger
-logger = LogCenterLogger(options=options)
-def get_logger():
-    return logger
 
 
 
 @app.get("/")
 async def root(logger=Depends(get_logger)):
-    logger.LogAsync(LogLevel.WARNING, "Hellooooo World", None, TraceId.Get())
+    logger.LogAsync(LogLevel.FATAL, "Hellooooo World 321", [{"test": 123}], TraceId.Get())
     return {"message": "Hello, FastAPI!"}
 
 @app.post("/echo")

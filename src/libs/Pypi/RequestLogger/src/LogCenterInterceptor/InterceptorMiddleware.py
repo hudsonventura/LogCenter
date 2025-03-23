@@ -25,16 +25,17 @@ class TraceId():
 
 
 
-class InterceptorMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app, options: InterceptorOptions):
+class InterceptorMiddleware(BaseHTTPMiddleware, LogCenterLogger):
+    def __init__(self, app, options: InterceptorOptions, logger: LogCenterLogger):
         super().__init__(app)  # Chama o construtor da classe base
         self.options = options  # Agora options pode ser usado na classe
-        self.logger = LogCenterLogger(options)
+        self.logger = logger
 
+
+    
     async def dispatch(self, request: Request, call_next):
         # Gera um TraceId único para a requisição
-        trace_id = str(uuid.uuid4())
-        trace_id_var.set(trace_id)
+        
 
 
         # Captura os dados da request
@@ -47,7 +48,7 @@ class InterceptorMiddleware(BaseHTTPMiddleware):
 
         # Send request if its not a GET or if LogGetRequest is True
         if(request.method != 'GET' or (request.method == 'GET' and self.options.LogGetRequest)):
-            asyncio.create_task(self.send_log(request_data, trace_id, type="Request"))
+            asyncio.create_task(self.send_log(request_data, self.logger.trace_id, type="Request"))
         
         
 
@@ -63,7 +64,7 @@ class InterceptorMiddleware(BaseHTTPMiddleware):
         # }
         response_data = self._getBodyResponse(
             status_code=response.status_code, 
-            headers={**response.headers, self.options.TraceIdReponseHeader: trace_id},
+            headers={**response.headers, self.options.TraceIdReponseHeader: self.logger.trace_id},
             body=b"".join(response_body).decode()
         )
 
@@ -73,7 +74,7 @@ class InterceptorMiddleware(BaseHTTPMiddleware):
         new_response = Response(
             content=b"".join(response_body),
             status_code=response.status_code,
-            headers={**response.headers, self.options.TraceIdReponseHeader: trace_id},
+            headers={**response.headers, self.options.TraceIdReponseHeader: self.logger.trace_id},
             media_type=response.media_type
         )
 
@@ -89,7 +90,7 @@ class InterceptorMiddleware(BaseHTTPMiddleware):
 
         # Send response if its not a GET or if LogGetRequest is True
         if(request.method != 'GET' or (request.method == 'GET' and self.options.LogGetRequest)):
-            asyncio.create_task(self.send_log(data=response_data, trace_id=trace_id, type="Response", log_level=log_level))
+            asyncio.create_task(self.send_log(data=response_data, trace_id=self.logger.trace_id, type="Response", log_level=log_level))
 
 
         return new_response
