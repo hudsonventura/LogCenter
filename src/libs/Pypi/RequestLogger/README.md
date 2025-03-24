@@ -1,4 +1,4 @@
-# LogCenter.Logger
+# LogCenter.RequestLogger
 
 This lib will send your app's request and responses from FastAPI to LogCenter automatically. See https://github.com/hudsonventura/LogCenter
 
@@ -13,7 +13,7 @@ This lib will send your app's request and responses from FastAPI to LogCenter au
 ### Basic usage
 First install the lib from Pypi
 ``` bash
-pip install LogCenterInterceptor --no-cache-dir
+pip install pip install LogCenter.RequestLogger --no-cache-dir
 ```
 
 
@@ -27,10 +27,9 @@ options = InterceptorOptions(
     token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....", # Generate this on LogCenter inteface, on you profile photo.
     consoleLog = True,                                # Log the message on the console as a comon Console.WriteLine(). Default is true
     consoleLogEntireObject = True,                     # Log the entire objeti to the Console.WriteLine(). Default is false
-    FormatType=SaveFormatType.Json, # TODO: Documentar
-    HideResponseExceptions=True,
-    LogGetRequest=True,
-    TraceIdReponseHeader="X-Trace-Id",
+    FormatType=SaveFormatType.Json,                     # Save in HTTP Text or JSON?
+    LogGetRequest=True,                                 # Log GET requests?
+    TraceIdReponseHeader="X-Trace-Id",                  # TraceId header name OPTIONAL. Default is X-Trace-Id
 )
 
 factory = LoggerFactory(options)

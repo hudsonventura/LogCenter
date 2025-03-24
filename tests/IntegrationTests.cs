@@ -67,7 +67,7 @@ public class UnitTest1
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    //TODO: check if the object was input
+
 
     [Fact]
     public async Task InsertLargeObject()

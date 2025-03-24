@@ -27,12 +27,10 @@ class InterceptorOptions(LogCenterOptions):
         consoleLogEntireObject: bool = False,
         TraceIdReponseHeader: str = "X-Trace-Id", 
         FormatType: SaveFormatType = SaveFormatType.HTTPText,
-        HideResponseExceptions: bool = False,
         LogGetRequest: bool = False,
     ):
         super().__init__(url, table, token, consoleLog, consoleLogEntireObject)
         
         self.TraceIdReponseHeader = TraceIdReponseHeader
         self.FormatType = FormatType
-        self.HideResponseExceptions = HideResponseExceptions
         self.LogGetRequest = LogGetRequest,

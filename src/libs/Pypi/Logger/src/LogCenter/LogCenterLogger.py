@@ -13,10 +13,9 @@ class LogCenterLogger:
         self.url = options.url
         self.table = options.table
         self.token = options.token
-        self.trace_id = trace_id
+        self.trace_id = trace_id if trace_id else str(uuid.uuid4())
         self.consoleLog = options.consoleLog
         self.consoleLogEntireObject = options.consoleLogEntireObject
-        self.trace_id = str(uuid.uuid4())
 
 
 

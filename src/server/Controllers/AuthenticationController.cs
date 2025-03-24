@@ -9,7 +9,7 @@ namespace server.Controllers;
 
 
 /// <summary>
-/// An explanation here //TODO: Document!!!
+/// Authentication controller
 /// </summary>
 [Route("[controller]")]
 public class AuthenticationController : ControllerBase
@@ -24,7 +24,7 @@ public class AuthenticationController : ControllerBase
 
 
     /// <summary>
-    /// //TODO: Document!!!
+    /// Login to LogCenter
     /// </summary>
     /// <param name="dto"></param>
     /// <returns></returns>

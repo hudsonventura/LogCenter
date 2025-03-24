@@ -31,3 +31,6 @@ src/libs/Pypi/Logger/src/LogCenter/venv/*
 examples/python/venv/*
 src/libs/Pypi/RequestLogger/src/LogCenterInterceptor/__pycache__/*
 examples/venv/*
+src/libs/Pypi/RequestLogger/src/LogCenter.egg-info/*
+src/libs/Pypi/RequestLogger/dist/*
+src/libs/Pypi/RequestLogger/src/LogCenter.RequestLogger.egg-info/*

@@ -15,7 +15,7 @@ public class LogCenterOptions
 
 
     /// <summary>
-    /// Your token. Generate it on web interface on user's preference //TODO: Put link of the documentation here
+    /// Your token. Generate it on web interface on user's preference
     /// </summary>
     public string token { get; set; }
     
