@@ -1,12 +1,11 @@
-using LogCenter; //TODO: DOCS
-using LogCenter.RequestInterceptor; //TODO: DOCS
+using LogCenter;
+using LogCenter.RequestInterceptor;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 
-////////////////
-// Configuração logger //TODO: DOCS
+
 builder.Services.AddScoped(provider =>
 {
     LogCenter.ILogger logger = new LogCenterLogger(new LogCenterOptions(){
@@ -15,9 +14,7 @@ builder.Services.AddScoped(provider =>
     });
     return logger;
 });
-  // Adiciona logs no Event Viewer (Windows)
-///////////////
-///
+
 
 
 // Add services to the container.

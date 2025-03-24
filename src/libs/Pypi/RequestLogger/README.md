@@ -28,7 +28,7 @@ options = InterceptorOptions(
     consoleLog = True,                                # Log the message on the console as a comon Console.WriteLine(). Default is true
     consoleLogEntireObject = True,                     # Log the entire objeti to the Console.WriteLine(). Default is false
     FormatType=SaveFormatType.Json,                     # Save in HTTP Text or JSON?
-    LogGetRequest=True,                                 # Log GET requests?
+    LogGetRequest=False,                                 # Log GET requests?
     TraceIdReponseHeader="X-Trace-Id",                  # TraceId header name OPTIONAL. Default is X-Trace-Id
 )
 
@@ -39,7 +39,7 @@ app.add_middleware(InterceptorMiddleware, options=options, logger=logger)
 ```
 
 
-Here the request and response will save to LogCenter.
+Here the request and response will save to LogCenter automatically. Nothing must be changed on your endpoint. Easy peasy lemon squeezy
 ``` python
 @app.post("/echo")
 async def echo(data: dict):
@@ -47,7 +47,7 @@ async def echo(data: dict):
 ```
 
 
-Here, both the request and response will be saved to LogCenter, along with the message. All messages will have the same TraceID in LogCenter, making mapping and debugging easier.
+Here, the same as above and with custom message. between request and response. All messages will have the same TraceID in LogCenter, making mapping problems and debugging easier.
 ``` python
 @app.get("/")
 async def root(logger=Depends(get_logger)):
@@ -87,43 +87,6 @@ logger.Log(LogLevel.ERROR, "Hello World")
 
 
 
-## TraceID
-A **Trace ID** (Tracing Identifier) is a unique identifier assigned to a request as it flows through a distributed system. It helps track the request across multiple services, making it easier to debug and monitor performance.
-
-## 🔹 How It Works:
-1. When a request enters a system (e.g., an API call), a **Trace ID** is generated.
-2. This ID is **propagated** across all microservices and logs as the request moves through the system.
-3. Developers can use it to **trace** the full lifecycle of a request across different services.
-
-
-If you want to reference an ID (a Guid or a string) on LogCenter, you can use the TraceId. Let's see how to and cases:
-
-
-
-``` python
-/* In this case, you configure an ID (a GUID or a custom string) as a global Trace ID for the execution instance of your app.
- * Here, you are assigning the same Trace ID to all logs for that instance's execution.
- */
-logger = LogCenterLogger(options, 
-                         #trace_id = str(uuid.uuid4()) # It's optional. If empty, it will generate a new one Guid, else, you can you your own traceId, Guid or string
-                         )
-
-// AND / OR
-
-/* In this case, you configure an ID (a GUID or a custom string) for each log entry. It will ignore the global Trace ID (above).
- * Here, you are assigning a Trace ID to each execution. It is useful for multiple thread executions in your app.
- * You can generate a Trace ID at the beginning of each thread and pass it to the Log method call.
- */
-traceId = str(uuid.uuid4()
-logger.LogAsync(LogLevel.Info, "Hello World - Info", traceId)
-
-//OR
-
-/* Same as above, but with a personal/custom string
- */
-myTrace = "My custom trace execution ID"
-logger.LogAsync(LogLevel.Info, "Hello World - Info", myTrace)
-```
 
 
 
