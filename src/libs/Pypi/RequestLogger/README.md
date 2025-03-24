@@ -97,4 +97,6 @@ On `pyproject.toml` file directory:
 python -m build # must be installed before -> pip install build
 twine upload dist/* # must be installed before -> pip install twine
 pip install LogCenter --no-cache-dir
+
+uvicorn main:app --reload
 ```

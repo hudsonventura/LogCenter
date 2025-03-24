@@ -38,7 +38,7 @@ services:
     networks:
       - logcenter
     ports:
-      - 9200:9200
+      - 9200:9200 //TODO: ISSO PRECISA SER VARIAVEL
 
   client:
     container_name: logcenter_client
