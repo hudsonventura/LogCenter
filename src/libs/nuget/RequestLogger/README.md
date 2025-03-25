@@ -18,22 +18,64 @@ dotnet add package LogCenter.RequestLogger
 using LogCenter;
 using LogCenter.RequestInterceptor;
 
-app.UseInterceptor(new LogCenterOptions(){
+//Set your configs
+InterceptorOptions options = new InterceptorOptions(){
     url = "http://localhost:9200",                                  // LogCenter's URL
     table = "example_interceptor",                                  // Table name 
     token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",              // Generate this on LogCenter inteface, on you profile photo.
     FormatType = InterceptorOptions.SaveFormatType.HTTPText,        // Save in HTTP Text or JSON?
-    HideResponseExceptions = false,                                 // Hide Exceptions when 500 Internal server error is returned to the user?    
-    LogGetRequest = false,                                          // Log GET requests?
-    TraceIdReponseHeader = "X-Trace-Id",                            // TraceId header name OPTIONAL. Default is X-Trace-Id
-});
+    HideResponseExceptions = false,                                 // Hide Exceptions when 500 Internal server error (body) is returned to the user? Default is false, but it is recommended able it.   
+    LogGetRequest = false,                                           // Log GET requests?
+    TraceIdReponseHeader = "X-Trace-Id",                             // TraceId header name OPTIONAL. Default is X-Trace-Id
+};
 
+//inject the configs on dependency injection
+builder.Services.AddSingleton<LogCenterOptions, InterceptorOptions>(op => options);
+
+//inject the logger, to use on your controller
+builder.Services.AddScoped<LogCenterLogger>();
+
+...
+var app = builder.Build();
+...
+
+//use the interceptor to log request and response
+app.UseRequestInterceptor();
+```
+
+On your controller:
+``` C#
+[ApiController]
+public class WeatherForecastController : ControllerBase
+{
+    private readonly LogCenter.LogCenterLogger _logger;
+
+    public WeatherForecastController(LogCenter.LogCenterLogger logger)
+    {
+        _logger = logger;
+    }
+
+
+    [HttpGet(Name = "GetWeatherForecast")]
+    public ActionResult Get()
+    {
+        _logger.Log(LogCenter.LogLevel.Debug, "Processing ...");
+        _logger.Log(LogCenter.LogLevel.Debug, "The object", test);
+        _logger.Log(LogCenter.LogLevel.Debug, "Ok ...");
+
+        return Ok();
+    }
+}
 ```
 
 ### TraceId
 Using this lib, it'ill add the responde header `TraceIdReponseHeader` (see above) in every single reponse. That is the same as aspnet TracerId, when a status code 400 is responded. It is saved on LogCenter. It can be used to localize the error that happend with your API clients.
 ```
 TraceId: 00-4cda521494d8bf2337774936370e2cd3-3cec96b6ee169636-00
+
+#OR
+
+X-Trace-Id: 00-4cda521494d8bf2337774936370e2cd3-3cec96b6ee169636-00
 ```  
 
 
