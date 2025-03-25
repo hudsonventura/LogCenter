@@ -48,6 +48,7 @@ public class LogCenterLogger : ILogger
     /// <param name="options"></param>
     /// <param name="traceId"></param>
     private void fullContructor(LogCenterOptions options, string traceId){
+        _validations(options);
         _table = options.table;
         _client = new HttpClient();
         _client.BaseAddress = new Uri(options.url);
@@ -55,6 +56,12 @@ public class LogCenterLogger : ILogger
         _GlobaltraceId = traceId.ToString();
         _ConsoleLog = options.consoleLog;
         _ConsoleEntryObject = options.consoleLogEntireObject;
+    }
+
+    private void _validations(LogCenterOptions options){
+        if (string.IsNullOrEmpty(options.url)) throw new Exception("LogCenterOptions URL is required");
+        if (string.IsNullOrEmpty(options.table)) throw new Exception("LogCenterOptions TABLE is required");
+        if (string.IsNullOrEmpty(options.token)) throw new Exception("LogCenterOptions TOKEN is required. Generate it on web interface");
     }
 
 
@@ -161,8 +168,8 @@ public class LogCenterLogger : ILogger
         if(type == null || !_ConsoleEntryObject){
             Console.WriteLine($"{timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{level.ToString().ToUpper()}] {message}");
         }else{
-        string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
-        Console.WriteLine($"{timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{level.ToString().ToUpper()}] {message}{Environment.NewLine}{json}{Environment.NewLine}");
+            string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+            Console.WriteLine($"{timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{level.ToString().ToUpper()}] {message}{Environment.NewLine}{json}{Environment.NewLine}");
         }
         Console.ForegroundColor = console_color_default; //return to default console color
     }

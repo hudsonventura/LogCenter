@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 
 //using RequestResponseInterceptor;
@@ -11,6 +12,13 @@ namespace LogCenter.RequestInterceptor;
 
 public static class InterceptorMiddlewareExtensions
 {
+    public static IApplicationBuilder UseRequestInterceptor(this IApplicationBuilder builder)
+    {
+        var options = builder.ApplicationServices.GetRequiredService<LogCenterOptions>();
+
+        return builder.UseMiddleware<InterceptorMiddleware>(options);
+    }
+
      public static IApplicationBuilder UseRequestInterceptor(this IApplicationBuilder builder,  LogCenterOptions options)
     {
         return builder.UseMiddleware<InterceptorMiddleware>(options);

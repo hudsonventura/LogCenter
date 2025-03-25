@@ -13,9 +13,9 @@ public class WeatherForecastController : ControllerBase
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
 
-    private readonly LogCenter.ILogger _logger;
+    private readonly LogCenter.LogCenterLogger _logger;
 
-    public WeatherForecastController(LogCenter.ILogger logger)
+    public WeatherForecastController(LogCenter.LogCenterLogger logger)
     {
         _logger = logger;
     }
