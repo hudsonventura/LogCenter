@@ -53,7 +53,7 @@ You can use an existing libraries listed below. Simply configure it and start us
 | Dotnet Core console app   | [README.md](src/libs/nuget/Logger/README.md)  |
 | Aspnet Core               | [README.md](src/libs/nuget/RequestLogger/README.md)  |
 | Python console app        | [README.md](src/libs/Pypi/Logger/README.md)  |
-| Python with FastAPI       | [README.md](src/libs/Pypi/Logger/README.md)  |
+| Python with FastAPI       | [README.md](src/libs/Pypi/RequestLogger/README.md)  |
 
 ## How can I do a Request without a lib?
 
@@ -136,3 +136,4 @@ The response is a simples string with the id of the created object
  - BUG: favicon int backend
  - TODO: Normalize backend return
  - TODO: Retrieve more than 100 itens on frontend.
+ - TODO: Write the owner of the token to identify the who (person) sent the log.
