@@ -207,14 +207,17 @@ public class LogCenterLogger : ILogger
             request.Headers.Add("Level", level.ToString());
 
 
-            //Add traceId from Log or LogAsync method call
-            if(traceId is not null){
-                request.Headers.Add("TraceID", traceId);
+            //Add traceId from aspnet execution
+            if(Activity.Current?.Id != null){
+                //request.Headers.Add("TraceID", Activity.Current?.Id);
+                traceId = Activity.Current?.Id;
             }
 
-            if(!request.Headers.Contains("TraceID")){
-                request.Headers.Add("TraceID", _GlobaltraceId);
+            if(traceId == null){
+                traceId = _GlobaltraceId;
             }
+
+            request.Headers.Add("TraceID", traceId);
 
             request.Headers.Add("Timestamp", timestamp.ToString("o"));
             request.Headers.Add("Message", message);

@@ -29,7 +29,7 @@ logger.Log(LogLevel.Fatal, "Hello World - Fatal");
 
 
 // Log asynchronously
-logger.LogAsync(LogLevel.Critical, "Hello World 2", new { 
+logger.LogAsync(LogLevel.Trace, "Hello World 2", new { 
     nome = "John Doe Jr. da Silva",
     idade = 30,
     cpf = "123.456.789-00",
