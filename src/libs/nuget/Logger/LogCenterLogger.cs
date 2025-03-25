@@ -153,12 +153,41 @@ public class LogCenterLogger : ILogger
         }
 
         Type type = data?.GetType();
+
+        ConsoleColor console_color_default = Console.ForegroundColor;
+        ConsoleColor console_color = SwitchColor(level, console_color_default);
+
+        Console.ForegroundColor = console_color;
         if(type == null || !_ConsoleEntryObject){
             Console.WriteLine($"{timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{level.ToString().ToUpper()}] {message}");
-            return;
-        }
+        }else{
         string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
         Console.WriteLine($"{timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{level.ToString().ToUpper()}] {message}{Environment.NewLine}{json}{Environment.NewLine}");
+        }
+        Console.ForegroundColor = console_color_default; //return to default console color
+    }
+
+    private ConsoleColor SwitchColor(LogLevel level, ConsoleColor default_color){
+        switch (level){
+            case LogLevel.Debug:
+                return ConsoleColor.DarkBlue;
+            case LogLevel.Information:
+                return ConsoleColor.Blue;
+            case LogLevel.Warning:
+                return ConsoleColor.Yellow;
+            case LogLevel.Error:
+                return ConsoleColor.Red;
+            case LogLevel.Success:
+                return ConsoleColor.Green;
+            case LogLevel.Critical:
+                return ConsoleColor.DarkRed;
+            case LogLevel.Fatal:
+                return ConsoleColor.DarkRed;
+            case LogLevel.Trace:
+                return ConsoleColor.DarkCyan;
+        }
+
+        return default_color;
     }
 
 
@@ -190,7 +219,6 @@ public class LogCenterLogger : ILogger
                 request.Content = content;
             }
         
-            Console.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")} [{level.ToString().ToUpper()}] {message}");
             var response = await _client.SendAsync(request);
             if(!response.IsSuccessStatusCode){
                 var responseBody = await response.Content.ReadAsStringAsync();

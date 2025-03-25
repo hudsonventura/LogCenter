@@ -63,6 +63,13 @@ public class WeatherForecastController : ControllerBase
         })
         .ToArray();
 
+        _logger.Log(LogCenter.LogLevel.Debug, "Processing ...");
+        _logger.Log(LogCenter.LogLevel.Information, "The object", test);
+        _logger.Log(LogCenter.LogLevel.Success, "Ok ...");
+        _logger.Log(LogCenter.LogLevel.Error, "Ok ...");
+        _logger.Log(LogCenter.LogLevel.Critical, "Ok ...");
+        _logger.Log(LogCenter.LogLevel.Warning, "Ok ...");
+        _logger.Log(LogCenter.LogLevel.Trace, "Ok ...");
 
         return Ok(test);
     }
