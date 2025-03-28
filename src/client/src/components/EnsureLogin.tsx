@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/services/api";
 
@@ -14,12 +14,10 @@ export default function EnsureLogin() {
 			}
 
 			try {
-				console.log("Aqui 1")
-				const response = await api.post("/logoff", {});
+				await api.post("/logoff", {});
 
-			} catch (error) {
+			} catch (error: any) {
 				if(error.status === 401){
-					console.log("Aqui 2")
 					navigate("/login");
 					sessionStorage.removeItem("token");
 				}

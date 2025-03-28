@@ -21,7 +21,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { useLocation } from "react-router-dom";
+//import { useLocation } from "react-router-dom";
 
 const colorMap = {
   1: "hsl(var(--chart-1))",
@@ -31,7 +31,7 @@ const colorMap = {
   5: "hsl(var(--chart-5))",
 };
 
-export default function NiveisLogsChart({ data }) {
+export default function NiveisLogsChart({ data }: any) {	
   const chartData = data;
 
   // Verificando se os dados existem
@@ -56,11 +56,16 @@ export default function NiveisLogsChart({ data }) {
   };
 
   // Transformando os dados no formato esperado
-  const formattedData = Object.entries(levelCounts).map(([level, count]) => ({
-    level: `${levelNames[level]}`,
-    value: count,
-    color: colorMap[level] || "hsl(var(--chart-1))",
-  }));
+  const formattedData = Object.entries(levelCounts).map(
+    ([level, count]: [string, number]) => {
+      const levelNumber = Number(level);
+      return {
+        level: `${levelNames[levelNumber]}`,
+        value: count,
+        color: colorMap[levelNumber] || "hsl(var(--chart-1))",
+      };
+    }
+  );
 
   return (
     <Card className="w-full p-5">

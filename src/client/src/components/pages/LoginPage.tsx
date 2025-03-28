@@ -40,7 +40,7 @@ export default function LoginPage() {
 			sessionStorage.setItem("token", token);
 			// Redirect to dashboard or something
 			navigate("/tables");
-		} catch (error) {
+		} catch (error: any) {
 			toast.error(error.message)
 		}
 	}

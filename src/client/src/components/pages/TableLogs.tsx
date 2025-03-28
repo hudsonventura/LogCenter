@@ -15,10 +15,10 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
-import { ChartBar } from "@phosphor-icons/react";
+//import { ChartBar } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+//
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -42,20 +42,20 @@ import api from "@/services/api";
 import { format } from "date-fns";
 import { ModalObject } from "../ModalObject";
 import { DateTimePicker } from "../DateTimePicker";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+// import {
+//   Tooltip,
+//   TooltipContent,
+//   TooltipProvider,
+//   TooltipTrigger,
+// } from "@/components/ui/tooltip";
 import { TimeZoneSelect } from "../TimeZoneSelect";
 
 //Charts
-import NiveisLogsChart from "../charts/NiveisLogsChart";
-import LogBarCharts from "../charts/LogBarCharts";
-import LogLineCharts from "../charts/LogLineCharts";
-import LogPieCharts from "../charts/LogPieCharts";
-import HitsHistogram from "../charts/HitsHistogram";
+// import NiveisLogsChart from "../charts/NiveisLogsChart";
+// import LogBarCharts from "../charts/LogBarCharts";
+// import LogLineCharts from "../charts/LogLineCharts";
+// import LogPieCharts from "../charts/LogPieCharts";
+// import HitsHistogram from "../charts/HitsHistogram";
 import   HeaderBar  from "@/components/HeaderBar";
 import EnsureLogin from "../EnsureLogin";
 
@@ -63,7 +63,7 @@ export type Record = {
   id: bigint;
   level: RecordLevel;
   traceId: string;
-  message: object;
+  message: string;
   content: object;
   timestamp: Date;
 };
@@ -190,7 +190,8 @@ export const columns: ColumnDef<Record>[] = [
       if (typeof content === "string") {
         return (
           <div className="text-left" style={{ whiteSpace: "pre-wrap" }}>
-            {content.substring(0, 230) + (content.length > 230 ? "..." : "")}
+            {(typeof content === "string" ? content : "").substring(0, 230) +
+              (typeof content === "string" && content.length > 230 ? "..." : "")}
           </div>
         );
       }

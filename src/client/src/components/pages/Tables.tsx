@@ -13,9 +13,14 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import HeaderBar from "@/components/HeaderBar";
 import EnsureLogin from "../EnsureLogin";
+export interface TableData {
+	id: string;
+	table_name: string;
+	size: number;
+}
 
 export function Tables() {
-	const [data, setData] = useState([]);
+	const [data, setData] = useState<TableData[]>([]);
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -74,8 +79,8 @@ export function Tables() {
 							</DropdownMenu>
 						</div>
 						<CardHeader>
-							<CardTitle>{item.table_name || "Tabela sem nome"}</CardTitle>
-							Size: {formatSize(item.size)}
+							<CardTitle>{item?.table_name || "Tabela sem nome"}</CardTitle>
+							Size: {formatSize(item?.size || 0)}
 						</CardHeader>
 						<CardFooter className="flex justify-between gap-2">
 							<Button
