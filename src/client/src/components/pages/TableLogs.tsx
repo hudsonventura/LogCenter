@@ -14,7 +14,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+import { ChevronDown, MoreHorizontal } from "lucide-react";
 import { format } from "date-fns";
 
 import HeaderBar from "@/components/HeaderBar";
@@ -83,12 +83,16 @@ const levelBadgeClass: Record<number, string> = {
   [RecordLevel.Trace]: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-100",
   [RecordLevel.Info]: "bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300",
   [RecordLevel.Debug]: "bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-100",
-  [RecordLevel.Warning]: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
-  [RecordLevel.Error]: "bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300",
+  [RecordLevel.Warning]: "bg-yellow-700 text-white w dark:bgdark:bg-amber-500/15 dark:text-amber-300",
+  [RecordLevel.Error]: "bg-red-600 text-white dark:bg-red-700 dark:text-red-50",
   [RecordLevel.Critical]: "bg-red-600 text-white dark:bg-red-700 dark:text-red-50",
-  [RecordLevel.Success]: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
-  [RecordLevel.Fatal]: "bg-red-700 text-white dark:bg-red-800 dark:text-red-50",
+  [RecordLevel.Success]: "bg-green-700 text-white dark:bg-green-950 dark:text-green-300",
+  [RecordLevel.Fatal]: "bg-red-600 text-white dark:bg-red-700 dark:text-red-50",
 };
+
+const allLevels = Object.values(RecordLevel).filter(
+  (value): value is RecordLevel => typeof value === "number"
+);
 
 const formatTimestamp = (value: string) => {
   return String(value).replace("T", " ").replace(/Z$/, "");
@@ -257,6 +261,7 @@ export function TableLogs() {
   const [includeContent, setIncludeContent] = React.useState(
     params.get("bring_content") === "true"
   );
+  const [selectedLevels, setSelectedLevels] = React.useState<RecordLevel[]>(allLevels);
   const [liveNowTick, setLiveNowTick] = React.useState(new Date());
   const resolvedDateFrom = React.useMemo(
     () => resolveDatePickerValue(dateFrom, liveNowTick),
@@ -266,9 +271,13 @@ export function TableLogs() {
     () => resolveDatePickerValue(dateTo, liveNowTick),
     [dateTo, liveNowTick]
   );
+  const visibleData = React.useMemo(
+    () => data.filter((record) => selectedLevels.includes(record.level)),
+    [data, selectedLevels]
+  );
 
   const table = useReactTable({
-    data,
+    data: visibleData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -364,7 +373,7 @@ export function TableLogs() {
           </p>
         </div>
 
-        <LogTimelineChart rawData={data} dateFrom={resolvedDateFrom} dateTo={resolvedDateTo} />
+        <LogTimelineChart rawData={visibleData} dateFrom={resolvedDateFrom} dateTo={resolvedDateTo} />
 
     
         <div className="w-full rounded-xl border bg-card p-4 shadow-sm">
@@ -398,6 +407,34 @@ export function TableLogs() {
                         {column.id}
                       </DropdownMenuCheckboxItem>
                     ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    Levels <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {allLevels.map((level) => (
+                    <DropdownMenuCheckboxItem
+                      key={level}
+                      className="capitalize"
+                      checked={selectedLevels.includes(level)}
+                      onCheckedChange={(checked) => {
+                        setSelectedLevels((current) => {
+                          if (checked) {
+                            return current.includes(level) ? current : [...current, level].sort((a, b) => a - b);
+                          }
+
+                          const next = current.filter((item) => item !== level);
+                          return next.length > 0 ? next : current;
+                        });
+                      }}
+                    >
+                      {levelLabels[level]}
+                    </DropdownMenuCheckboxItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
           </div>
@@ -485,7 +522,7 @@ export function TableLogs() {
 
           <div className="flex items-center justify-end gap-2 py-4">
             <div className="mr-auto text-sm text-muted-foreground">
-              Showing {table.getRowModel().rows.length} of {data.length} logs
+              Showing {table.getRowModel().rows.length} of {visibleData.length} logs
             </div>
             <Button
               variant="outline"

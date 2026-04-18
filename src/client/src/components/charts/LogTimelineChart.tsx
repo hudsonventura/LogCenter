@@ -31,15 +31,24 @@ type LogTimelineChartProps = {
   dateTo: Date;
 };
 
-const logLevels: Record<number, { name: string; color: string }> = {
-  0: { name: "Trace", color: "hsl(var(--chart-5))" },
-  1: { name: "Info", color: "hsl(var(--chart-1))" },
-  2: { name: "Debug", color: "hsl(var(--chart-2))" },
-  3: { name: "Warning", color: "hsl(var(--chart-4))" },
-  4: { name: "Error", color: "hsl(var(--destructive))" },
-  5: { name: "Critical", color: "hsl(var(--chart-3))" },
-  6: { name: "Success", color: "hsl(var(--chart-2))" },
-  7: { name: "Fatal", color: "hsl(var(--foreground))" },
+const logLevels: Record<
+  number,
+  {
+    name: string;
+    theme: {
+      light: string;
+      dark: string;
+    };
+  }
+> = {
+  0: { name: "Trace", theme: { light: "#334155", dark: "#e2e8f0" } },
+  1: { name: "Info", theme: { light: "#075985", dark: "#489ac0" } },
+  2: { name: "Debug", theme: { light: "#3f3f46", dark: "#12241e" } },
+  3: { name: "Warning", theme: { light: "#92400e", dark: "#fcd34d" } },
+  4: { name: "Error", theme: { light: "#ff0000", dark: "#ff2b2b" } },
+  5: { name: "Critical", theme: { light: "#ff0000", dark: "#ff2b2b" } },
+  7: { name: "Fatal", theme: { light: "#ff0000", dark: "#ff2b2b" } },
+  6: { name: "Success", theme: { light: "#166534", dark: "#15be4b" } },
 };
 
 const buildMinuteBuckets = (start: Date, end: Date) => {
@@ -98,7 +107,7 @@ export default function LogTimelineChart({
   const chartConfig = visibleLevels.reduce((config, level) => {
     config[`level${level}`] = {
       label: logLevels[level].name,
-      color: logLevels[level].color,
+      theme: logLevels[level].theme,
     };
     return config;
   }, {} as ChartConfig);
@@ -131,7 +140,7 @@ export default function LogTimelineChart({
                 type="monotone"
                 dataKey={`level${level}`}
                 stroke={`var(--color-level${level})`}
-                strokeWidth={2}
+                strokeWidth={3}
                 dot={false}
                 activeDot={{ r: 4 }}
               />
