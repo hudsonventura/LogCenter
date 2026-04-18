@@ -229,10 +229,9 @@ function LogActionsCell({ record }: { record: LogRecord }) {
 
 export function TableLogs() {
   const location = useLocation();
-  const { tabela } = location.state || {
-    tabela: new URLSearchParams(location.search).get("tabela"),
-  };
   const params = new URLSearchParams(location.search);
+  const tabela =
+    (location.state as { tabela?: string } | null)?.tabela ?? params.get("tabela");
   const { timezone } = useTimezone();
 
   const [data, setData] = React.useState<LogRecord[]>([]);
@@ -309,6 +308,7 @@ export function TableLogs() {
       }
 
       const searchParams = new URLSearchParams({
+        tabela,
         take: "5000",
         datetime1: format(fromDate, "yyyy-MM-dd HH:mm:ss"),
         datetime2: format(toDate, "yyyy-MM-dd HH:mm:ss"),

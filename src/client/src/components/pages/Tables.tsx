@@ -37,7 +37,9 @@ export function Tables() {
 	};
 
 	const consultarTabela = (tabela: string) => {
-		navigate("/table-logs", { state: { tabela } });
+		navigate(`/table-logs?tabela=${encodeURIComponent(tabela)}`, {
+			state: { tabela },
+		});
 	};
 
 	const goToConfigsTable = (tabela: string) => {
