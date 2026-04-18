@@ -114,7 +114,6 @@ export const columns: ColumnDef<LogRecord>[] = [
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
         Trace ID
-        <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => (
