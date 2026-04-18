@@ -43,7 +43,7 @@ import { toast } from "sonner";
 
 import api from "@/services/api";
 import { ModalObject } from "../ModalObject";
-import { DateTimePicker } from "../DateTimePicker";
+import { DatePickerValue, DateTimePicker, resolveDatePickerValue } from "../DateTimePicker";
 import { TimeZoneSelect } from "../TimeZoneSelect";
 import LogTimelineChart from "../charts/LogTimelineChart";
 
@@ -238,32 +238,31 @@ export function TableLogs() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-  const [lastId, setLastId] = React.useState<string | null>(null);
 
   const [timezone, setTimezone] = React.useState(
     params.get("timezone") || Intl.DateTimeFormat().resolvedOptions().timeZone
   );
-  const [dateFrom, setDateFrom] = React.useState<Date>(() => {
+  const [dateFrom, setDateFrom] = React.useState<DatePickerValue>(() => {
     const datetime = params.get("datetime1");
     const now = new Date();
     now.setHours(now.getHours() - 1);
-    return datetime ? new Date(datetime) : now;
+    return { mode: "absolute", date: datetime ? new Date(datetime) : now };
   });
-  const [dateTo, setDateTo] = React.useState<Date>(() => {
+  const [dateTo, setDateTo] = React.useState<DatePickerValue>(() => {
     const datetime = params.get("datetime2");
     const now = new Date();
-    now.setMinutes(now.getMinutes() + 2);
-    return datetime ? new Date(datetime) : now;
+    return { mode: "absolute", date: datetime ? new Date(datetime) : now };
   });
   const [searchTerm, setSearchTerm] = React.useState(params.get("search") || "");
-
-  const filtersRef = React.useRef({
-    dateFrom,
-    dateTo,
-    timezone,
-    searchTerm,
-  });
-  filtersRef.current = { dateFrom, dateTo, timezone, searchTerm };
+  const [liveNowTick, setLiveNowTick] = React.useState(new Date());
+  const resolvedDateFrom = React.useMemo(
+    () => resolveDatePickerValue(dateFrom, liveNowTick),
+    [dateFrom, liveNowTick]
+  );
+  const resolvedDateTo = React.useMemo(
+    () => resolveDatePickerValue(dateTo, liveNowTick),
+    [dateTo, liveNowTick]
+  );
 
   const table = useReactTable({
     data,
@@ -288,18 +287,26 @@ export function TableLogs() {
       return;
     }
 
-    const searchParams = new URLSearchParams({
-      take: "5000",
-      datetime1: format(dateFrom, "yyyy-MM-dd HH:mm:ss"),
-      datetime2: format(dateTo, "yyyy-MM-dd HH:mm:ss"),
-      timezone,
-    });
-
-    if (searchTerm) {
-      searchParams.set("search", searchTerm);
-    }
-
     try {
+      const fromDate = resolveDatePickerValue(dateFrom);
+      const toDate = resolveDatePickerValue(dateTo);
+
+      if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+        toast.error("Invalid date range");
+        return;
+      }
+
+      const searchParams = new URLSearchParams({
+        take: "5000",
+        datetime1: format(fromDate, "yyyy-MM-dd HH:mm:ss"),
+        datetime2: format(toDate, "yyyy-MM-dd HH:mm:ss"),
+        timezone,
+      });
+
+      if (searchTerm) {
+        searchParams.set("search", searchTerm);
+      }
+
       const response = await api.get<LogRecord[]>(`/${tabela}?${searchParams.toString()}`, {
         headers: {
           Timezone: timezone,
@@ -308,10 +315,6 @@ export function TableLogs() {
 
       const nextData = Array.isArray(response.data) ? response.data : [];
       setData(nextData);
-
-      if (nextData.length > 0) {
-        setLastId(nextData[0].id);
-      }
 
       const url = new URL(window.location.href);
       url.search = searchParams.toString();
@@ -331,35 +334,16 @@ export function TableLogs() {
   }, [tabela]);
 
   React.useEffect(() => {
-    if (!tabela) {
+    if (dateTo.mode !== "now") {
       return;
     }
 
-    const interval = setInterval(async () => {
-      try {
-        const response = await api.get<string>(`/${tabela}/Last`, {
-          headers: {
-            Timezone: filtersRef.current.timezone,
-          },
-        });
-
-        if (filtersRef.current.dateTo >= new Date()) {
-          const nextDateTo = new Date();
-          nextDateTo.setMinutes(nextDateTo.getMinutes() + 2);
-          setDateTo(nextDateTo);
-        }
-
-        if (response.data && response.data !== lastId) {
-          setLastId(response.data);
-          await searchRef.current();
-        }
-      } catch {
-        console.log("Erro ao carregar LastID");
-      }
+    const interval = setInterval(() => {
+      setLiveNowTick(new Date());
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [lastId, tabela]);
+  }, [dateTo.mode]);
 
   const handleTimeZone = (nextTimezone: string) => {
     const now = new Date();
@@ -372,34 +356,16 @@ export function TableLogs() {
     const offset = dateInNextTZ.getTime() - dateInCurrentTZ.getTime();
 
     setTimezone(nextTimezone);
-    setDateFrom(new Date(dateFrom.getTime() + offset));
-    setDateTo(new Date(dateTo.getTime() + offset));
-  };
-
-  const handleDateFrom = (date: Date | undefined) => {
-    if (!date) {
-      return;
-    }
-
-    if (date > dateTo) {
-      const nextDateTo = new Date(date.getTime() + 3600000);
-      setDateTo(nextDateTo);
-    }
-
-    setDateFrom(date);
-  };
-
-  const handleDateTo = (date: Date | undefined) => {
-    if (!date) {
-      return;
-    }
-
-    if (date < dateFrom) {
-      const nextDateFrom = new Date(date.getTime() + 3600000);
-      setDateFrom(nextDateFrom);
-    }
-
-    setDateTo(date);
+    setDateFrom((current) =>
+      current.mode === "absolute"
+        ? { ...current, date: new Date(current.date.getTime() + offset) }
+        : current
+    );
+    setDateTo((current) =>
+      current.mode === "absolute"
+        ? { ...current, date: new Date(current.date.getTime() + offset) }
+        : current
+    );
   };
 
   return (
@@ -414,11 +380,11 @@ export function TableLogs() {
           </p>
         </div>
 
-        <LogTimelineChart rawData={data} dateFrom={dateFrom} dateTo={dateTo} />
+        <LogTimelineChart rawData={data} dateFrom={resolvedDateFrom} dateTo={resolvedDateTo} />
 
         <div className="w-full rounded-xl border bg-card p-4 shadow-sm">
-          <div className="flex flex-wrap items-center gap-3 py-1">
-            <div className="w-full max-w-xs">
+          <div className="flex flex-wrap items-start gap-3 py-1">
+            <div className="min-w-0 flex-1 basis-[220px]">
               <Input
                 placeholder="Search"
                 value={searchTerm}
@@ -430,7 +396,7 @@ export function TableLogs() {
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
             </div>
-            <div className="w-full max-w-xs">
+            <div className="min-w-0 flex-1 basis-[220px]">
               <Input
                 placeholder="Filter trace ID"
                 value={(table.getColumn("traceId")?.getFilterValue() as string) ?? ""}
@@ -439,24 +405,27 @@ export function TableLogs() {
                 }
               />
             </div>
-            <div className="w-full max-w-xs">
-              <DateTimePicker
-                func="from"
-                date={dateFrom}
-                setDate={handleDateFrom}
-              />
+            <div className="flex min-w-0 flex-[1.5] basis-[430px] gap-2">
+              <div className="min-w-0 flex-1">
+                <DateTimePicker
+                  value={dateFrom}
+                  onChange={setDateFrom}
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <DateTimePicker
+                  value={dateTo}
+                  onChange={setDateTo}
+                  allowNow
+                />
+              </div>
             </div>
-            <div className="w-full max-w-xs">
-              <DateTimePicker
-                func="to"
-                date={dateTo}
-                setDate={handleDateTo}
-              />
-            </div>
-            <div className="w-full max-w-xs">
+            <div className="min-w-0 flex-1 basis-[220px]">
               <TimeZoneSelect value={timezone} setValue={handleTimeZone} />
             </div>
-            <Button onClick={() => void search()}>Search</Button>
+            <Button type="button" onClick={() => void search()}>
+              Search
+            </Button>
             <div className="ml-auto flex gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
