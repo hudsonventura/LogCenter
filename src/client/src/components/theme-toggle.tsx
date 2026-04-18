@@ -1,49 +1,23 @@
-import { Monitor, Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-
-const themes = [
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
-  { value: "system", label: "System", icon: Monitor },
-] as const
+import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
-  const { theme = "system", setTheme } = useTheme()
-  const activeTheme = themes.find((item) => item.value === theme) ?? themes[2]
-  const ActiveIcon = activeTheme.icon
+  const { resolvedTheme = "light", setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const Icon = isDark ? Sun : Moon;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <ActiveIcon className="h-4 w-4" />
-          <span>{activeTheme.label}</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {themes.map((item) => {
-          const Icon = item.icon
-
-          return (
-            <DropdownMenuItem
-              key={item.value}
-              onClick={() => setTheme(item.value)}
-              className="gap-2"
-            >
-              <Icon className="h-4 w-4" />
-              <span>{item.label}</span>
-            </DropdownMenuItem>
-          )
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
+    <Button
+      variant="outline"
+      size="icon"
+      type="button"
+      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      title={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+    >
+      <Icon className="h-4 w-4" />
+    </Button>
+  );
 }

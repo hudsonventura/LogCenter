@@ -365,6 +365,13 @@ export function TableLogs() {
     
         <div className="w-full rounded-xl border bg-card p-4 shadow-sm">
           <div className="mb-3 flex justify-end gap-2">
+              <label className="flex h-10 items-center gap-2 rounded-md border px-3 text-sm text-muted-foreground">
+              <Checkbox
+                checked={includeContent}
+                onCheckedChange={(checked) => setIncludeContent(checked === true)}
+              />
+              <span>Include payloads</span>
+            </label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline">
@@ -412,13 +419,7 @@ export function TableLogs() {
                 }
               />
             </div>
-            <label className="flex h-10 items-center gap-2 rounded-md border px-3 text-sm text-muted-foreground">
-              <Checkbox
-                checked={includeContent}
-                onCheckedChange={(checked) => setIncludeContent(checked === true)}
-              />
-              <span>Include payloads</span>
-            </label>
+            
             <div className="flex min-w-0 flex-[1.5] basis-[430px] gap-2">
               <div className="min-w-0 flex-1">
                 <DateTimePicker
