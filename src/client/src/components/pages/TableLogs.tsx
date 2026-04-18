@@ -382,7 +382,35 @@ export function TableLogs() {
 
         <LogTimelineChart rawData={data} dateFrom={resolvedDateFrom} dateTo={resolvedDateTo} />
 
+    
         <div className="w-full rounded-xl border bg-card p-4 shadow-sm">
+          <div className="mb-3 flex justify-end gap-2">
+            <TimeZoneSelect value={timezone} setValue={handleTimeZone} />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    Visible Columns <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+          </div>
           <div className="flex flex-wrap items-start gap-3 py-1">
             <div className="min-w-0 flex-1 basis-[220px]">
               <Input
@@ -396,7 +424,7 @@ export function TableLogs() {
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
             </div>
-            <div className="min-w-0 flex-1 basis-[220px]">
+            <div className="min-w-0 flex-1 basis-[320px]">
               <Input
                 placeholder="Filter trace ID"
                 value={(table.getColumn("traceId")?.getFilterValue() as string) ?? ""}
@@ -420,38 +448,11 @@ export function TableLogs() {
                 />
               </div>
             </div>
-            <div className="min-w-0 flex-1 basis-[220px]">
-              <TimeZoneSelect value={timezone} setValue={handleTimeZone} />
-            </div>
+            
             <Button type="button" onClick={() => void search()}>
               Search
             </Button>
-            <div className="ml-auto flex gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="ml-auto">
-                    Visible Columns <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {table
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) =>
-                          column.toggleVisibility(!!value)
-                        }
-                      >
-                        {column.id}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            
           </div>
 
           <div className="mt-4 rounded-md border">
