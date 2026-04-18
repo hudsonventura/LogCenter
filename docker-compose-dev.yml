@@ -1,0 +1,18 @@
+services:
+
+  db:
+    container_name: logcenter_db
+    image: "postgres:18"
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    shm_size: '256m' # Necessary to use Postgres VACUUM. You can increment it as you need
+    volumes:
+      - ./data/db/:/var/lib/postgresql/data/
+    ports:
+      - "${DB_PORT}:5432" # by default, the port isn't exposed
+
+ 

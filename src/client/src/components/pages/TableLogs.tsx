@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -15,10 +15,12 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
-import { ChartBar } from "@phosphor-icons/react";
+import { format } from "date-fns";
+
+import HeaderBar from "@/components/HeaderBar";
+import EnsureLogin from "@/components/EnsureLogin";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -38,34 +40,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+
 import api from "@/services/api";
-import { format } from "date-fns";
 import { ModalObject } from "../ModalObject";
 import { DateTimePicker } from "../DateTimePicker";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { TimeZoneSelect } from "../TimeZoneSelect";
+import LogTimelineChart from "../charts/LogTimelineChart";
 
-//Charts
-import NiveisLogsChart from "../charts/NiveisLogsChart";
-import LogBarCharts from "../charts/LogBarCharts";
-import LogLineCharts from "../charts/LogLineCharts";
-import LogPieCharts from "../charts/LogPieCharts";
-import HitsHistogram from "../charts/HitsHistogram";
-import   HeaderBar  from "@/components/HeaderBar";
-import EnsureLogin from "../EnsureLogin";
-
-export type Record = {
-  id: bigint;
+export type LogRecord = {
+  id: string;
   level: RecordLevel;
-  traceId: string;
-  message: object;
-  content: object;
-  timestamp: Date;
+  traceId: string | null;
+  message: string;
+  content: unknown;
+  timestamp: string;
 };
 
 export enum RecordLevel {
@@ -76,220 +64,207 @@ export enum RecordLevel {
   Error = 4,
   Critical = 5,
   Success = 6,
-  Fatal = 7
+  Fatal = 7,
 }
 
-const getCorBadge = (level: RecordLevel) => {
-  switch (level) {
-    case RecordLevel.Info:
-      return "bg-blue-200 text-blue-800";
-    case RecordLevel.Debug:
-      return "bg-gray-200 text-gray-800";
-    case RecordLevel.Warning:
-      return "bg-yellow-200 text-yellow-800";
-    case RecordLevel.Error:
-      return "bg-red-200 text-red-800";
-    case RecordLevel.Critical:
-      return "bg-red-700 text-white";
-    case RecordLevel.Fatal:
-      return "bg-red-700 text-white";
-    case RecordLevel.Success:
-      return "bg-green-700 text-white";
-    default:
-      return "bg-gray-200 text-gray-800";
-  }
+const levelLabels: Record<number, string> = {
+  [RecordLevel.Trace]: "Trace",
+  [RecordLevel.Info]: "Info",
+  [RecordLevel.Debug]: "Debug",
+  [RecordLevel.Warning]: "Warning",
+  [RecordLevel.Error]: "Error",
+  [RecordLevel.Critical]: "Critical",
+  [RecordLevel.Success]: "Success",
+  [RecordLevel.Fatal]: "Fatal",
 };
 
-export const columns: ColumnDef<Record>[] = [
-  // {
-  //   id: "select",
-  //   header: ({ table }) => (
-  //     <Checkbox
-  //       checked={
-  //         table.getIsAllPageRowsSelected() ||
-  //         (table.getIsSomePageRowsSelected() && "indeterminate")
-  //       }
-  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-  //       aria-label="Select all"
-  //     />
-  //   ),
-  //   cell: ({ row }) => (
-  //     <Checkbox
-  //       checked={row.getIsSelected()}
-  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
-  //       aria-label="Select row"
-  //     />
-  //   ),
-  //   enableSorting: false,
-  //   enableHiding: false,
-  // },
+const levelBadgeClass: Record<number, string> = {
+  [RecordLevel.Trace]: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-100",
+  [RecordLevel.Info]: "bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300",
+  [RecordLevel.Debug]: "bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-100",
+  [RecordLevel.Warning]: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
+  [RecordLevel.Error]: "bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300",
+  [RecordLevel.Critical]: "bg-red-600 text-white dark:bg-red-700 dark:text-red-50",
+  [RecordLevel.Success]: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
+  [RecordLevel.Fatal]: "bg-red-700 text-white dark:bg-red-800 dark:text-red-50",
+};
+
+const formatTimestamp = (value: string) => {
+  const [datePart, microPart = "000000"] = String(value).split(".");
+  const formattedDate = format(new Date(datePart), "yyyy/MM/dd HH:mm:ss");
+  const fixedMicro = microPart.padEnd(6, "0");
+
+  return `${formattedDate}.${fixedMicro}`;
+};
+
+export const columns: ColumnDef<LogRecord>[] = [
   {
     accessorKey: "level",
     header: "Level",
     cell: ({ row }) => (
       <Badge
-        className={`capitalize ${getCorBadge(
-          row.original.level
-        )} min-w-[40px] flex items-center justify-center`}
+        className={`min-w-[76px] justify-center ${levelBadgeClass[row.original.level] ?? levelBadgeClass[RecordLevel.Trace]}`}
       >
-        {RecordLevel[row.original.level]}
+        {levelLabels[row.original.level] ?? "Unknown"}
       </Badge>
     ),
   },
-
   {
     accessorKey: "traceId",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Trace ID
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Trace ID
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => (
-      <div className="lowercase">{row.original.traceId}</div>
+      <div className="max-w-[220px] truncate lowercase">
+        {row.original.traceId || "-"}
+      </div>
     ),
   },
   {
     accessorKey: "timestamp",
     header: () => <div className="text-left">Timestamp</div>,
-    cell: ({ row }) => {
-      const timestamp = String(row.original.timestamp); // Garantir que seja string
-  
-      // Separar data e microssegundos
-      const [datePart, microPart = "000000"] = timestamp.split(".");
-  
-      // Criar um objeto Date
-      const formattedDate = format(new Date(datePart), "yyyy/MM/dd HH:mm:ss");
-  
-      // Garantir que sempre tenha 6 casas decimais
-      const fixedMicro = microPart.padEnd(6, "0");
-  
-      return <div className="text-left">{`${formattedDate}.${fixedMicro}`}</div>;
-    },
+    cell: ({ row }) => (
+      <div className="text-left font-mono text-xs sm:text-sm">
+        {formatTimestamp(row.original.timestamp)}
+      </div>
+    ),
   },
-  
-  
   {
     accessorKey: "message",
     header: () => <div className="text-left">Message</div>,
-    cell: ({ row }) => {
-      return <div className="text-left">{row.original.message}</div>;
-    },
+    cell: ({ row }) => (
+      <div className="max-w-[280px] whitespace-pre-wrap break-words text-left">
+        {row.original.message}
+      </div>
+    ),
   },
   {
     accessorKey: "content",
     header: () => <div className="text-left">Content</div>,
     cell: ({ row }) => {
-      // Converter o objeto `content` para uma string JSON formatada
-      const content = row.original.content;
+      const { content } = row.original;
+
       if (typeof content === "string") {
         return (
-          <div className="text-left" style={{ whiteSpace: "pre-wrap" }}>
-            {content.substring(0, 230) + (content.length > 230 ? "..." : "")}
+          <div className="max-w-[320px] whitespace-pre-wrap break-words text-left">
+            {content.substring(0, 230)}
+            {content.length > 230 ? "..." : ""}
           </div>
         );
       }
 
-      const jsonStr = JSON.stringify(content);
+      const json = JSON.stringify(content);
 
       return (
-        <div className="text-left" style={{ whiteSpace: "pre-wrap" }}>
-          {jsonStr.substring(0, 230) + (jsonStr.length > 230 ? "..." : "")}
+        <div className="max-w-[320px] whitespace-pre-wrap break-words text-left">
+          {json?.substring(0, 230)}
+          {json && json.length > 230 ? "..." : ""}
         </div>
       );
     },
   },
-
   {
     id: "actions",
     enableHiding: false,
-    cell: ({ row }) => {
-      const dados = row.original;
-      const [abrirModal, setAbrirModal] = React.useState(false);
-
-      const copiarId = () => {
-        navigator.clipboard.writeText(dados.id.toString());
-        toast("ID copiado com sucesso!");
-      };
-
-      const abrirDetalhes = () => {
-        setAbrirModal(true);
-        console.log(abrirModal);
-      };
-
-      const fecharDetalhes = () => {
-        setAbrirModal(false);
-        document.body.style.pointerEvents = "";
-      };
-      const location = useLocation();
-      const { tabela } = location.state || {
-        tabela: new URLSearchParams(location.search).get("tabela"),
-      };
-
-      React.useEffect(() => {
-        // Cleanup ao desmontar ou quando o modal fechar
-        return () => {
-          document.body.style.pointerEvents = "";
-        };
-      }, [abrirModal]);
-
-      return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={copiarId}>Copy ID</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => abrirDetalhes()}>
-                Details
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* ModalObject renderizado com base no estado */}
-          {abrirModal && (
-            <ModalObject
-              id={dados.id.toString()}
-              tableName={tabela}
-              isOpen={abrirModal}
-              onOpenChange={fecharDetalhes}
-            />
-          )}
-        </>
-      );
-    },
+    cell: ({ row }) => <LogActionsCell record={row.original} />,
   },
 ];
 
-
-
-export function TableLogs() {
+function LogActionsCell({ record }: { record: LogRecord }) {
+  const [isOpen, setIsOpen] = React.useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
   const { tabela } = location.state || {
     tabela: new URLSearchParams(location.search).get("tabela"),
   };
-  const [data, setData] = React.useState([]);
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
 
-  
+  React.useEffect(() => {
+    return () => {
+      document.body.style.pointerEvents = "";
+    };
+  }, [isOpen]);
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => {
+              navigator.clipboard.writeText(record.id);
+              toast("ID copied successfully!");
+            }}
+          >
+            Copy ID
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setIsOpen(true)}>
+            Details
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {isOpen && tabela && (
+        <ModalObject
+          id={record.id}
+          tableName={tabela}
+          isOpen={isOpen}
+          onOpenChange={setIsOpen}
+        />
+      )}
+    </>
+  );
+}
+
+export function TableLogs() {
+  const location = useLocation();
+  const { tabela } = location.state || {
+    tabela: new URLSearchParams(location.search).get("tabela"),
+  };
+  const params = new URLSearchParams(location.search);
+
+  const [data, setData] = React.useState<LogRecord[]>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [lastId, setLastId] = React.useState<string | null>(null);
+
+  const [timezone, setTimezone] = React.useState(
+    params.get("timezone") || Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
+  const [dateFrom, setDateFrom] = React.useState<Date>(() => {
+    const datetime = params.get("datetime1");
+    const now = new Date();
+    now.setHours(now.getHours() - 1);
+    return datetime ? new Date(datetime) : now;
+  });
+  const [dateTo, setDateTo] = React.useState<Date>(() => {
+    const datetime = params.get("datetime2");
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 2);
+    return datetime ? new Date(datetime) : now;
+  });
+  const [searchTerm, setSearchTerm] = React.useState(params.get("search") || "");
+
+  const filtersRef = React.useRef({
+    dateFrom,
+    dateTo,
+    timezone,
+    searchTerm,
+  });
+  filtersRef.current = { dateFrom, dateTo, timezone, searchTerm };
+
   const table = useReactTable({
     data,
     columns,
@@ -300,52 +275,46 @@ export function TableLogs() {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
-      rowSelection,
     },
   });
 
   const search = async () => {
+    if (!tabela) {
+      setData([]);
+      return;
+    }
+
+    const searchParams = new URLSearchParams({
+      take: "5000",
+      datetime1: format(dateFrom, "yyyy-MM-dd HH:mm:ss"),
+      datetime2: format(dateTo, "yyyy-MM-dd HH:mm:ss"),
+      timezone,
+    });
+
+    if (searchTerm) {
+      searchParams.set("search", searchTerm);
+    }
+
     try {
-      const from = `${dateFrom.getFullYear()}-${padZero(dateFrom.getMonth() + 1)}-${padZero(dateFrom.getDate())} ${padZero(dateFrom.getHours())}:${padZero(dateFrom.getMinutes())}:${padZero(dateFrom.getSeconds())}`;
-      const to = `${dateTo.getFullYear()}-${padZero(dateTo.getMonth() + 1)}-${padZero(dateTo.getDate())} ${padZero(dateTo.getHours())}:${padZero(dateTo.getMinutes())}:${padZero(dateTo.getSeconds())}`;
-      const queryParams = `tabela=${tabela}&take=5000&datetime1=${from}&datetime2=${to}${
-        searchTerm ? `&search=${searchTerm}` : ""
-      }`;
-      
-
-      function padZero(number: number) {
-        return (number < 10 ? "0" : "") + number;
-      }
-
-
-      const response = await api.get(`/${tabela}?${queryParams}`, {
+      const response = await api.get<LogRecord[]>(`/${tabela}?${searchParams.toString()}`, {
         headers: {
-          Timezone: timezone, // Adicione o valor correto aqui
+          Timezone: timezone,
         },
       });
 
-      const data = response.data
-        ? response.data.map((item: any) => ({
-            ...item,
-            id: item.id, // Certifique-se de que `snowflakeId` seja o campo correto
-          }))
-        : [];
+      const nextData = Array.isArray(response.data) ? response.data : [];
+      setData(nextData);
 
-        //Organiza os logs em ordem decrescente da real execução
-        setData(data);
-        
-        
-        
-        
+      if (nextData.length > 0) {
+        setLastId(nextData[0].id);
+      }
 
-      // Update the URL query parameters
       const url = new URL(window.location.href);
-      url.search = queryParams;
+      url.search = searchParams.toString();
       window.history.replaceState({}, "", url.toString());
     } catch (error) {
       console.log(error);
@@ -354,222 +323,152 @@ export function TableLogs() {
     }
   };
 
-  React.useEffect(() => {
-    search();
-  }, []);
-
-  const goToChart = (data) => {
-    navigate("/charts", { state: { data } });
-  };
-
-
-  const [lastID, setLastID] = React.useState();
-  const [atualizarHorario, setAtualizarHorario] = React.useState<Date>();
-  React.useEffect(() => {
-    const interval = setInterval(loadLastID, 3000);
-    return () => clearInterval(interval);
-  }, []);
+  const searchRef = React.useRef(search);
+  searchRef.current = search;
 
   React.useEffect(() => {
-    if(dateTo >= new Date()){
-      const newDateTo = new Date();
-      newDateTo.setMinutes(newDateTo.getMinutes() + 2);
-      setDateTo(atualizarHorario);
+    void searchRef.current();
+  }, [tabela]);
+
+  React.useEffect(() => {
+    if (!tabela) {
+      return;
     }
-  }, [atualizarHorario]);
 
-  const loadLastID = async () => { //busca o lastID da tabela para ver deve-se atualizar
-    try {
-      const response = await api.get(`/${tabela}/Last`, {
-        headers: {
-          Timezone: timezone, // Adicione o valor correto aqui
-        },
-      });
-      //console.log("Agora: "+ new Date())     
-      //if(dateTo >= new Date()){ //atualiza o horario to , se ele foi colocado para o horario atual ou maior.
-        const newDateTo = new Date();
-        newDateTo.setMinutes(newDateTo.getMinutes() + 2);
-        await setAtualizarHorario(newDateTo);
-        //console.log("atualizarHorario: "+atualizarHorario)
-      //}
-      
+    const interval = setInterval(async () => {
+      try {
+        const response = await api.get<string>(`/${tabela}/Last`, {
+          headers: {
+            Timezone: filtersRef.current.timezone,
+          },
+        });
 
+        if (filtersRef.current.dateTo >= new Date()) {
+          const nextDateTo = new Date();
+          nextDateTo.setMinutes(nextDateTo.getMinutes() + 2);
+          setDateTo(nextDateTo);
+        }
 
-      if(lastID != response.data){ //se o lastID for diferente, recebeu uma atualização, então buscar atualização
-        setLastID(response.data);
+        if (response.data && response.data !== lastId) {
+          setLastId(response.data);
+          await searchRef.current();
+        }
+      } catch {
+        console.log("Erro ao carregar LastID");
       }
-    } catch (error) {
-      //toast.error("Erro ao carregar LastID");
-      console.log("Erro ao carregar LastID");
-    }
-  };
-  React.useEffect(() => { //nova busca no backend caso o lastID seja modificado
-    search();
-  }, [lastID]);
+    }, 3000);
 
+    return () => clearInterval(interval);
+  }, [lastId, tabela]);
 
-
-  const params = new URLSearchParams(location.search);
-
-  const timezoneParam = params.getAll("timezone");
-  const [timezone, setTimezone] = React.useState(
-    timezoneParam.length > 0 && timezoneParam[0] !== ""
-      ? timezoneParam[0]
-      : Intl.DateTimeFormat().resolvedOptions().timeZone
-  );
-  const handleTimeZone = (tz: React.ChangeEvent<HTMLSelectElement>) => {
-    const before = timezone;
-    const after = tz;
-    setTimezone(tz);
-
+  const handleTimeZone = (nextTimezone: string) => {
     const now = new Date();
-    const dateInBeforeTZ = new Date(
-      now.toLocaleString("en-US", { timeZone: before })
+    const dateInCurrentTZ = new Date(
+      now.toLocaleString("en-US", { timeZone: timezone })
     );
-    const dateInAfterTZ = new Date(
-      now.toLocaleString("en-US", { timeZone: after })
+    const dateInNextTZ = new Date(
+      now.toLocaleString("en-US", { timeZone: nextTimezone })
     );
-    const offset = dateInAfterTZ.getTime() - dateInBeforeTZ.getTime();
+    const offset = dateInNextTZ.getTime() - dateInCurrentTZ.getTime();
 
+    setTimezone(nextTimezone);
     setDateFrom(new Date(dateFrom.getTime() + offset));
     setDateTo(new Date(dateTo.getTime() + offset));
   };
 
-  const [dateFrom, setDateFrom] = React.useState<Date>(() => {
-    const datetime = params.getAll("datetime1")?.[0];
-    const now = new Date();
-    now.setHours(now.getHours() - 1);
-
-
-    return datetime ? new Date(datetime) : now;
-  });
-  const handleDateFrom = (date: Date) => {
-    if (date > dateTo) {
-      const newDate = new Date(date.getTime() + 3600000); // date + 1 hour
-      setDateTo(newDate);
+  const handleDateFrom = (date: Date | undefined) => {
+    if (!date) {
+      return;
     }
+
+    if (date > dateTo) {
+      const nextDateTo = new Date(date.getTime() + 3600000);
+      setDateTo(nextDateTo);
+    }
+
     setDateFrom(date);
   };
 
-  const [dateTo, setDateTo] = React.useState<Date>(() => {
-    const datetime = params.getAll("datetime2")?.[0];
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 2);
-    
-    return datetime ? new Date(datetime) : now;
-  });
-  const handleDateTo = (date: Date) => {
-    if (date < dateFrom) {
-      const newDate = new Date(date.getTime() + 3600000); // date + 1 hour
-      setDateFrom(newDate);
+  const handleDateTo = (date: Date | undefined) => {
+    if (!date) {
+      return;
     }
+
+    if (date < dateFrom) {
+      const nextDateFrom = new Date(date.getTime() + 3600000);
+      setDateFrom(nextDateFrom);
+    }
+
     setDateTo(date);
   };
-
-  const [searchTerm, setSearchTerm] = React.useState<string>(
-    params.getAll("search")?.[0]
-  );
 
   return (
     <>
       <HeaderBar />
       <EnsureLogin />
-      <h1 className="py-5 mb-4 font-bold text-center">Logs from {tabela}</h1>
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-5">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-semibold tracking-tight">Logs from {tabela}</h1>
+          <p className="text-sm text-muted-foreground">
+            Explore table data, filter by time window and inspect log details.
+          </p>
+        </div>
 
-      
-      
-      {/* <div className="flex" style={{ margin: "5px" }}>
-        <div className="w-1/2 px-2" >
-          <LogLineCharts rawData={data} dateFrom={dateFrom} dateTo={dateTo} />
-        </div>
-        <div className="w-1/2 px-2" >
-          <LogPieCharts rawData={data} />
-        </div>
-      </div>
-      <div className="flex" style={{ margin: "5px" }}>
-        <div className="w-1/2 px-2" >
-          <LogLineCharts rawData={data} dateFrom={dateFrom} dateTo={dateTo} />
-        </div>
-        <div className="w-1/2 px-2" >
-          <LogBarCharts rawData={data} dateFrom={dateFrom} dateTo={dateTo} />
-        </div>
-      </div> */}
+        <LogTimelineChart rawData={data} dateFrom={dateFrom} dateTo={dateTo} />
 
-      <div className="w-full">
-        <div className="flex items-center py-4">
-          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
-            <Input
-              placeholder="Search"
-              value={searchTerm}
-              className="max-w-sm"
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  search();
+        <div className="w-full rounded-xl border bg-card p-4 shadow-sm">
+          <div className="flex flex-wrap items-center gap-3 py-1">
+            <div className="w-full max-w-xs">
+              <Input
+                placeholder="Search"
+                value={searchTerm}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    void search();
+                  }
+                }}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+            </div>
+            <div className="w-full max-w-xs">
+              <Input
+                placeholder="Filter trace ID"
+                value={(table.getColumn("traceId")?.getFilterValue() as string) ?? ""}
+                onChange={(event) =>
+                  table.getColumn("traceId")?.setFilterValue(event.target.value)
                 }
-              }}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
-          </div>
-          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
-            <Input
-              placeholder="Filter table"
-              value={
-                (table.getColumn("traceId")?.getFilterValue() as string) ??
-                ""
-              }
-              onChange={(event) =>
-                table
-                  .getColumn("traceId")
-                  ?.setFilterValue(event.target.value)
-              }
-              className="max-w-sm"
-            />
-          </div>
-          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
-            <DateTimePicker
-              func="from"
-              date={dateFrom}
-              setDate={
-                handleDateFrom as React.Dispatch<
-                  React.SetStateAction<Date | undefined>
-                >
-              }
-            />
-          </div>
-          <div className="max-w-xs">
-            <DateTimePicker
-              func="to"
-              date={dateTo}
-              setDate={
-                handleDateTo as React.Dispatch<
-                  React.SetStateAction<Date | undefined>
-                >
-              }
-            />
-          </div>
-          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
-            <TimeZoneSelect
-              value={timezone}
-              setValue={(tz) => handleTimeZone(tz)}
-            />
-          </div>
-          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
-            <Button onClick={search}>Search</Button>
-          </div>
-          <div className=" flex ml-auto gap-2 ">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto">
-                  Visible Columns <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent align="end">
-                {table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => {
-                    return (
+              />
+            </div>
+            <div className="w-full max-w-xs">
+              <DateTimePicker
+                func="from"
+                date={dateFrom}
+                setDate={handleDateFrom}
+              />
+            </div>
+            <div className="w-full max-w-xs">
+              <DateTimePicker
+                func="to"
+                date={dateTo}
+                setDate={handleDateTo}
+              />
+            </div>
+            <div className="w-full max-w-xs">
+              <TimeZoneSelect value={timezone} setValue={handleTimeZone} />
+            </div>
+            <Button onClick={() => void search()}>Search</Button>
+            <div className="ml-auto flex gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="ml-auto">
+                    Visible Columns <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => (
                       <DropdownMenuCheckboxItem
                         key={column.id}
                         className="capitalize"
@@ -580,77 +479,60 @@ export function TableLogs() {
                       >
                         {column.id}
                       </DropdownMenuCheckboxItem>
-                    );
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                    ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-        </div>
-        <div className="mt-4" />
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
+
+          <div className="mt-4 rounded-md border">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
                       <TableHead key={header.id}>
                         {header.isPlaceholder
                           ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                          : flexRender(header.column.columnDef.header, header.getContext())}
                       </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
                     ))}
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    Sem Resultados.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <div className="flex-1 text-sm text-muted-foreground p-2">
-            Linhas Selecionadas -{" "}
-            {table.getFilteredSelectedRowModel().rows.length} de{" "}
-            {table.getFilteredRowModel().rows.length}
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.length > 0 ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                      No results found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
-          <div className="space-x-2 p-2">
+
+          <div className="flex items-center justify-end gap-2 py-4">
+            <div className="mr-auto text-sm text-muted-foreground">
+              Showing {table.getRowModel().rows.length} of {data.length} logs
+            </div>
             <Button
               variant="outline"
               size="sm"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              Anterior
+              Previous
             </Button>
             <Button
               variant="outline"
@@ -658,12 +540,11 @@ export function TableLogs() {
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              Próximo
+              Next
             </Button>
           </div>
         </div>
-      </div>
+      </main>
     </>
   );
 }
-

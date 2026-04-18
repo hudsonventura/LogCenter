@@ -26,20 +26,20 @@ export function ModalObject({
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
 }) {
-  const [data, setData] = useState([]);
-
-  const getObject = async () => {
-    try {
-      const response = await api.get(`/${tableName}/${id}`);
-      setData(null !== response.data.content ? response.data.content : "null");
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const [data, setData] = useState<unknown>("null");
 
   React.useEffect(() => {
-    getObject();
-  }, [id]);
+    const getObject = async () => {
+      try {
+        const response = await api.get(`/${tableName}/${id}`);
+        setData(null !== response.data.content ? response.data.content : "null");
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    void getObject();
+  }, [id, tableName]);
 
   const handleCopy = async () => {
     try {
@@ -53,6 +53,21 @@ export function ModalObject({
       console.log(error);
     }
   };
+
+  let jsonValue: object | undefined;
+
+  if (typeof data === "object" && data !== null) {
+    jsonValue = data as object;
+  } else if (typeof data === "string") {
+    try {
+      const parsed = JSON.parse(data);
+      if (typeof parsed === "object" && parsed !== null) {
+        jsonValue = parsed as object;
+      }
+    } catch {
+      jsonValue = undefined;
+    }
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -68,11 +83,11 @@ export function ModalObject({
               }}
               className="min-w-full"
             >
-              {typeof data === "string" && !/^\{.*\}$/.test(data) ? (
-                <pre style={{ whiteSpace: "pre-wrap" }}>{data}</pre>
+              {!jsonValue ? (
+                <pre style={{ whiteSpace: "pre-wrap" }}>{String(data)}</pre>
               ) : (
                 <JsonView 
-                  value={data} 
+                  value={jsonValue} 
                   shortenTextAfterLength={1000}
                 />
                 

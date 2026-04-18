@@ -20,7 +20,8 @@ export function DateTimePicker({
   func
 }: {
   date: Date | undefined;
-  setDate: React.Dispatch<React.SetStateAction<Date | undefined>>;
+  setDate: (date: Date | undefined) => void;
+  func: string;
 }) {
   
   const [isOpen, setIsOpen] = React.useState(false);
@@ -149,7 +150,7 @@ export function DateTimePicker({
             
             <div className="flex flex-col items-center p-2">
               {
-                (func == 'to') ? 
+                (func === 'to') ? 
                   <Button
                     variant="default"
                     onClick={() => {

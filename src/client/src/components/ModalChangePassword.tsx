@@ -43,7 +43,7 @@ export function ModalChangePassword() {
 	}
 
 	return (
-		<Popover>
+		<Popover open={isOpen} onOpenChange={setIsOpen}>
 			<PopoverTrigger asChild>
 				<span style={{ cursor: "pointer" }}>Change Password</span>
 			</PopoverTrigger>
@@ -85,4 +85,3 @@ export function ModalChangePassword() {
 		</Popover>
 	)
 }
-

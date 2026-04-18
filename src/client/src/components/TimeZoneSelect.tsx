@@ -20,13 +20,17 @@ import {
 } from "@/components/ui/popover"
 import api from "@/services/api"
 
+type TimezoneOption = {
+  id: string;
+  displayName: string;
+}
 
 
 export function TimeZoneSelect({value, setValue}: {value: string | undefined, setValue: (value: string) => void}) {
   const [open, setOpen] = React.useState(false)
   
 
-  const [timezones, setTimezones] = React.useState([]);
+  const [timezones, setTimezones] = React.useState<TimezoneOption[]>([]);
 
   const listTimeZones = async () => {
     try {
@@ -34,7 +38,6 @@ export function TimeZoneSelect({value, setValue}: {value: string | undefined, se
         "/Timezones"
       );
       setTimezones(response.data);
-      console.log(timezones); 
     } catch (error) {
       console.log(error);
     }
@@ -69,12 +72,12 @@ export function TimeZoneSelect({value, setValue}: {value: string | undefined, se
           <CommandList>
             <CommandEmpty>No timezone found</CommandEmpty>
             <CommandGroup>
-              {timezones.map((tz: { id: string, displayName: string }) => (
+              {timezones.map((tz) => (
                 <CommandItem
                   key={tz.id}
                   value={tz.id}
-                  onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue)
+                  onSelect={() => {
+                    setValue(tz.id === value ? "" : tz.id)
                     setOpen(false)
                   }}
                 >

@@ -17,12 +17,7 @@ export function ModalTokenGeneration() {
 	const [name, setName] = useState("")
 	const [date, setDate] = useState<Date | undefined>(new Date());
 
-
-
 	const [generatedToken, setGeneratedToken] = useState("")
-	const [tokenGerated, setTokenGerated] = useState(false)
-
-
 
 	const handleGenerate = async () => {
 		if (!tables || !date) {
@@ -38,9 +33,9 @@ export function ModalTokenGeneration() {
 			})
 
 			if (response.status === 200) {
-				setGeneratedToken(response.data.token)
+				setGeneratedToken(response.data)
 				toast.success("Token successfully generated!")
-				setTokenGerated(response.data);
+				setIsOpen(false)
 			} else {
 				alert("Erro ao gerar token. Por favor, tente novamente.")
 			}
@@ -50,17 +45,12 @@ export function ModalTokenGeneration() {
 		}
 	}
 
-	const handleDateSelect = (selectedDate: Date | null) => {
-		setDate(selectedDate)
-		setIsCalendarOpen(false)
-	}
-
 	const handleCopy = () => {
-		navigator.clipboard.writeText(tokenGerated)
+		navigator.clipboard.writeText(generatedToken)
 		toast.success("Token copiado com sucesso!")
 	}
 	return (
-		<Popover>
+		<Popover open={isOpen} onOpenChange={setIsOpen}>
 			<PopoverTrigger asChild>
 				<span style={{ cursor: "pointer" }}>Generate token</span>
 			</PopoverTrigger>
@@ -118,18 +108,7 @@ export function ModalTokenGeneration() {
 						Gerar
 					</Button>
 				</div>
-				<div className="flex items-center gap-2" style={{ wordBreak: "break-word" }}>
-					{tokenGerated && (
-						<>
-							<Button variant="default" onClick={handleCopy}>
-								Copy
-							</Button>
-							{tokenGerated.slice(0, 80)}...
-						</>
-					)}
-				</div>
 			</PopoverContent>
 		</Popover>
 	)
 }
-

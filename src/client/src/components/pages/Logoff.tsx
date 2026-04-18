@@ -7,7 +7,7 @@ export default function Logoff() {
   React.useEffect(() => {
     sessionStorage.removeItem("token");
     navigate("/login");
-  }, []);
+  }, [navigate]);
 
   return null;
 }

@@ -7,6 +7,13 @@ import { useEffect, useState } from "react";
 import { ModalTokenGeneration } from "./ModalTokenGeneration";
 import { ModalUserCreation } from "./ModalUserCreation";
 import { ModalChangePassword } from "./ModalChangePassword";
+import { ThemeToggle } from "./theme-toggle";
+
+type DecodedToken = {
+  name?: string;
+  email?: string;
+  [key: string]: unknown;
+};
 
 export default function HeaderBar() {
   const navigate = useNavigate();
@@ -15,8 +22,8 @@ export default function HeaderBar() {
     navigate("/logoff"); // Redireciona sem recarregar a página
   };
 
-  const [userData, setUserData] = useState(null);
-  const decodeJWT = (token) => {
+  const [userData, setUserData] = useState<DecodedToken | null>(null);
+  const decodeJWT = (token: string): DecodedToken | null => {
     try {
       const base64Url = token.split(".")[1]; // Pegando a parte do payload
       const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -30,62 +37,69 @@ export default function HeaderBar() {
     const token = sessionStorage.getItem("token"); // Obtendo do sessionStorage
     if (token) {
       const decodedData = decodeJWT(token);
-      decodedData.email = decodedData["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
-      setUserData(decodedData);
-      //console.log(decodedData["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"]);
-      
-      //console.log("Dados do JWT:", decodedData);
+
+      if (decodedData) {
+        decodedData.email = String(
+          decodedData["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] ?? ""
+        );
+        setUserData(decodedData);
+      }
     }
   }, []);
 
   return (
-    <header className="bg-white shadow-md p-4 flex items-center justify-between">
-      {/* Menu Button */}
-      <Button variant="ghost" size="icon" className="ml-12">
-        <img src="/logo.png" alt="Logo" />
-        <h1 className="text-xl">LogCenter</h1>
-      </Button>
-
-      {/* Ações (Login, Perfil, etc.) */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Avatar className="cursor-pointer">
-            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-            <AvatarFallback>CN</AvatarFallback>
-          </Avatar>
-        </PopoverTrigger>
-        <PopoverContent className="min-w-[200px]">
-          <div>
-            <div className="space-y-1">
-              <h2>{userData !== null ? userData.name : ""} <p className="text-sm text-muted-foreground">{userData !== null ? userData.email : ""}</p> </h2>
-              <h4 className="text-sm font-medium leading-none">
-
-              </h4>
-              {/* <p className="text-sm text-muted-foreground">
-                An open-source UI component library.
-              </p> */}
-            </div>
-            <Separator className="my-4" />
-            <div className="flex h-5 items-center space-x-4 text-sm">
-              <ModalTokenGeneration />
-              <Separator orientation="vertical" />
-              <ModalUserCreation />
-              <Separator orientation="vertical" />
-              <ModalChangePassword />
-            </div>
-            <Separator className="my-4" />
-            <div className="flex h-5 items-center space-x-4 text-sm">
-              <a href={`${import.meta.env.VITE_API_HOST}/docs/swagger/index.html`} target="_blank" rel="noopener noreferrer">Docs</a>
-              <Separator orientation="vertical" />
-              <a href="https://github.com/hudsonventura/LogCenter" target="_blank" rel="noopener noreferrer">Repository</a>
-              <Separator orientation="vertical" />
-              <button onClick={handleLogoff} className="text-sm text-red-500">
-                Logoff
-              </button>
-            </div>
+    <header className="sticky top-0 z-20 border-b bg-background/95 px-4 py-3 shadow-sm backdrop-blur">
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4">
+        <Button variant="ghost" className="h-auto gap-3 px-2">
+          <img src="/logo.png" alt="Logo" className="h-10 w-10" />
+          <div className="text-left">
+            <p className="text-lg font-semibold leading-none">LogCenter</p>
+            <p className="text-xs text-muted-foreground">Log explorer</p>
           </div>
-        </PopoverContent>
-      </Popover>
+        </Button>
+
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Avatar className="cursor-pointer">
+                <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+                <AvatarFallback>LC</AvatarFallback>
+              </Avatar>
+            </PopoverTrigger>
+            <PopoverContent className="min-w-[260px]" align="end">
+              <div>
+                <div className="space-y-1">
+                  <h2 className="font-medium">
+                    {userData !== null ? userData.name : ""}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {userData !== null ? userData.email : ""}
+                  </p>
+                </div>
+                <Separator className="my-4" />
+                <div className="flex items-center gap-3 text-sm">
+                  <ModalTokenGeneration />
+                  <Separator orientation="vertical" />
+                  <ModalUserCreation />
+                  <Separator orientation="vertical" />
+                  <ModalChangePassword />
+                </div>
+                <Separator className="my-4" />
+                <div className="flex items-center gap-3 text-sm">
+                  <a href={`${import.meta.env.VITE_API_HOST}/docs/swagger/index.html`} target="_blank" rel="noopener noreferrer">Docs</a>
+                  <Separator orientation="vertical" />
+                  <a href="https://github.com/hudsonventura/LogCenter" target="_blank" rel="noopener noreferrer">Repository</a>
+                  <Separator orientation="vertical" />
+                  <button onClick={handleLogoff} className="text-sm text-red-500">
+                    Logoff
+                  </button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
     </header>
   );
 }

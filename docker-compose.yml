@@ -2,7 +2,7 @@ services:
 
   db:
     container_name: logcenter_db
-    image: "postgres:16"
+    image: "postgres:18"
     restart: always
     environment:
       POSTGRES_DB: ${DB_NAME}
@@ -12,12 +12,6 @@ services:
     shm_size: '256m' # Necessary to use Postgres VACUUM. You can increment it as you need
     volumes:
       - ./data/db/:/var/lib/postgresql/data/
-    networks:
-      - logcenter
-    #ports:
-    #  - "${DB_PORT}:5432" # by default, the port isn't exposed
-
-    
 
   server:
     build: ./src/server
@@ -35,10 +29,8 @@ services:
       JWT_KEY: ${JWT_KEY}
     depends_on:
       - db
-    networks:
-      - logcenter
     ports:
-      - 9200:9200 //TODO: ISSO PRECISA SER VARIAVEL
+      - ${LOGCENTER_PORT}:9200
 
   client:
     container_name: logcenter_client
@@ -53,11 +45,3 @@ services:
       - "5173:5173"
     depends_on:
       - server
-    networks:
-      - logcenter
-
-
-
-networks:
-  logcenter:
-    driver: bridge

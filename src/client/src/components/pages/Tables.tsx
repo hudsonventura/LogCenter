@@ -14,8 +14,13 @@ import { MoreHorizontal } from "lucide-react";
 import HeaderBar from "@/components/HeaderBar";
 import EnsureLogin from "../EnsureLogin";
 
+type TableConfig = {
+	table_name: string;
+	size: number;
+};
+
 export function Tables() {
-	const [data, setData] = useState([]);
+	const [data, setData] = useState<TableConfig[]>([]);
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -54,8 +59,8 @@ export function Tables() {
 
 
 			<div className="flex flex-wrap gap-4 text-center ">
-				{data.map((item, index) => (
-					<Card key={index} className="w-[300px]">
+				{data.map((item) => (
+					<Card key={item.table_name} className="w-[300px]">
 						<div className="flex justify-end">
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>

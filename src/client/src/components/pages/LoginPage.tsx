@@ -17,8 +17,13 @@ import { useEffect } from "react"
 
 
 
+type LoginForm = {
+	email: string;
+	password: string;
+}
+
 export default function LoginPage() {
-	const { register, handleSubmit } = useForm()
+	const { register, handleSubmit } = useForm<LoginForm>()
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -26,9 +31,9 @@ export default function LoginPage() {
 		if (token) {
 			navigate("/tables");
 		}
-	}, []);
+	}, [navigate]);
 
-	const onSubmit = async (data: { email: string; password: string }) => {
+	const onSubmit = async (data: LoginForm) => {
 		try {
 			const response = await api.post("/Login", JSON.stringify(data), {
 				headers: {
@@ -41,7 +46,7 @@ export default function LoginPage() {
 			// Redirect to dashboard or something
 			navigate("/tables");
 		} catch (error) {
-			toast.error(error.message)
+			toast.error(error instanceof Error ? error.message : "Login failed")
 		}
 	}
 
@@ -113,4 +118,3 @@ export default function LoginPage() {
 		</div>
 	)
 }
-
