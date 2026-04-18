@@ -39,6 +39,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 import api from "@/services/api";
@@ -234,7 +235,9 @@ export function TableLogs() {
   const [data, setData] = React.useState<LogRecord[]>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
+    content: false,
+  });
   const [dateFrom, setDateFrom] = React.useState<DatePickerValue>(() => {
     const datetime = params.get("datetime1");
     const now = new Date();
@@ -247,6 +250,9 @@ export function TableLogs() {
     return { mode: "absolute", date: datetime ? new Date(datetime) : now };
   });
   const [searchTerm, setSearchTerm] = React.useState(params.get("search") || "");
+  const [includeContent, setIncludeContent] = React.useState(
+    params.get("bring_content") === "true"
+  );
   const [liveNowTick, setLiveNowTick] = React.useState(new Date());
   const resolvedDateFrom = React.useMemo(
     () => resolveDatePickerValue(dateFrom, liveNowTick),
@@ -294,6 +300,7 @@ export function TableLogs() {
         datetime1: format(fromDate, "yyyy-MM-dd HH:mm:ss"),
         datetime2: format(toDate, "yyyy-MM-dd HH:mm:ss"),
         timezone,
+        bring_content: String(includeContent),
       });
 
       if (searchTerm) {
@@ -321,6 +328,13 @@ export function TableLogs() {
   React.useEffect(() => {
     void searchRef.current();
   }, [tabela, timezone]);
+
+  React.useEffect(() => {
+    setColumnVisibility((current) => ({
+      ...current,
+      content: includeContent,
+    }));
+  }, [includeContent]);
 
   React.useEffect(() => {
     if (dateTo.mode !== "now") {
@@ -398,6 +412,13 @@ export function TableLogs() {
                 }
               />
             </div>
+            <label className="flex h-10 items-center gap-2 rounded-md border px-3 text-sm text-muted-foreground">
+              <Checkbox
+                checked={includeContent}
+                onCheckedChange={(checked) => setIncludeContent(checked === true)}
+              />
+              <span>Include payloads</span>
+            </label>
             <div className="flex min-w-0 flex-[1.5] basis-[430px] gap-2">
               <div className="min-w-0 flex-1">
                 <DateTimePicker

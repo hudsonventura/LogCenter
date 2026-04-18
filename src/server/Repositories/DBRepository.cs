@@ -167,9 +167,10 @@ public class DBRepository : IDisposable
 
     internal List<Record> Search(string table, SearchObject query)
     {
+        string selectedContent = query.bring_content ? "content" : "NULL::jsonb as content";
         
         string sql = @$"
-            SELECT id, level, timestamp AT TIME ZONE 'UTC' as timestamp, traceid, message, content
+            SELECT id, level, timestamp AT TIME ZONE 'UTC' as timestamp, traceid, message, {selectedContent}
             FROM log_{table} 
             WHERE timestamp AT TIME ZONE 'UTC' BETWEEN @datetime1 AND @datetime2
             AND (content::text ILIKE @search OR traceid::text ILIKE @search OR message::text ILIKE @search)
@@ -337,4 +338,3 @@ public class DBRepository : IDisposable
         return result.FirstOrDefault(x => x.table_name == table);
     }
 }
-

@@ -26,6 +26,11 @@ public class SearchObject
     /// Inform the page size
     /// </summary>
     public  int take {get; set; } = 100;
+
+    /// <summary>
+    /// Include content payload in search results
+    /// </summary>
+    public bool bring_content { get; set; } = false;
     
     /// <summary>
     /// Read only. Represents how many itens the paginations must skip during DB select
