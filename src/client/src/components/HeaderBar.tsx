@@ -4,11 +4,10 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
-import { ModalTokenGeneration } from "./ModalTokenGeneration";
-import { ModalUserCreation } from "./ModalUserCreation";
 import { ModalChangePassword } from "./ModalChangePassword";
 import { ThemeToggle } from "./theme-toggle";
 import { TimeZoneSelect } from "./TimeZoneSelect";
+import { UserManagementDialog } from "./UserManagementDialog";
 
 type DecodedToken = {
   name?: string;
@@ -81,9 +80,7 @@ export default function HeaderBar() {
                 </div>
                 <Separator className="my-4" />
                 <div className="flex items-center gap-3 text-sm">
-                  <ModalTokenGeneration />
-                  <Separator orientation="vertical" />
-                  <ModalUserCreation />
+                  <UserManagementDialog />
                   <Separator orientation="vertical" />
                   <ModalChangePassword />
                 </div>
