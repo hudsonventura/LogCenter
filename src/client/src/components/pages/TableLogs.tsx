@@ -240,14 +240,19 @@ export function TableLogs() {
   });
   const [dateFrom, setDateFrom] = React.useState<DatePickerValue>(() => {
     const datetime = params.get("datetime1");
-    const now = new Date();
-    now.setHours(now.getHours() - 1);
-    return { mode: "absolute", date: datetime ? new Date(datetime) : now };
+    if (datetime) {
+      return { mode: "absolute", date: new Date(datetime) };
+    }
+
+    return { mode: "relative", amount: 1, unit: "hours" };
   });
   const [dateTo, setDateTo] = React.useState<DatePickerValue>(() => {
     const datetime = params.get("datetime2");
-    const now = new Date();
-    return { mode: "absolute", date: datetime ? new Date(datetime) : now };
+    if (datetime) {
+      return { mode: "absolute", date: new Date(datetime) };
+    }
+
+    return { mode: "now" };
   });
   const [searchTerm, setSearchTerm] = React.useState(params.get("search") || "");
   const [includeContent, setIncludeContent] = React.useState(

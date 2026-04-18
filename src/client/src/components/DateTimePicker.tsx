@@ -63,13 +63,13 @@ export const resolveDatePickerValue = (value: DatePickerValue, now = new Date())
   return applyRelativeOffset(now, value.amount, value.unit);
 };
 
-const getLabel = (value: DatePickerValue, nowLabelDate: Date) => {
+const getLabel = (value: DatePickerValue) => {
   if (value.mode === "absolute") {
     return format(value.date, "yyyy/MM/dd HH:mm");
   }
 
   if (value.mode === "now") {
-    return `Now (${format(nowLabelDate, "yyyy/MM/dd HH:mm")})`;
+    return "Now";
   }
 
   return `Last ${value.amount} ${value.unit}`;
@@ -171,7 +171,7 @@ export function DateTimePicker({
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
-          <span className="truncate">{getLabel(value, nowLabelDate)}</span>
+          <span className="truncate">{getLabel(value)}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[360px] p-0 sm:w-[460px]" align="start">
