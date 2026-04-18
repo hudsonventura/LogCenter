@@ -19,14 +19,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import api from "@/services/api"
+import { useTimezone } from "./timezone-provider"
 
 type TimezoneOption = {
   id: string;
   displayName: string;
 }
-
-
-export function TimeZoneSelect({value, setValue}: {value: string | undefined, setValue: (value: string) => void}) {
+export function TimeZoneSelect() {
+  const { timezone, setTimezone } = useTimezone()
   const [open, setOpen] = React.useState(false)
   
 
@@ -54,21 +54,15 @@ export function TimeZoneSelect({value, setValue}: {value: string | undefined, se
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between"
+          className="w-[220px] justify-between"
         >
-          {value || "Select your timezone ..."}
-          {
-            //value
-            //? timezones.find((tz: { id: string }) => tz.id === value)?.id
-            //:// "Select your timezone ..."
-          }
-
+          <span className="truncate">{timezone || "Select your timezone ..."}</span>
           <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
+      <PopoverContent className="w-[320px] p-0" align="end">
         <Command>
-          <CommandInput placeholder="Search framework..." className="h-9" />
+          <CommandInput placeholder="Search timezone..." className="h-9" />
           <CommandList>
             <CommandEmpty>No timezone found</CommandEmpty>
             <CommandGroup>
@@ -77,7 +71,7 @@ export function TimeZoneSelect({value, setValue}: {value: string | undefined, se
                   key={tz.id}
                   value={tz.id}
                   onSelect={() => {
-                    setValue(tz.id === value ? "" : tz.id)
+                    setTimezone(tz.id)
                     setOpen(false)
                   }}
                 >
@@ -85,7 +79,7 @@ export function TimeZoneSelect({value, setValue}: {value: string | undefined, se
                   <CheckIcon
                     className={cn(
                       "ml-auto h-4 w-4",
-                      value === tz.id ? "opacity-100" : "opacity-0"
+                      timezone === tz.id ? "opacity-100" : "opacity-0"
                     )}
                   />
                 </CommandItem>

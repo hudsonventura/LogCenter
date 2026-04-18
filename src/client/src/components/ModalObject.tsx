@@ -10,9 +10,9 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import api from "@/services/api";
-import { format } from "date-fns";
 import React from "react";
 import { useState } from "react";
+import { useTimezone } from "./timezone-provider";
 
 import JsonView from "@uiw/react-json-view";
 import { toast } from "sonner";
@@ -50,14 +50,7 @@ const formatTimestamp = (value?: string) => {
   if (!value) {
     return "-";
   }
-
-  const parsedDate = new Date(value);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return String(value).replace("T", " ");
-  }
-
-  return format(parsedDate, "yyyy/MM/dd HH:mm:ss.SSS");
+  return String(value).replace("T", " ").replace(/Z$/, "");
 };
 
 export function ModalObject({
@@ -72,6 +65,7 @@ export function ModalObject({
   onOpenChange: (isOpen: boolean) => void;
 }) {
   const [data, setData] = useState<LogDetails>({});
+  const { timezone } = useTimezone();
 
   React.useEffect(() => {
     const getObject = async () => {
@@ -84,7 +78,7 @@ export function ModalObject({
     };
 
     void getObject();
-  }, [id, tableName]);
+  }, [id, tableName, timezone]);
 
   const handleCopy = async () => {
     try {

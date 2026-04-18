@@ -8,6 +8,7 @@ import { ModalTokenGeneration } from "./ModalTokenGeneration";
 import { ModalUserCreation } from "./ModalUserCreation";
 import { ModalChangePassword } from "./ModalChangePassword";
 import { ThemeToggle } from "./theme-toggle";
+import { TimeZoneSelect } from "./TimeZoneSelect";
 
 type DecodedToken = {
   name?: string;
@@ -59,6 +60,7 @@ export default function HeaderBar() {
         </Button>
 
         <div className="flex items-center gap-3">
+          <TimeZoneSelect />
           <ThemeToggle />
           <Popover>
             <PopoverTrigger asChild>

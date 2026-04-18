@@ -44,7 +44,7 @@ import { toast } from "sonner";
 import api from "@/services/api";
 import { ModalObject } from "../ModalObject";
 import { DatePickerValue, DateTimePicker, resolveDatePickerValue } from "../DateTimePicker";
-import { TimeZoneSelect } from "../TimeZoneSelect";
+import { useTimezone } from "../timezone-provider";
 import LogTimelineChart from "../charts/LogTimelineChart";
 
 export type LogRecord = {
@@ -90,11 +90,7 @@ const levelBadgeClass: Record<number, string> = {
 };
 
 const formatTimestamp = (value: string) => {
-  const [datePart, microPart = "000000"] = String(value).split(".");
-  const formattedDate = format(new Date(datePart), "yyyy/MM/dd HH:mm:ss");
-  const fixedMicro = microPart.padEnd(6, "0");
-
-  return `${formattedDate}.${fixedMicro}`;
+  return String(value).replace("T", " ").replace(/Z$/, "");
 };
 
 export const columns: ColumnDef<LogRecord>[] = [
@@ -233,15 +229,12 @@ export function TableLogs() {
     tabela: new URLSearchParams(location.search).get("tabela"),
   };
   const params = new URLSearchParams(location.search);
+  const { timezone } = useTimezone();
 
   const [data, setData] = React.useState<LogRecord[]>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-
-  const [timezone, setTimezone] = React.useState(
-    params.get("timezone") || Intl.DateTimeFormat().resolvedOptions().timeZone
-  );
   const [dateFrom, setDateFrom] = React.useState<DatePickerValue>(() => {
     const datetime = params.get("datetime1");
     const now = new Date();
@@ -307,11 +300,7 @@ export function TableLogs() {
         searchParams.set("search", searchTerm);
       }
 
-      const response = await api.get<LogRecord[]>(`/${tabela}?${searchParams.toString()}`, {
-        headers: {
-          Timezone: timezone,
-        },
-      });
+      const response = await api.get<LogRecord[]>(`/${tabela}?${searchParams.toString()}`);
 
       const nextData = Array.isArray(response.data) ? response.data : [];
       setData(nextData);
@@ -331,7 +320,7 @@ export function TableLogs() {
 
   React.useEffect(() => {
     void searchRef.current();
-  }, [tabela]);
+  }, [tabela, timezone]);
 
   React.useEffect(() => {
     if (dateTo.mode !== "now") {
@@ -344,29 +333,6 @@ export function TableLogs() {
 
     return () => clearInterval(interval);
   }, [dateTo.mode]);
-
-  const handleTimeZone = (nextTimezone: string) => {
-    const now = new Date();
-    const dateInCurrentTZ = new Date(
-      now.toLocaleString("en-US", { timeZone: timezone })
-    );
-    const dateInNextTZ = new Date(
-      now.toLocaleString("en-US", { timeZone: nextTimezone })
-    );
-    const offset = dateInNextTZ.getTime() - dateInCurrentTZ.getTime();
-
-    setTimezone(nextTimezone);
-    setDateFrom((current) =>
-      current.mode === "absolute"
-        ? { ...current, date: new Date(current.date.getTime() + offset) }
-        : current
-    );
-    setDateTo((current) =>
-      current.mode === "absolute"
-        ? { ...current, date: new Date(current.date.getTime() + offset) }
-        : current
-    );
-  };
 
   return (
     <>
@@ -385,7 +351,6 @@ export function TableLogs() {
     
         <div className="w-full rounded-xl border bg-card p-4 shadow-sm">
           <div className="mb-3 flex justify-end gap-2">
-            <TimeZoneSelect value={timezone} setValue={handleTimeZone} />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline">
