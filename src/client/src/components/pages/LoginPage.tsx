@@ -14,6 +14,7 @@ import { toast } from "sonner"
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
+import { getStoredToken, setStoredToken } from "@/lib/auth-storage";
 
 
 
@@ -27,7 +28,7 @@ export default function LoginPage() {
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		const token = sessionStorage.getItem("token");
+		const token = getStoredToken();
 		if (token) {
 			navigate("/tables");
 		}
@@ -42,7 +43,7 @@ export default function LoginPage() {
 			})
 			const token = await response.data;
 			//toast.success(`Welcome back, ${token}!`)
-			sessionStorage.setItem("token", token);
+			setStoredToken(token);
 			// Redirect to dashboard or something
 			navigate("/tables");
 		} catch (error) {

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { ThemeToggle } from "./theme-toggle";
 import { TimeZoneSelect } from "./TimeZoneSelect";
 import { UserManagementDialog } from "./UserManagementDialog";
+import { getStoredToken } from "@/lib/auth-storage";
 
 type DecodedToken = {
   name?: string;
@@ -33,7 +34,7 @@ export default function HeaderBar() {
     }
   };
   useEffect(() => {
-    const token = sessionStorage.getItem("token"); // Obtendo do sessionStorage
+    const token = getStoredToken();
     if (token) {
       const decodedData = decodeJWT(token);
 

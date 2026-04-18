@@ -1,6 +1,7 @@
 // src/services/api.ts
 import axios, { AxiosInstance } from 'axios';
 import { timezoneStorageKey } from '@/components/timezone-provider';
+import { getStoredToken } from '@/lib/auth-storage';
 
 // Instância do Axios com uma configuração padrão
 const api: AxiosInstance = axios.create({
@@ -12,7 +13,7 @@ const api: AxiosInstance = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = window.sessionStorage.getItem('token');
+  const token = getStoredToken();
   const timezone =
     window.localStorage.getItem(timezoneStorageKey) ||
     Intl.DateTimeFormat().resolvedOptions().timeZone ||
