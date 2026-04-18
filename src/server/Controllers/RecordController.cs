@@ -80,7 +80,10 @@ public class RecordController : ControllerBase
             }
         }
 
-        TraceId = (TraceId.Length >= 100) ? TraceId.Substring(0, 100) : TraceId;
+        if(TraceId != null){
+            TraceId = (TraceId?.Length >= 100) ? TraceId.Substring(0, 100) : TraceId;
+        }
+        
         
         
         Guid id = Guid.Empty;

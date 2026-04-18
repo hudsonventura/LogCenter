@@ -20,7 +20,7 @@ import { toast } from "sonner"
 
 import { ComboBoxTimeExpiration } from "./ComboBoxTimeExpiration"
 
-type ActivePanel = "token" | "user"
+type ActivePanel = "token" | "user" | "password"
 
 export function UserManagementDialog() {
   const [open, setOpen] = useState(false)
@@ -35,6 +35,8 @@ export function UserManagementDialog() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmNewPassword, setConfirmNewPassword] = useState("")
 
   const handleGenerateToken = async () => {
     if (!tables || !expiresAt) {
@@ -102,6 +104,35 @@ export function UserManagementDialog() {
     }
   }
 
+  const handleChangePassword = async () => {
+    if (!newPassword || !confirmNewPassword) {
+      toast.error("Please fill in all fields.")
+      return
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      toast.error("Passwords do not match.")
+      return
+    }
+
+    try {
+      const response = await api.post("/ChangePassword", {
+        password: newPassword,
+      })
+
+      if (response.status === 200) {
+        toast.success("Password changed successfully!")
+        setNewPassword("")
+        setConfirmNewPassword("")
+      } else {
+        toast.error("Error changing password. Please try again.")
+      }
+    } catch (error) {
+      console.error("Error changing password:", error)
+      toast.error("Error changing password. Please try again.")
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -131,6 +162,13 @@ export function UserManagementDialog() {
             onClick={() => setActivePanel("user")}
           >
             Create User
+          </Button>
+          <Button
+            type="button"
+            variant={activePanel === "password" ? "default" : "outline"}
+            onClick={() => setActivePanel("password")}
+          >
+            Change Password
           </Button>
         </div>
 
@@ -244,6 +282,47 @@ export function UserManagementDialog() {
               <div className="flex justify-end">
                 <Button type="button" onClick={handleCreateUser}>
                   Create User
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {activePanel === "password" ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Change Password</CardTitle>
+              <CardDescription>
+                Update the current user's password without leaving this dialog.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="change-password">New password</Label>
+                  <Input
+                    id="change-password"
+                    type="password"
+                    value={newPassword}
+                    onChange={(event) => setNewPassword(event.target.value)}
+                    placeholder="Enter new password"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="change-password-confirm">Confirm new password</Label>
+                  <Input
+                    id="change-password-confirm"
+                    type="password"
+                    value={confirmNewPassword}
+                    onChange={(event) => setConfirmNewPassword(event.target.value)}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button type="button" onClick={handleChangePassword}>
+                  Change Password
                 </Button>
               </div>
             </CardContent>
