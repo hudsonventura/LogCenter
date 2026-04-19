@@ -1,5 +1,3 @@
-using Microsoft.OpenApi.Models;
-using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 
 using DotNetEnv;
@@ -11,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.OpenApi;
 using Scalar.AspNetCore;
 
 AppContext.SetSwitch("System.Globalization.Invariant", true);
@@ -62,57 +61,7 @@ builder.Services.AddSingleton<TokenRepository>();
 builder.Services.AddDbContext<UserContext>();
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddOpenApi(); //net8.0 or higher
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "LogCenter Docs",
-        Version = "1.0",
-        Description = @"LogCenter API - Log Store and Trace<br>
-        <img src='https://github.com/hudsonventura/LogCenter/blob/main/logo.png?raw=true' alt='LogCenter Logo' width='230px'>
-        <p>
-            Repository: <a href='https://github.com/hudsonventura/LogCenter'>https://github.com/hudsonventura/LogCenter</a>
-        </p>
-        <p>
-            Thanks for <a href='https://github.com/LucasLuann'>https://github.com/LucasLuann</a>
-        </p>",
-        Contact = new OpenApiContact
-        {
-            Name = "LogCenter",
-            Url = new Uri("https://github.com/hudsonventura/LogCenter")
-        }
-    });
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "JWT Authorization header using the Bearer scheme."
-    });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    c.IncludeXmlComments(xmlPath);
-});
+builder.Services.AddOpenApi("v1");
 builder.Services.AddControllers();
 
 string listen = Environment.GetEnvironmentVariable("ASPNETCORE_LISTEN") ?? "http://localhost:9200";
@@ -177,19 +126,12 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-//Use Scalar API Docs
-app.UseSwagger(options =>
-{
-    options.RouteTemplate = "/openapi/{documentName}.json";
-});
+app.MapOpenApi("/openapi/{documentName}.json");
 app.MapScalarApiReference(options =>
 {
-
-    // Object initializer
     options.Title = "Docs LogCenter API";
     options.ShowSidebar = true;
     options.WithTitle("LogCenter Docs");
-
     options.Favicon = "https://github.com/hudsonventura/LogCenter/blob/main/logo.png?raw=true";
 });
 

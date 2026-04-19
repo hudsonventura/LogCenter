@@ -84,7 +84,7 @@ export default function HeaderBar() {
                 </div>
                 <Separator className="my-4" />
                 <div className="flex items-center gap-3 text-sm">
-                  <a href={`${import.meta.env.VITE_API_HOST}/docs/swagger/index.html`} target="_blank" rel="noopener noreferrer">Docs</a>
+                  <a href={`${import.meta.env.VITE_API_HOST}/scalar/v1`} target="_blank" rel="noopener noreferrer">Docs</a>
                   <Separator orientation="vertical" />
                   <a href="https://github.com/hudsonventura/LogCenter" target="_blank" rel="noopener noreferrer">Repository</a>
                   <Separator orientation="vertical" />

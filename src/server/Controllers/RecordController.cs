@@ -35,11 +35,15 @@ public class RecordController : ControllerBase
 
 
     /// <summary>
-    /// Save a message string or object json to table log. Returns a snowflake id
+    /// Save a message string and object json to table log. Returns a Guid
+    /// * is optional
     /// </summary>
     /// <param name="table">Table name</param>
-    /// <param name="obj">Message string or object json</param>
-    /// <param name="level">Log level. Default is Info</param>
+    /// <param name="message">A message</param>
+    /// <param name="timestamp">*A datetime when the event happened</param>
+    /// <param name="TraceId">*A traceid</param>
+    /// <param name="level">*Log level. Default is Info</param>
+    /// <param name="obj">*Object json to be saved</param>
     /// <returns>uuid</returns>
     [HttpPost("/{table}")]
     public ActionResult<Guid> Insert(
@@ -48,7 +52,7 @@ public class RecordController : ControllerBase
         [FromHeader] DateTime? timestamp = null,
         [FromHeader] Level level = Level.Info, 
         [FromHeader] string? TraceId = null,
-        [FromBody] dynamic obj = null)
+        [FromBody] dynamic? obj = null)
     {
         if(timestamp == null){
             timestamp = DateTime.UtcNow;

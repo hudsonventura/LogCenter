@@ -57,44 +57,45 @@ export function Tables() {
 		<>
 			<EnsureLogin />
 			<HeaderBar />
-			<h1 className="font-bold mb-3 text-center mt-3">Tables</h1>
+			<main className="mx-auto w-full max-w-7xl px-4 py-6">
+				<h1 className="mb-4 mt-1 text-center font-bold">Tables</h1>
 
-
-			<div className="flex flex-wrap gap-4 text-center ">
-				{data.map((item) => (
-					<Card key={item.table_name} className="w-[300px]">
-						<div className="flex justify-end">
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button variant="ghost" className="h-8 w-8 p-0">
-										<span className="sr-only">Open menu</span>
-										<MoreHorizontal className="h-4 w-4" />
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent className="w-56">
-									<DropdownMenuGroup>
-										<DropdownMenuItem onClick={() => goToConfigsTable(item.table_name)}>
-											Configurations
-										</DropdownMenuItem>
-									</DropdownMenuGroup>
-								</DropdownMenuContent>
-							</DropdownMenu>
-						</div>
-						<CardHeader>
-							<CardTitle>{item.table_name || "Tabela sem nome"}</CardTitle>
-							Size: {formatSize(item.size)}
-						</CardHeader>
-						<CardFooter className="flex justify-between gap-2">
-							<Button
-								className="w-full"
-								onClick={() => consultarTabela(item.table_name)}
-							>
-								See Logs
-							</Button>
-						</CardFooter>
-					</Card>
-				))}
-			</div>
+				<div className="flex flex-wrap gap-4 text-center">
+					{data.map((item) => (
+						<Card key={item.table_name} className="w-[300px]">
+							<div className="flex justify-end">
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button variant="ghost" className="h-8 w-8 p-0">
+											<span className="sr-only">Open menu</span>
+											<MoreHorizontal className="h-4 w-4" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent className="w-56">
+										<DropdownMenuGroup>
+											<DropdownMenuItem onClick={() => goToConfigsTable(item.table_name)}>
+												Configurations
+											</DropdownMenuItem>
+										</DropdownMenuGroup>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</div>
+							<CardHeader>
+								<CardTitle>{item.table_name || "Tabela sem nome"}</CardTitle>
+								Size: {formatSize(item.size)}
+							</CardHeader>
+							<CardFooter className="flex justify-between gap-2">
+								<Button
+									className="w-full"
+									onClick={() => consultarTabela(item.table_name)}
+								>
+									See Logs
+								</Button>
+							</CardFooter>
+						</Card>
+					))}
+				</div>
+			</main>
 
 		</>
 	);
