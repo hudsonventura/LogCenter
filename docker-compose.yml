@@ -30,18 +30,16 @@ services:
     depends_on:
       - db
     ports:
-      - ${LOGCENTER_PORT}:9200
+      - ${LOGCENTER_API_PORT}:9200
 
   client:
     container_name: logcenter_client
+    #image:
     restart: always
     build:
       context: ./src/client
       dockerfile: Dockerfile
-    environment:
-      VITE_API_HOST: ${SERVER_BACKEND_URL}
-      #TZ -> THE SERVER MUST BE ON UTC+0
     ports:
-      - "5173:5173"
+      - ${LOGCENTER_INTERFACE_PORT}:5173
     depends_on:
       - server

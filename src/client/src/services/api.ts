@@ -2,10 +2,11 @@
 import axios, { AxiosInstance } from 'axios';
 import { timezoneStorageKey } from '@/components/timezone-provider';
 import { getStoredToken } from '@/lib/auth-storage';
+import { getApiBaseUrl } from '@/lib/api-host';
 
 // Instância do Axios com uma configuração padrão
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_HOST,
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },

@@ -20,7 +20,7 @@ public class UnitTest1
         _output = output;
         client.DefaultRequestHeaders.Add("Authorization", "Bearer xB70Valquiredb2c884bb1b01b4dd884fghrtnnrnc5ea57");
 
-        client.BaseAddress = new Uri("https://logcenter.hudsonventura.ddnsgeek.com");
+        //client.BaseAddress = new Uri("");
     }
 
     [Fact]

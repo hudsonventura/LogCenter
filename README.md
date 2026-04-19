@@ -19,13 +19,15 @@ In `Details` you can see whole object that you sent.
 Edit the `.env` file as your reality:
 
 ```
+LOGCENTER_API_PORT=9200
+LOGCENTER_INTERFACE_PORT=5173
+
 DB_HOST=db
 DB_PORT=5432
 DB_NAME=logcenter
 DB_USER=logcenter
 DB_PASSWORD=MyS3cr3tP@ssw0rd                    # CHANGE DB PASS
 JWT_KEY=MyS3cr3tP@ssw0rdF0rJWTT0k3nGener4tion   # GENERATE A NEW KEY TO JWT ENCODING
-SERVER_BACKEND_URL=http://localhost:9200        # PUT YOU BACKEND URL TO SERVE FRONTEND APP
 ```
 
 After:
