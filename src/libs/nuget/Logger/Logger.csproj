@@ -1,19 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <Title>Lib to abstract communication with LogCenter</Title>
-		<Description>Lib to abstract communication with LogCenter. Handles logging and message exchange efficiently.</Description>
+    <Title>Lib to abstract communication with LogCenter via ILogger</Title>
+		<Description>Lib to abstract communication with LogCenter via ILogger</Description>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <PackageTags>Log;Logs;LogCenter;</PackageTags>
+    <PackageTags>Log;Logs;LogCenter;Logger;ILogger</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
 		<EnableNETAnalyzers>True</EnableNETAnalyzers>
 		<AnalysisLevel>latest-all</AnalysisLevel>
-		<VersionPrefix>0.1.1</VersionPrefix>
+		<VersionPrefix>0.2.0</VersionPrefix>
     <PackageId>LogCenter.Logger</PackageId>
     <Version>$(VersionPrefix)</Version>
 		<!--Version>$(VersionPrefix).$(VersionSuffix)</Version-->
@@ -40,6 +40,11 @@
     </None>
 
 
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.6" />
   </ItemGroup>
 
 </Project>

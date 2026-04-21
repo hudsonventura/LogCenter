@@ -13,12 +13,13 @@ public class WeatherForecastController : ControllerBase
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
 
-    private readonly LogCenter.LogCenterLogger _logger;
+    private readonly ILogger<WeatherForecastController> _logger;
 
-    public WeatherForecastController(LogCenter.LogCenterLogger logger)
+    public WeatherForecastController(ILogger<WeatherForecastController> logger)
     {
-        _logger = logger;
+        _logger = logger;;
     }
+
 
 
     /// <summary>
@@ -37,9 +38,8 @@ public class WeatherForecastController : ControllerBase
         })
         .ToArray();
 
-        _logger.Log(LogCenter.LogLevel.Debug, "Processing ...");
-        _logger.Log(LogCenter.LogLevel.Debug, "The object", test);
-        _logger.Log(LogCenter.LogLevel.Debug, "Ok ...");
+        _logger.LogCritical("Hello World - Info", Guid.NewGuid());
+
 
         return Ok(test);
 
@@ -63,13 +63,7 @@ public class WeatherForecastController : ControllerBase
         })
         .ToArray();
 
-        _logger.Log(LogCenter.LogLevel.Debug, "Processing ...");
-        _logger.Log(LogCenter.LogLevel.Information, "The object", test);
-        _logger.Log(LogCenter.LogLevel.Success, "Ok ...");
-        _logger.Log(LogCenter.LogLevel.Error, "Ok ...");
-        _logger.Log(LogCenter.LogLevel.Critical, "Ok ...");
-        _logger.Log(LogCenter.LogLevel.Warning, "Ok ...");
-        _logger.Log(LogCenter.LogLevel.Trace, "Ok ...");
+        _logger.LogCritical("Hello World - Info {aaa}", test);
 
         return Ok(test);
     }
