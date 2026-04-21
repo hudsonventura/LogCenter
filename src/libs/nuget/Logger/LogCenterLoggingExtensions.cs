@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace LogCenter;
@@ -8,13 +7,14 @@ namespace LogCenter;
 public static class LogCenterLoggingExtensions
 {
     /// <summary>
-    /// Adiciona o provider LogCenter. Exige <c>AddHttpClient(LogCenterOptions.HttpClientName, ...)</c>
-    /// e em geral <c>Configure&lt;LogCenterOptions&gt;</c> já registrados antes do build da aplicação.
+    /// Adiciona o provider LogCenter. Exige apenas que <c>LogCenterOptions</c> esteja registrado
+    /// no serviço de injeção de dependências (AddSingleton ou via configuration).
     /// </summary>
-    public static ILoggingBuilder AddLogCenter(this ILoggingBuilder builder)
+    public static ILoggingBuilder AddLogCenter(this ILoggingBuilder builder, LogCenterOptions options)
     {
-        builder.Services.TryAddEnumerable(
-            ServiceDescriptor.Singleton<ILoggerProvider, LogCenterLoggerProvider>());
+        builder.Services.AddSingleton(options);
+        builder.Services.AddSingleton<ILoggerProvider>(sp => 
+            new LogCenterLoggerProvider(sp.GetRequiredService<LogCenterOptions>()));
         return builder;
     }
 }

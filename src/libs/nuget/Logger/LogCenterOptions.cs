@@ -66,4 +66,9 @@ public sealed class LogCenterOptions
     /// Your token. Generate it on web interface on user's preference
     /// </summary>
     public string token { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Timeout for HTTP requests, in seconds. Default is 5 seconds (5000 ms).
+    /// </summary>    
+    public int timeout { get; set; } = 5000;
 }

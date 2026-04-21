@@ -19,16 +19,16 @@ internal sealed class LogCenterLogger : ILogger
     };
 
     private readonly string _categoryName;
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly HttpClient _httpClient;
     private readonly LogCenterOptions _options;
 
     public LogCenterLogger(
         string categoryName,
-        IHttpClientFactory httpClientFactory,
+        HttpClient httpClient,
         LogCenterOptions options)
     {
         _categoryName = categoryName;
-        _httpClientFactory = httpClientFactory;
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _options = options;
     }
 
@@ -44,9 +44,6 @@ internal sealed class LogCenterLogger : ILogger
         Exception? exception,
         Func<TState, Exception?, string> formatter)
     {
-        //if (!IsEnabled(logLevel))
-        //    return;
-
         var message = formatter(state, exception);
         var structured = LogCenterStructuredState.TryBuildStructuredProperties(
             state,
@@ -63,47 +60,52 @@ internal sealed class LogCenterLogger : ILogger
             StructuredProperties = structured
         };
 
-        string json = JsonSerializer.Serialize(structured);
-        //Debug.WriteLine("[LogFull] Template", state.);
-        Debug.WriteLine("[LogFull] Message", message);
-        Debug.WriteLine("[LogFull] Object", json);
+        string payloadJson = JsonSerializer.Serialize(structured, JsonOptions);
+        //Console.WriteLine($"[LogCenter] Payload para enviar:\n{payloadJson}\n");
+
+
+        ShowConsole(logLevel, message);
+
+            
 
         // Daqui em diante o payload já existe na thread atual (síncrono).
-        // if (_options.SendSynchronously)
-        //     SendAsync(payload).GetAwaiter().GetResult();
-        // else
-        //     _ = SendAsync(payload);
+        if (_options.SendSynchronously)
+            SendAsync(payload).GetAwaiter().GetResult();
+        else
+            _ = SendAsync(payload);
     }
 
     private async Task SendAsync(LogCenterLogPayload payload)
     {
+        // TODO: Descomente quando o objeto chegar corretamente
+        /*
         try
         {
-            var client = _httpClientFactory.CreateClient(LogCenterOptions.HttpClientName);
-            var requestUri = ResolveRequestUri(client);
+            var requestUri = ResolveRequestUri();
             if (requestUri is null)
             {
                 Debug.WriteLine(
-                    "[LogFull] Envio ignorado: defina BaseAddress no HttpClient nomeado ou use LogEndpoint como URL absoluta.");
+                    "[LogFull] Envio ignorado: defina BaseAddress no HttpClient ou use LogEndpoint como URL absoluta.");
                 return;
             }
 
-            using var response = await client.PostAsJsonAsync(requestUri, payload, JsonOptions).ConfigureAwait(false);
+            using var response = await _httpClient.PostAsJsonAsync(requestUri, payload, JsonOptions).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[LogFull] Falha ao enviar log: {ex.Message}");
         }
+        */
     }
 
-    private string? ResolveRequestUri(HttpClient client)
+    private string? ResolveRequestUri()
     {
         var ep = _options.LogEndpoint.Trim();
         if (Uri.TryCreate(ep, UriKind.Absolute, out _))
             return ep;
 
-        if (client.BaseAddress is null)
+        if (_httpClient.BaseAddress is null)
             return null;
 
         return ep.StartsWith('/') ? ep : "/" + ep;
@@ -113,5 +115,54 @@ internal sealed class LogCenterLogger : ILogger
     {
         internal static readonly NullScope Instance = new();
         public void Dispose() { }
+    }
+
+
+    private void ShowConsole(LogLevel level, string message){
+        var default_foreground_color = Console.ForegroundColor;
+        var default_background_color = Console.BackgroundColor;
+
+        Console.ForegroundColor = SwitchColor(level, default_foreground_color);
+        Console.BackgroundColor = ConsoleColor.Black;
+
+        var formattedLevel = FormatLevel(level.ToString());
+        Console.Write(formattedLevel + " ");
+
+        Console.ForegroundColor = default_foreground_color;
+        Console.BackgroundColor = default_background_color;
+
+        Console.WriteLine(message);
+    }
+
+    private string FormatLevel(string level)
+    {
+        // Total de 15 caracteres: [ + espaço + 11 caracteres centralizados + espaço + ]
+        const int contentWidth = 11;
+        
+        string padded = level.Length < contentWidth 
+            ? level.PadLeft((contentWidth + level.Length) / 2).PadRight(contentWidth)
+            : level.Substring(0, contentWidth);
+        
+        return $"[ {padded} ]";
+    }
+
+    private ConsoleColor SwitchColor(LogLevel level, ConsoleColor default_color){
+        switch (level){
+            case LogLevel.Debug:
+                return ConsoleColor.Cyan;
+            case LogLevel.Information:
+                return ConsoleColor.Blue;
+            case LogLevel.Warning:
+                return ConsoleColor.Yellow;
+            case LogLevel.Error:
+                return ConsoleColor.Red;
+            case LogLevel.Critical:
+                return ConsoleColor.Red;
+            case LogLevel.Trace:
+                return ConsoleColor.DarkCyan;
+            default: return default_color;
+        }
+
+        return default_color;
     }
 }

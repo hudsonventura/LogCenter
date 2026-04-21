@@ -38,7 +38,13 @@ public class WeatherForecastController : ControllerBase
         })
         .ToArray();
 
-        _logger.LogCritical("Hello World - Info", Guid.NewGuid());
+        _logger.LogInformation("Hello World - Info");
+        _logger.LogWarning("Hello World - Warning");
+        _logger.LogCritical("Hello World - Critical");
+        _logger.LogDebug("Hello World - Debug");
+        _logger.LogTrace("Hello World - Trace");
+        _logger.LogError("Hello World - Error");
+        _logger.LogCritical("Hello World - Critical {@obj1} {@obj2}", test, test);
 
 
         return Ok(test);
@@ -63,7 +69,7 @@ public class WeatherForecastController : ControllerBase
         })
         .ToArray();
 
-        _logger.LogCritical("Hello World - Info {aaa}", test);
+        _logger.LogCritical("Hello World - Info1 {aaa}", test);
 
         return Ok(test);
     }
