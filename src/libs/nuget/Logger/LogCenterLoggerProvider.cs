@@ -10,18 +10,33 @@ internal sealed class LogCenterLoggerProvider : ILoggerProvider
     public LogCenterLoggerProvider(LogCenterOptions options)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
-        
-        // Cria o HttpClient internamente com as opções fornecidas
+
         _httpClient = new HttpClient
         {
-            BaseAddress = new Uri(_options.url),
-            Timeout = _options.Timeout
+            BaseAddress = ResolveBaseAddress(_options),
+            Timeout = TimeSpan.FromMilliseconds(_options.Timeout)
         };
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_options.token}");
+
+        if (!string.IsNullOrWhiteSpace(_options.Token))
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_options.Token}");
     }
 
     public ILogger CreateLogger(string categoryName) =>
         new LogCenterLogger(categoryName, _httpClient, _options);
 
     public void Dispose() => _httpClient?.Dispose();
+
+    private static Uri? ResolveBaseAddress(LogCenterOptions options)
+    {
+        if (options.BaseAddress is not null)
+            return options.BaseAddress;
+
+        if (!string.IsNullOrWhiteSpace(options.Url))
+            return new Uri(options.Url, UriKind.Absolute);
+
+        if (options.Enabled)
+            throw new InvalidOperationException("LogCenterOptions.Url or LogCenterOptions.BaseAddress is required when logging is enabled.");
+
+        return null;
+    }
 }

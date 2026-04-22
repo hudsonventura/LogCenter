@@ -42,7 +42,7 @@ internal static class LogCenterStructuredState
 
     private static string ResolvePropertyKey(string templateKey, bool stripDestructuringAtPrefix)
     {
-        if (!stripDestructuringAtPrefix || !templateKey.StartsWith("@", StringComparison.Ordinal))
+        if (!stripDestructuringAtPrefix || !templateKey.StartsWith('@'))
             return templateKey;
 
         var without = templateKey.Length > 1 ? templateKey[1..] : templateKey;

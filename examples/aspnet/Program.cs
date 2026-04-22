@@ -1,4 +1,5 @@
 using LogCenter;
+using LogCenter.RequestInterceptor;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://0.0.0.0:5000");
@@ -8,13 +9,18 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configure LogCenter - apenas informe url, table e token
-var logCenterOptions = new LogCenterOptions
+// Configure LogCenter e o interceptor HTTP usando a mesma configuração base.
+var logCenterOptions = new InterceptorOptions
 {
-    url = "http://localhost:9200",
-    table = "example_aspnet",
-    token = "seu_token_aqui"
+    Url = "http://localhost:9200",
+    Table = "example_aspnet",
+    Token = "seu_token_aqui",
+    FormatType = InterceptorOptions.SaveFormatType.Json,
+    LogGetRequest = true
 };
+
+builder.Services.AddSingleton(logCenterOptions);
+builder.Services.AddSingleton<LogCenterOptions>(logCenterOptions);
 
 // Remove todos os loggers padrão (console, debug, etc)
 builder.Logging.ClearProviders();
@@ -31,6 +37,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseRequestInterceptor();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();

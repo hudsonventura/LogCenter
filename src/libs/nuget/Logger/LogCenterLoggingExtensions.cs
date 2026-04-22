@@ -12,6 +12,9 @@ public static class LogCenterLoggingExtensions
     /// </summary>
     public static ILoggingBuilder AddLogCenter(this ILoggingBuilder builder, LogCenterOptions options)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
+
         builder.Services.AddSingleton(options);
         builder.Services.AddSingleton<ILoggerProvider>(sp => 
             new LogCenterLoggerProvider(sp.GetRequiredService<LogCenterOptions>()));

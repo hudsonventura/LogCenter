@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
@@ -8,7 +10,6 @@ namespace LogCenter;
 /// <summary>
 /// <see cref="ILogger.Log"/> da BCL é sempre síncrono: o <see cref="LogCenterLogPayload"/> é montado aqui, na mesma chamada.
 /// O I/O HTTP fica em <see cref="SendAsync"/> (assíncrono), agendado após <see cref="Log"/> retornar, salvo se
-/// <see cref="LogCenterOptions.SendSynchronously"/> estiver ativo.
 /// </summary>
 internal sealed class LogCenterLogger : ILogger
 {
@@ -45,71 +46,157 @@ internal sealed class LogCenterLogger : ILogger
         Func<TState, Exception?, string> formatter)
     {
         var message = formatter(state, exception);
+        var messageTemplate = TryExtractMessageTemplate(state);
+
         var structured = LogCenterStructuredState.TryBuildStructuredProperties(
             state,
             JsonOptions,
             _options.StripDestructuringAtPrefix);
         var payload = new LogCenterLogPayload
         {
+            Table = _options.Table,
             Timestamp = DateTimeOffset.UtcNow,
             Level = logLevel.ToString(),
+            TraceId = TryExtractTraceId(structured) ?? Activity.Current?.Id,
             Category = _categoryName,
             Message = message,
-            Exception = exception?.ToString(),
             ApplicationName = _options.ApplicationName,
+            Exception = exception?.ToString(),
             StructuredProperties = structured
         };
 
-        string payloadJson = JsonSerializer.Serialize(structured, JsonOptions);
-        //Console.WriteLine($"[LogCenter] Payload para enviar:\n{payloadJson}\n");
+        _ = SendAsync(messageTemplate, DateTime.UtcNow, logLevel, payload);
 
-
-        ShowConsole(logLevel, message);
-
-            
-
-        // Daqui em diante o payload já existe na thread atual (síncrono).
-        if (_options.SendSynchronously)
-            SendAsync(payload).GetAwaiter().GetResult();
-        else
-            _ = SendAsync(payload);
+        ShowConsole(logLevel, messageTemplate);
     }
 
-    private async Task SendAsync(LogCenterLogPayload payload)
+    private async Task SendAsync(string message, DateTime timestamp, LogLevel logLevel, LogCenterLogPayload payload)
     {
-        // TODO: Descomente quando o objeto chegar corretamente
-        /*
         try
         {
-            var requestUri = ResolveRequestUri();
-            if (requestUri is null)
+            if (_options.Url is null)
             {
-                Debug.WriteLine(
-                    "[LogFull] Envio ignorado: defina BaseAddress no HttpClient ou use LogEndpoint como URL absoluta.");
+                return;
+            }
+            HttpRequestMessage request = new(HttpMethod.Post, $"{_options.Url}/{_options.Table}");
+            request.Headers.Add("Message", ToAscii(message));
+            request.Headers.Add("Timestamp", timestamp.ToString("o"));
+            request.Headers.Add("Level", logLevel.ToString());
+
+            if (!string.IsNullOrWhiteSpace(payload.TraceId))
+                request.Headers.Add("TraceId", payload.TraceId);
+
+            if (payload.StructuredProperties is not null)
+            {
+                var content = BuildLegacyContent(payload);
+                if (content is not null)
+                    request.Content = JsonContent.Create(content, mediaType: new MediaTypeHeaderValue("application/json"));
+            }
+
+            using var response =  await _httpClient.SendAsync(request).ConfigureAwait(false);
+
+            //using var response = await _httpClient.PostAsJsonAsync(requestUri, payload, JsonOptions).ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
+                return;
+
+            if (!ShouldFallbackToLegacyEndpoint(response))
+            {
+                response.EnsureSuccessStatusCode();
                 return;
             }
 
-            using var response = await _httpClient.PostAsJsonAsync(requestUri, payload, JsonOptions).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
+            using var legacyRequest = BuildLegacyRequest(payload);
+            using var legacyResponse = await _httpClient.SendAsync(legacyRequest).ConfigureAwait(false);
+            legacyResponse.EnsureSuccessStatusCode();
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[LogFull] Falha ao enviar log: {ex.Message}");
         }
-        */
     }
 
-    private string? ResolveRequestUri()
+    private HttpRequestMessage BuildLegacyRequest(LogCenterLogPayload payload)
     {
-        var ep = _options.LogEndpoint.Trim();
-        if (Uri.TryCreate(ep, UriKind.Absolute, out _))
-            return ep;
+        var request = new HttpRequestMessage(HttpMethod.Post, ResolveLegacyRequestUri());
+        request.Headers.Add("Level", payload.Level);
+        request.Headers.Add("Timestamp", payload.Timestamp.ToString("o"));
+        request.Headers.Add("Message", payload.Message);
 
-        if (_httpClient.BaseAddress is null)
+        if (!string.IsNullOrWhiteSpace(payload.TraceId))
+            request.Headers.Add("TraceId", payload.TraceId);
+
+        var content = BuildLegacyContent(payload);
+        if (content is not null)
+            request.Content = JsonContent.Create(content, mediaType: new MediaTypeHeaderValue("application/json"));
+
+        return request;
+    }
+
+    private static Dictionary<string, object?>? BuildLegacyContent(LogCenterLogPayload payload)
+    {
+        Dictionary<string, object?>? content = null;
+
+        if (!string.IsNullOrWhiteSpace(payload.Category))
+        {
+            content ??= new Dictionary<string, object?>(StringComparer.Ordinal);
+            content["Category"] = payload.Category;
+        }
+
+        if (!string.IsNullOrWhiteSpace(payload.ApplicationName))
+        {
+            content ??= new Dictionary<string, object?>(StringComparer.Ordinal);
+            content["ApplicationName"] = payload.ApplicationName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(payload.Exception))
+        {
+            content ??= new Dictionary<string, object?>(StringComparer.Ordinal);
+            content["Exception"] = payload.Exception;
+        }
+
+        if (payload.StructuredProperties is not null)
+        {
+            content ??= new Dictionary<string, object?>(StringComparer.Ordinal);
+            foreach (var (key, value) in payload.StructuredProperties)
+                content[key] = value.Clone();
+        }
+
+        return content;
+    }
+
+    private string ResolveLegacyRequestUri()
+    {
+        var table = payloadPathSegment(_options.Table);
+        return "/" + table;
+
+        static string payloadPathSegment(string value) =>
+            value.Trim().Trim('/').Replace(" ", "_", StringComparison.Ordinal).ToLowerInvariant();
+    }
+
+    private static bool ShouldFallbackToLegacyEndpoint(HttpResponseMessage response) =>
+        response.StatusCode is System.Net.HttpStatusCode.NotFound
+            or System.Net.HttpStatusCode.MethodNotAllowed
+            or System.Net.HttpStatusCode.NotImplemented;
+
+    private static string? TryExtractTraceId(Dictionary<string, JsonElement>? structuredProperties)
+    {
+        if (structuredProperties is null)
             return null;
 
-        return ep.StartsWith('/') ? ep : "/" + ep;
+        foreach (var key in new[] { "TraceId", "traceId" })
+        {
+            if (!structuredProperties.TryGetValue(key, out var value))
+                continue;
+
+            if (value.ValueKind == JsonValueKind.String)
+                return value.GetString();
+        }
+
+        return null;
     }
+
+
+
 
     private sealed class NullScope : IDisposable
     {
@@ -162,7 +249,40 @@ internal sealed class LogCenterLogger : ILogger
                 return ConsoleColor.DarkCyan;
             default: return default_color;
         }
-
-        return default_color;
     }
+
+
+    private static string? TryExtractMessageTemplate<TState>(TState state)
+    {
+        if (state is not IEnumerable<KeyValuePair<string, object?>> pairs)
+            return null;
+
+        foreach (var kv in pairs)
+        {
+            if (string.Equals(kv.Key, "{OriginalFormat}", StringComparison.Ordinal) ||
+                string.Equals(kv.Key, "OriginalFormat", StringComparison.Ordinal))
+            {
+                return kv.Value?.ToString();
+            }
+        }
+
+        return null;
+    }
+
+    public static string ToAscii(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        var sb = new StringBuilder(input.Length);
+
+        foreach (char c in input)
+        {
+            if (c <= 127) // ASCII vai de 0 a 127
+                sb.Append(c);
+        }
+
+        return sb.ToString();
+    }
+
 }
