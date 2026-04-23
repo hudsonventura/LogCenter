@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
 //using RequestResponseInterceptor;
@@ -14,79 +15,111 @@ public static class InterceptorMiddlewareExtensions
 {
     public static IApplicationBuilder UseRequestInterceptor(this IApplicationBuilder builder)
     {
-        var options = builder.ApplicationServices.GetRequiredService<LogCenterOptions>();
+        ArgumentNullException.ThrowIfNull(builder);
+        var options = ResolveOptions(builder.ApplicationServices);
 
         return builder.UseMiddleware<InterceptorMiddleware>(options);
     }
 
-     public static IApplicationBuilder UseRequestInterceptor(this IApplicationBuilder builder,  LogCenterOptions options)
+    public static IApplicationBuilder UseRequestInterceptor(this IApplicationBuilder builder, InterceptorOptions options)
     {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
         return builder.UseMiddleware<InterceptorMiddleware>(options);
     }
+
+    public static IApplicationBuilder UseRequestInterceptor(this IApplicationBuilder builder, LogCenterOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
+        return builder.UseRequestInterceptor(ToInterceptorOptions(options));
+    }
+
+    private static InterceptorOptions ResolveOptions(IServiceProvider services)
+    {
+        var interceptorOptions = services.GetService<InterceptorOptions>();
+        if (interceptorOptions is not null)
+            return interceptorOptions;
+
+        var logCenterOptions = services.GetRequiredService<LogCenterOptions>();
+        return logCenterOptions as InterceptorOptions ?? ToInterceptorOptions(logCenterOptions);
+    }
+
+    private static InterceptorOptions ToInterceptorOptions(LogCenterOptions options) =>
+        new()
+        {
+            Enabled = options.Enabled,
+            BaseAddress = options.BaseAddress,
+            LogEndpoint = options.LogEndpoint,
+            MinimumLevel = options.MinimumLevel,
+            ApplicationName = options.ApplicationName,
+            StripDestructuringAtPrefix = options.StripDestructuringAtPrefix,
+            Url = options.Url,
+            Table = options.Table,
+            Token = options.Token,
+            Timeout = options.Timeout
+        };
 }
 
 
 public sealed class InterceptorMiddleware
 {
     private readonly RequestDelegate _next;
-    private LogCenterLogger _logger;
-    private InterceptorOptions _options;
+    private readonly ILogger<InterceptorMiddleware> _logger;
+    private readonly InterceptorOptions _options;
 
-    public InterceptorMiddleware(RequestDelegate next, InterceptorOptions options)
+    public InterceptorMiddleware(
+        RequestDelegate next,
+        InterceptorOptions options,
+        ILogger<InterceptorMiddleware> logger)
     {
         _next = next;
         _options = options;
-        _logger = new LogCenterLogger(options);
+        _logger = logger;
     }
 
     public async Task Invoke(HttpContext context)
     {
-        Request request = await Request.Convert(context);
-        string traceId = Activity.Current?.Id ?? context?.TraceIdentifier;
+        ArgumentNullException.ThrowIfNull(context);
 
-        if(_options.LogGetRequest == false && request.Method == "GET"){
-            
-        }else{
+        Request request = await Request.Convert(context);
+        string traceId = Activity.Current?.Id ?? context.TraceIdentifier;
+
+        if (_options.LogGetRequest || !HttpMethods.IsGet(request.Method))
+        {
             OnReceiveRequest(request, traceId);
         }
-        
 
-        context.Response.Headers.Add(_options.TraceIdReponseHeader, traceId); // Garantir que o header seja adicionado
+        context.Response.Headers[_options.TraceIdReponseHeader] = traceId;
 
-        // Salva o body original da response
         Stream originalbody = context.Response.Body;
-        string response_body = "";
+        string responseBody = "";
 
         using (var memstream = new MemoryStream())
         {
             context.Response.Body = memstream;
 
-            Exception error = null;
             try
             {
-                await _next(context); // Continua o pipeline
+                await _next(context);
 
-                // Captura e restaura o body da response
                 memstream.Position = 0;
-                response_body = new StreamReader(memstream).ReadToEnd();
+                responseBody = await new StreamReader(memstream).ReadToEndAsync();
                 memstream.Position = 0;
                 await memstream.CopyToAsync(originalbody);
                 context.Response.Body = originalbody;
 
-                Response response = await Response.Convert(context, response_body);
+                Response response = await Response.Convert(context, responseBody);
 
-                if(_options.LogGetRequest == false && request.Method == "GET"){
-            
-                }else{
+                if (_options.LogGetRequest || !HttpMethods.IsGet(request.Method))
+                {
                     OnSendResponse(response, traceId);
                 }
-                
             }
             catch (Exception e)
             {
-                error = e;
                 memstream.Position = 0;
-                response_body = await new StreamReader(memstream).ReadToEndAsync();
+                responseBody = await new StreamReader(memstream).ReadToEndAsync();
                 memstream.Position = 0;
                 await memstream.CopyToAsync(originalbody);
                 context.Response.Body = originalbody;
@@ -95,73 +128,85 @@ public sealed class InterceptorMiddleware
                 Response response = await Response.Convert(context, e);
                 OnSendResponse(response, traceId);
 
-                // 🔹 Define o status code antes de lançar a exceção
-                
-                
-
                 if (!_options.HideResponseExceptions)
                 {
-                    await context.Response.WriteAsync(error.ToString());
+                    await context.Response.WriteAsync(e.ToString());
                 }
             }
-
         }
     }
 
-
-
-
-    public async void OnReceiveRequest(Request request, string traceId)
+    public void OnReceiveRequest(Request request, string traceId)
     {
-
-        switch (_options.FormatType)
+        object payload = _options.FormatType switch
         {
-            case InterceptorOptions.SaveFormatType.HTTPText: _logger.Log(LogLevel.Trace, "Request", traceId, request.ToString());
-            break;
+            InterceptorOptions.SaveFormatType.HTTPText => request.ToString(),
+            _ => request
+        };
 
-            default: _logger.Log(LogLevel.Trace, "Request", request);
-            break;
-        }
-
+        LogStructured(
+            LogLevel.Trace,
+            new EventId(1000, nameof(Request)),
+            "HTTP request received",
+            traceId,
+            nameof(Request),
+            payload);
     }
 
-    public async void OnSendResponse(Response response, string traceId)
-    {      
-        try
+    public void OnSendResponse(Response response, string traceId)
+    {
+        object payload = _options.FormatType switch
         {
-            LogLevel level = LogLevel.Information;
-            switch (response.StatusCode.ToString().Substring(0, 1))
-            {
-                case "2": level = LogLevel.Success;
-                break;
+            InterceptorOptions.SaveFormatType.HTTPText => response.ToString(),
+            _ => response
+        };
 
-                case "3": level = LogLevel.Warning;
-                break;
-
-                case "4": level = LogLevel.Error;
-                break;
-
-                case "5": level = LogLevel.Fatal;
-                break;
-
-                default: level = LogLevel.Information;
-                break;
-            }
-
-            switch (_options.FormatType)
-            {
-                case InterceptorOptions.SaveFormatType.HTTPText: _logger.Log(level, "Response", traceId, response.ToString());
-                break;
-
-                default: _logger.Log(level, "Response", response);
-                break;
-            }
-
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erro ao fazer a solicitação: {ex.Message}");
-        }
+        LogStructured(
+            MapLogLevel(response.StatusCode),
+            new EventId(1001, nameof(Response)),
+            "HTTP response sent",
+            traceId,
+            nameof(Response),
+            payload,
+            response.Exception);
     }
-    
+
+    private void LogStructured(
+        LogLevel level,
+        EventId eventId,
+        string message,
+        string traceId,
+        string propertyName,
+        object payload,
+        Exception? exception = null)
+    {
+        if (!_logger.IsEnabled(level))
+            return;
+
+        var state = new Dictionary<string, object?>(StringComparer.Ordinal)
+        {
+            ["{OriginalFormat}"] = message,
+            ["TraceId"] = traceId,
+            [propertyName] = payload
+        };
+
+        _logger.Log(
+            level,
+            eventId,
+            state,
+            exception,
+            static (currentState, _) =>
+                currentState.TryGetValue("{OriginalFormat}", out var currentMessage)
+                    ? currentMessage?.ToString() ?? string.Empty
+                    : string.Empty);
+    }
+
+    private static LogLevel MapLogLevel(int statusCode) =>
+        statusCode switch
+        {
+            >= 500 => LogLevel.Critical,
+            >= 400 => LogLevel.Error,
+            >= 300 => LogLevel.Warning,
+            _ => LogLevel.Information
+        };
 }

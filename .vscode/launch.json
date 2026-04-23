@@ -24,32 +24,10 @@
             "console": "internalConsole"
         },
         {
-            "name": "Run server API",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "Prepare Debug",
-            "program": "${workspaceFolder}/src/server/bin/Debug/net10.0/server.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}",
-            "stopAtEntry": false,
-            "serverReadyAction": {
-                "action": "openExternally",
-                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
-                "uriFormat": "%s/scalar/v1"
-                //"uriFormat": "%s/api-docs"
-            },
-            "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
-            },
-            "sourceFileMap": {
-                "/Views": "${workspaceFolder}/Views"
-            }
-        },
-        {
             "name": "Example aspnet",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "dotnet: build",
+            "preLaunchTask": "dotnet: build Example aspnet",
             "postDebugTask": "Cleanup Debug",
             "program": "${workspaceFolder}/examples/aspnet/bin/Debug/net10.0/aspnet_example.dll",
             "args": [],
@@ -72,12 +50,34 @@
             "name": "Example dotnet",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "dotnet: build",
+            "preLaunchTask": "dotnet: build Example dotnet",
             "program": "${workspaceFolder}/examples/dotnet/bin/Debug/net10.0/dotnet_example.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
+        },
+        {
+            "name": "Run server API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "Prepare Debug",
+            "program": "${workspaceFolder}/src/server/bin/Debug/net10.0/server.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+                "uriFormat": "%s/scalar/v1"
+                //"uriFormat": "%s/api-docs"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
         },
         {
             "name": "Example FastAPI",
