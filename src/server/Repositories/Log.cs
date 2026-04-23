@@ -1,5 +1,4 @@
-
-using System.Text;
+using System.Net.Http.Json;
 using server.Domain;
 
 namespace server.Repositories;
@@ -15,14 +14,18 @@ public class Log
 
         Console.WriteLine($"{level.ToString()}: {execution_id} -> {log}");
 
-
-        HttpContent content = new StringContent($"\"{log}\"", Encoding.UTF8, "application/json");
+        var payload = new RequestRecord
+        {
+            Message = execution_id,
+            Category = LogCategory.Log,
+            Timestamp = DateTime.UtcNow,
+            Level = level,
+            Content = log
+        };
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,"/LogCenter_JobExecution")
         {
-            Content = content
+            Content = JsonContent.Create(payload)
         };
-        request.Headers.Add("description", execution_id);
-        request.Headers.Add("level", level.ToString());
 
         try
         {

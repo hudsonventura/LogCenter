@@ -1,7 +1,5 @@
 using System.Diagnostics;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
@@ -45,6 +43,7 @@ internal sealed class LogCenterLogger : ILogger
         Exception? exception,
         Func<TState, Exception?, string> formatter)
     {
+        var now = TryExtractTimestamp(state) ?? DateTimeOffset.UtcNow;
         var message = formatter(state, exception);
         var messageTemplate = TryExtractMessageTemplate(state);
 
@@ -55,7 +54,7 @@ internal sealed class LogCenterLogger : ILogger
         var payload = new LogCenterLogPayload
         {
             Table = _options.Table,
-            Timestamp = DateTimeOffset.UtcNow,
+            Timestamp = now,
             Level = logLevel.ToString(),
             TraceId = TryExtractTraceId(structured) ?? Activity.Current?.Id,
             Category = _categoryName,
@@ -65,37 +64,23 @@ internal sealed class LogCenterLogger : ILogger
             StructuredProperties = structured
         };
 
-        _ = SendAsync(messageTemplate, DateTime.UtcNow, logLevel, payload);
+        _ = SendAsync(payload);
 
         ShowConsole(logLevel, message);
     }
 
-    private async Task SendAsync(string message, DateTime timestamp, LogLevel logLevel, LogCenterLogPayload payload)
+    private async Task SendAsync(LogCenterLogPayload payload)
     {
         try
         {
-            if (_options.Url is null)
+            if (_httpClient.BaseAddress is null)
             {
                 return;
             }
-            HttpRequestMessage request = new(HttpMethod.Post, $"{_options.Url}/{_options.Table}");
-            request.Headers.Add("Message", ToAscii(message));
-            request.Headers.Add("Timestamp", timestamp.ToString("o"));
-            request.Headers.Add("Level", logLevel.ToString());
+            using var request = BuildRequestRecordRequest(payload);
 
-            if (!string.IsNullOrWhiteSpace(payload.TraceId))
-                request.Headers.Add("TraceId", payload.TraceId);
+            using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
 
-            if (payload.StructuredProperties is not null)
-            {
-                var content = BuildLegacyContent(payload);
-                if (content is not null)
-                    request.Content = JsonContent.Create(content, mediaType: new MediaTypeHeaderValue("application/json"));
-            }
-
-            using var response =  await _httpClient.SendAsync(request).ConfigureAwait(false);
-
-            //using var response = await _httpClient.PostAsJsonAsync(requestUri, payload, JsonOptions).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
                 return;
 
@@ -125,14 +110,32 @@ internal sealed class LogCenterLogger : ILogger
         if (!string.IsNullOrWhiteSpace(payload.TraceId))
             request.Headers.Add("TraceId", payload.TraceId);
 
-        var content = BuildLegacyContent(payload);
+        var content = BuildRequestContent(payload);
         if (content is not null)
-            request.Content = JsonContent.Create(content, mediaType: new MediaTypeHeaderValue("application/json"));
+            request.Content = JsonContent.Create(content);
 
         return request;
     }
 
-    private static Dictionary<string, object?>? BuildLegacyContent(LogCenterLogPayload payload)
+    private HttpRequestMessage BuildRequestRecordRequest(LogCenterLogPayload payload)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, ResolveLegacyRequestUri())
+        {
+            Content = JsonContent.Create(new
+            {
+                Message = payload.Message,
+                Category = ResolveLogCategory(payload),
+                Timestamp = payload.Timestamp.UtcDateTime,
+                Level = ResolveLevel(payload),
+                TraceId = payload.TraceId,
+                Content = BuildRequestContent(payload)
+            })
+        };
+
+        return request;
+    }
+
+    private static Dictionary<string, object?>? BuildRequestContent(LogCenterLogPayload payload)
     {
         Dictionary<string, object?>? content = null;
 
@@ -178,6 +181,42 @@ internal sealed class LogCenterLogger : ILogger
             or System.Net.HttpStatusCode.MethodNotAllowed
             or System.Net.HttpStatusCode.NotImplemented;
 
+    private static int ResolveLevel(LogCenterLogPayload payload)
+    {
+        if (Enum.TryParse<LogLevel>(payload.Level, ignoreCase: true, out var level))
+        {
+            return level switch
+            {
+                LogLevel.Trace => 0,
+                LogLevel.Debug => 2,
+                LogLevel.Information => 1,
+                LogLevel.Warning => 3,
+                LogLevel.Error => 4,
+                LogLevel.Critical => 5,
+                _ => 1
+            };
+        }
+
+        return 1;
+    }
+
+    private static int ResolveLogCategory(LogCenterLogPayload payload)
+    {
+        if (payload.StructuredProperties is not null)
+        {
+            if (payload.StructuredProperties.ContainsKey("Response"))
+                return 4;
+
+            if (payload.StructuredProperties.ContainsKey("Request"))
+                return 3;
+        }
+
+        if (!string.IsNullOrWhiteSpace(payload.Exception))
+            return 2;
+
+        return 0;
+    }
+
     private static string? TryExtractTraceId(Dictionary<string, JsonElement>? structuredProperties)
     {
         if (structuredProperties is null)
@@ -190,6 +229,28 @@ internal sealed class LogCenterLogger : ILogger
 
             if (value.ValueKind == JsonValueKind.String)
                 return value.GetString();
+        }
+
+        return null;
+    }
+
+    private static DateTimeOffset? TryExtractTimestamp<TState>(TState state)
+    {
+        if (state is not IEnumerable<KeyValuePair<string, object?>> pairs)
+            return null;
+
+        foreach (var kv in pairs)
+        {
+            if (!string.Equals(kv.Key, LogCenterReservedPropertyNames.Timestamp, StringComparison.Ordinal))
+                continue;
+
+            return kv.Value switch
+            {
+                DateTimeOffset dto => dto,
+                DateTime dt => new DateTimeOffset(dt),
+                string s when DateTimeOffset.TryParse(s, out var parsed) => parsed,
+                _ => null
+            };
         }
 
         return null;
@@ -267,22 +328,6 @@ internal sealed class LogCenterLogger : ILogger
         }
 
         return null;
-    }
-
-    public static string ToAscii(string input)
-    {
-        if (string.IsNullOrEmpty(input))
-            return input;
-
-        var sb = new StringBuilder(input.Length);
-
-        foreach (char c in input)
-        {
-            if (c <= 127) // ASCII vai de 0 a 127
-                sb.Append(c);
-        }
-
-        return sb.ToString();
     }
 
 }

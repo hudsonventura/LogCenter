@@ -39,23 +39,17 @@ public class RecordController : ControllerBase
     /// * is optional
     /// </summary>
     /// <param name="table">Table name</param>
-    /// <param name="message">A message</param>
-    /// <param name="timestamp">*A datetime when the event happened</param>
-    /// <param name="TraceId">*A traceid</param>
-    /// <param name="level">*Log level. Default is Info</param>
     /// <param name="obj">*Object json to be saved</param>
     /// <returns>uuid</returns>
     [HttpPost("/{table}")]
     public ActionResult<Guid> Insert(
         string table, 
-        [FromHeader] string message, 
-        [FromHeader] DateTime? timestamp = null,
-        [FromHeader] Level level = Level.Info, 
-        [FromHeader] string? TraceId = null,
-        [FromBody] dynamic? obj = null)
+        [FromBody] RequestRecord obj = null)
     {
-        if(timestamp == null){
-            timestamp = DateTime.UtcNow;
+        obj ??= new RequestRecord();
+
+        if(obj.Timestamp == default){
+            obj.Timestamp = DateTime.UtcNow;
         }
         table = table.Replace(" ", "_").ToLower();
         _db.ValidateTable(table);
@@ -65,17 +59,17 @@ public class RecordController : ControllerBase
         }
         
         string json = null;
-        if(!(obj is JsonElement { ValueKind: JsonValueKind.Null }) && obj is not null) {
+        if(obj.Content is JsonElement { ValueKind: not JsonValueKind.Null and not JsonValueKind.Undefined } contentElement) {
             try
             {
-                dynamic body = Utils.Base64Replacer.ReplaceBase64Content(obj);
+                dynamic body = Utils.Base64Replacer.ReplaceBase64Content(contentElement);
                 json = JsonSerializer.Serialize(body);
             }
             catch (System.Exception)
             {
                 try
                 {
-                    json = JsonSerializer.Serialize(obj);
+                    json = JsonSerializer.Serialize(obj.Content);
                 }
                 catch (System.Exception)
                 {
@@ -83,9 +77,19 @@ public class RecordController : ControllerBase
                 }
             }
         }
+        else if(obj.Content is not null)
+        {
+            try
+            {
+                json = JsonSerializer.Serialize(obj.Content);
+            }
+            catch (System.Exception)
+            {
+            }
+        }
 
-        if(TraceId != null){
-            TraceId = (TraceId?.Length >= 100) ? TraceId.Substring(0, 100) : TraceId;
+        if(obj.TraceId != null){
+            obj.TraceId = (obj.TraceId?.Length >= 100) ? obj.TraceId.Substring(0, 100) : obj.TraceId;
         }
         
         
@@ -95,7 +99,7 @@ public class RecordController : ControllerBase
         {
             //tenta salvar na tabela do meu index.
             //se der certo, 200
-            id = _db.Insert(table, level, TraceId, message, json, timestamp);
+            id = _db.Insert(table, obj.Level, obj.TraceId, obj.Message, json, obj.Timestamp);
             return Created(id.ToString(), id);
         }
         catch (System.Exception error1)
@@ -124,7 +128,7 @@ public class RecordController : ControllerBase
                 _db.CreateDateTimeIndex(table);
                 Console.Write("OK! ... ");
 
-                id = _db.Insert(table, level, TraceId, message, json, timestamp);
+                id = _db.Insert(table, obj.Level, obj.TraceId, obj.Message, json, obj.Timestamp);
                 return Created($"/{table}/{id}", $"/{table}/{id}");
             }
             catch (System.Exception error2)

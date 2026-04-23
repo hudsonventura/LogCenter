@@ -64,6 +64,7 @@ public static class InterceptorMiddlewareExtensions
 
 public sealed class InterceptorMiddleware
 {
+    private const string TimestampPropertyName = "__LogCenterTimestamp";
     private readonly RequestDelegate _next;
     private readonly ILogger<InterceptorMiddleware> _logger;
     private readonly InterceptorOptions _options;
@@ -81,13 +82,14 @@ public sealed class InterceptorMiddleware
     public async Task Invoke(HttpContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
+        var requestStartedAt = DateTimeOffset.UtcNow;
 
         Request request = await Request.Convert(context);
         string traceId = Activity.Current?.Id ?? context.TraceIdentifier;
 
         if (_options.LogGetRequest || !HttpMethods.IsGet(request.Method))
         {
-            OnReceiveRequest(request, traceId);
+            OnReceiveRequest(request, traceId, requestStartedAt);
         }
 
         context.Response.Headers[_options.TraceIdReponseHeader] = traceId;
@@ -102,6 +104,7 @@ public sealed class InterceptorMiddleware
             try
             {
                 await _next(context);
+                var responseCompletedAt = DateTimeOffset.UtcNow;
 
                 memstream.Position = 0;
                 responseBody = await new StreamReader(memstream).ReadToEndAsync();
@@ -113,11 +116,12 @@ public sealed class InterceptorMiddleware
 
                 if (_options.LogGetRequest || !HttpMethods.IsGet(request.Method))
                 {
-                    OnSendResponse(response, traceId);
+                    OnSendResponse(response, traceId, responseCompletedAt);
                 }
             }
             catch (Exception e)
             {
+                var responseCompletedAt = DateTimeOffset.UtcNow;
                 memstream.Position = 0;
                 responseBody = await new StreamReader(memstream).ReadToEndAsync();
                 memstream.Position = 0;
@@ -126,7 +130,7 @@ public sealed class InterceptorMiddleware
                 context.Response.StatusCode = 500;
 
                 Response response = await Response.Convert(context, e);
-                OnSendResponse(response, traceId);
+                OnSendResponse(response, traceId, responseCompletedAt);
 
                 if (!_options.HideResponseExceptions)
                 {
@@ -136,7 +140,7 @@ public sealed class InterceptorMiddleware
         }
     }
 
-    public void OnReceiveRequest(Request request, string traceId)
+    public void OnReceiveRequest(Request request, string traceId, DateTimeOffset timestamp)
     {
         object payload = _options.FormatType switch
         {
@@ -149,11 +153,12 @@ public sealed class InterceptorMiddleware
             new EventId(1000, nameof(Request)),
             "HTTP request received",
             traceId,
+            timestamp,
             nameof(Request),
             payload);
     }
 
-    public void OnSendResponse(Response response, string traceId)
+    public void OnSendResponse(Response response, string traceId, DateTimeOffset timestamp)
     {
         object payload = _options.FormatType switch
         {
@@ -166,6 +171,7 @@ public sealed class InterceptorMiddleware
             new EventId(1001, nameof(Response)),
             "HTTP response sent",
             traceId,
+            timestamp,
             nameof(Response),
             payload,
             response.Exception);
@@ -176,6 +182,7 @@ public sealed class InterceptorMiddleware
         EventId eventId,
         string message,
         string traceId,
+        DateTimeOffset timestamp,
         string propertyName,
         object payload,
         Exception? exception = null)
@@ -187,6 +194,7 @@ public sealed class InterceptorMiddleware
         {
             ["{OriginalFormat}"] = message,
             ["TraceId"] = traceId,
+            [TimestampPropertyName] = timestamp,
             [propertyName] = payload
         };
 
