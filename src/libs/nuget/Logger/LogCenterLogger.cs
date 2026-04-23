@@ -67,7 +67,7 @@ internal sealed class LogCenterLogger : ILogger
 
         _ = SendAsync(messageTemplate, DateTime.UtcNow, logLevel, payload);
 
-        ShowConsole(logLevel, messageTemplate);
+        ShowConsole(logLevel, message);
     }
 
     private async Task SendAsync(string message, DateTime timestamp, LogLevel logLevel, LogCenterLogPayload payload)
@@ -111,7 +111,7 @@ internal sealed class LogCenterLogger : ILogger
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[LogFull] Falha ao enviar log: {ex.Message}");
+            Debug.WriteLine($"[LogCenter] Fail sending log: {ex.Message}");
         }
     }
 

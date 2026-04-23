@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace LogCenter;
 
 /// <summary>
-/// Opções para envio de logs via HTTP (seção de configuração padrão: "LogFull").
+/// Opções para envio de logs via HTTP (seção de configuração padrão: "LogCenter").
 /// </summary>
 public class LogCenterOptions
 {
