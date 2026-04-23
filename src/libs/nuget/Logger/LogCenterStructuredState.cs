@@ -27,8 +27,7 @@ internal static class LogCenterStructuredState
         foreach (var kv in pairs)
         {
             if (string.Equals(kv.Key, OriginalFormatKeyBraced, StringComparison.Ordinal)
-                || string.Equals(kv.Key, OriginalFormatKeyPlain, StringComparison.Ordinal)
-                || string.Equals(kv.Key, LogCenterReservedPropertyNames.Timestamp, StringComparison.Ordinal))
+                || string.Equals(kv.Key, OriginalFormatKeyPlain, StringComparison.Ordinal))
                 continue;
 
             var key = ResolvePropertyKey(kv.Key, stripDestructuringAtPrefix);

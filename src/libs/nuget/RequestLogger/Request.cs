@@ -1,5 +1,4 @@
 using System.Text;
-using System.Web;
 using Microsoft.AspNetCore.Http;
 
 
@@ -19,29 +18,29 @@ public sealed class Request
     public string Host { get; private set; }
     public string Path { get; private set; }
     public Dictionary<string, string> Query { get; private set; }
+    public List<RequestParameter> Parameters { get; private set; }
     public string CompleteURL { get; private set; }
     public string Body { get; private set; }
 
     internal static async Task<Request> Convert(Microsoft.AspNetCore.Http.HttpContext context)
     {
         HttpRequest request = context.Request;
-
-        //Query params
-        string query = "";
-        if(request.Query.Count() > 0){
-            query = "?" + string.Join("&", request.Query.Select(q => $"{q.Key}={q.Value}"));
-        }
-
-        var completeURL = $"{request.Scheme}://{request.Host}{request.Path}{query}";
+        var completeURL = $"{request.Scheme}://{request.Host}{request.PathBase}{request.Path}{request.QueryString}";
+        var parameters = request.Query
+            .SelectMany(
+                static query => query.Value,
+                static (query, value) => new RequestParameter(query.Key, value ?? string.Empty))
+            .ToList();
 
 
         return new Request(){
-            ReceivedFromAddress = context.Connection.RemoteIpAddress.ToString(),
+            ReceivedFromAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             Method = request.Method,
             Host = request.Host.ToString(),
-            Path = request.Path.ToString(),
+            Path = $"{request.PathBase}{request.Path}",
             CompleteURL = completeURL,
             Query = request.Query.ToDictionary(q => q.Key, q => q.Value.ToString()),
+            Parameters = parameters,
             Headers = request.Headers.ToDictionary(q => q.Key, q => q.Value.ToString()),
             Body = await ReadBody(request),
         };
@@ -71,8 +70,13 @@ public sealed class Request
     public override string ToString()
     {
         string headers_string = string.Join("\n", Headers.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
+        string parameters = Parameters.Count > 0
+            ? "\nParams: " + string.Join(", ", Parameters.Select(static parameter => $"{parameter.Name}={parameter.Value}"))
+            : string.Empty;
 
 
-        return $"Request\n{Method} {CompleteURL}\n{headers_string}\n\n{Body}";
+        return $"Request\n{Method} {CompleteURL}{parameters}\n{headers_string}\n\n{Body}";
     }
 }
+
+public sealed record RequestParameter(string Name, string Value);

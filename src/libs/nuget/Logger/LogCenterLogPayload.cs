@@ -9,7 +9,6 @@ internal sealed class LogCenterLogPayload
     public DateTimeOffset Timestamp { get; set; }
     public string Level { get; set; } = "";
     public string? TraceId { get; set; }
-    public string Category { get; set; } = "";
     public string Message { get; set; } = "";
     public string? Exception { get; set; }
     public string? ApplicationName { get; set; }
@@ -19,4 +18,5 @@ internal sealed class LogCenterLogPayload
     /// Com <see cref="LogCenterOptions.StripDestructuringAtPrefix"/>, a chave enviada pode ser <c>teste</c> em vez de <c>@teste</c>.
     /// </summary>
     public Dictionary<string, JsonElement>? StructuredProperties { get; set; }
+    public LogCategory Category { get; internal set; }
 }

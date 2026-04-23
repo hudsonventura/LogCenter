@@ -11,6 +11,7 @@ namespace LogCenter;
 /// </summary>
 internal sealed class LogCenterLogger : ILogger
 {
+    private const string TimestampPropertyName = "__LogCenterTimestamp";
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -26,7 +27,7 @@ internal sealed class LogCenterLogger : ILogger
         HttpClient httpClient,
         LogCenterOptions options)
     {
-        _categoryName = categoryName;
+        _categoryName = categoryName ?? throw new ArgumentNullException(nameof(categoryName));
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _options = options;
     }
@@ -34,7 +35,9 @@ internal sealed class LogCenterLogger : ILogger
     public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
 
     public bool IsEnabled(LogLevel logLevel) =>
-        _options.Enabled && logLevel != LogLevel.None && logLevel >= _options.MinimumLevel;
+        _options.Enabled
+        && logLevel != LogLevel.None
+        && logLevel >= _options.MinimumLevel;
 
     public void Log<TState>(
         LogLevel logLevel,
@@ -57,7 +60,7 @@ internal sealed class LogCenterLogger : ILogger
             Timestamp = now,
             Level = logLevel.ToString(),
             TraceId = TryExtractTraceId(structured) ?? Activity.Current?.Id,
-            Category = _categoryName,
+            Category = ResolveLogCategory(structured, exception),
             Message = message,
             ApplicationName = _options.ApplicationName,
             Exception = exception?.ToString(),
@@ -124,7 +127,7 @@ internal sealed class LogCenterLogger : ILogger
             Content = JsonContent.Create(new
             {
                 Message = payload.Message,
-                Category = ResolveLogCategory(payload),
+                Category = payload.Category,
                 Timestamp = payload.Timestamp.UtcDateTime,
                 Level = ResolveLevel(payload),
                 TraceId = payload.TraceId,
@@ -139,11 +142,7 @@ internal sealed class LogCenterLogger : ILogger
     {
         Dictionary<string, object?>? content = null;
 
-        if (!string.IsNullOrWhiteSpace(payload.Category))
-        {
-            content ??= new Dictionary<string, object?>(StringComparer.Ordinal);
-            content["Category"] = payload.Category;
-        }
+
 
         if (!string.IsNullOrWhiteSpace(payload.ApplicationName))
         {
@@ -200,21 +199,26 @@ internal sealed class LogCenterLogger : ILogger
         return 1;
     }
 
-    private static int ResolveLogCategory(LogCenterLogPayload payload)
+    private static LogCategory ResolveLogCategory(
+        Dictionary<string, JsonElement>? structuredProperties,
+        Exception? exception)
     {
-        if (payload.StructuredProperties is not null)
+        if (structuredProperties is not null)
         {
-            if (payload.StructuredProperties.ContainsKey("Response"))
-                return 4;
+            if (structuredProperties.ContainsKey("HttpExchangeLog"))
+                return LogCategory.HttpExchange;
 
-            if (payload.StructuredProperties.ContainsKey("Request"))
-                return 3;
+            if (structuredProperties.ContainsKey("Response"))
+                return LogCategory.HttpResponse;
+
+            if (structuredProperties.ContainsKey("Request"))
+                return LogCategory.HttpRequest;
         }
 
-        if (!string.IsNullOrWhiteSpace(payload.Exception))
-            return 2;
+        if (exception is not null)
+            return LogCategory.Exception;
 
-        return 0;
+        return LogCategory.Log;
     }
 
     private static string? TryExtractTraceId(Dictionary<string, JsonElement>? structuredProperties)
@@ -241,7 +245,7 @@ internal sealed class LogCenterLogger : ILogger
 
         foreach (var kv in pairs)
         {
-            if (!string.Equals(kv.Key, LogCenterReservedPropertyNames.Timestamp, StringComparison.Ordinal))
+            if (!string.Equals(kv.Key, TimestampPropertyName, StringComparison.Ordinal))
                 continue;
 
             return kv.Value switch
@@ -255,6 +259,8 @@ internal sealed class LogCenterLogger : ILogger
 
         return null;
     }
+
+
 
 
 

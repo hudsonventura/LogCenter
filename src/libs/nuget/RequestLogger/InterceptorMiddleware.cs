@@ -150,6 +150,7 @@ public sealed class InterceptorMiddleware
 
         LogStructured(
             LogLevel.Trace,
+            LogCategory.HttpRequest,
             new EventId(1000, nameof(Request)),
             "HTTP request received",
             traceId,
@@ -168,6 +169,7 @@ public sealed class InterceptorMiddleware
 
         LogStructured(
             MapLogLevel(response.StatusCode),
+            LogCategory.HttpResponse,
             new EventId(1001, nameof(Response)),
             "HTTP response sent",
             traceId,
@@ -179,6 +181,7 @@ public sealed class InterceptorMiddleware
 
     private void LogStructured(
         LogLevel level,
+        LogCategory category,
         EventId eventId,
         string message,
         string traceId,
@@ -187,12 +190,12 @@ public sealed class InterceptorMiddleware
         object payload,
         Exception? exception = null)
     {
-        if (!_logger.IsEnabled(level))
-            return;
+
 
         var state = new Dictionary<string, object?>(StringComparer.Ordinal)
         {
             ["{OriginalFormat}"] = message,
+            ["Category"] = category,
             ["TraceId"] = traceId,
             [TimestampPropertyName] = timestamp,
             [propertyName] = payload
