@@ -169,26 +169,15 @@ export const columns: ColumnDef<LogRecord>[] = [
       );
     },
   },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => <LogActionsCell record={row.original} />,
-  },
 ];
 
-function LogActionsCell({ record }: { record: LogRecord }) {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const location = useLocation();
-  const { tabela } = location.state || {
-    tabela: new URLSearchParams(location.search).get("tabela"),
-  };
-
-  React.useEffect(() => {
-    return () => {
-      document.body.style.pointerEvents = "";
-    };
-  }, [isOpen]);
-
+function LogActionsCell({
+  record,
+  onOpenDetails,
+}: {
+  record: LogRecord;
+  onOpenDetails: (id: string) => void;
+}) {
   return (
     <>
       <DropdownMenu>
@@ -209,20 +198,11 @@ function LogActionsCell({ record }: { record: LogRecord }) {
           >
             Copy ID
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setIsOpen(true)}>
+          <DropdownMenuItem onClick={() => onOpenDetails(record.id)}>
             Details
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {isOpen && tabela && (
-        <ModalObject
-          id={record.id}
-          tableName={tabela}
-          isOpen={isOpen}
-          onOpenChange={setIsOpen}
-        />
-      )}
     </>
   );
 }
@@ -260,6 +240,7 @@ export function TableLogs() {
   const [includeContent, setIncludeContent] = React.useState(
     params.get("bring_content") === "true"
   );
+  const [selectedRecordId, setSelectedRecordId] = React.useState<string | null>(null);
   const [selectedLevels, setSelectedLevels] = React.useState<RecordLevel[]>(allLevels);
   const [liveNowTick, setLiveNowTick] = React.useState(new Date());
   const resolvedDateFrom = React.useMemo(
@@ -277,7 +258,22 @@ export function TableLogs() {
 
   const table = useReactTable({
     data: visibleData,
-    columns,
+    columns: React.useMemo<ColumnDef<LogRecord>[]>(
+      () => [
+        ...columns,
+        {
+          id: "actions",
+          enableHiding: false,
+          cell: ({ row }) => (
+            <LogActionsCell
+              record={row.original}
+              onOpenDetails={setSelectedRecordId}
+            />
+          ),
+        },
+      ],
+      []
+    ),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -291,6 +287,15 @@ export function TableLogs() {
       columnVisibility,
     },
   });
+  const tableRows = table.getRowModel().rows;
+  const modalRecordIds = tableRows.map((row) => row.original.id);
+  const selectedIndex =
+    selectedRecordId !== null ? modalRecordIds.indexOf(selectedRecordId) : -1;
+  const previousRecordId = selectedIndex > 0 ? modalRecordIds[selectedIndex - 1] : null;
+  const nextRecordId =
+    selectedIndex >= 0 && selectedIndex < modalRecordIds.length - 1
+      ? modalRecordIds[selectedIndex + 1]
+      : null;
 
   const search = async () => {
     if (!tabela) {
@@ -360,6 +365,16 @@ export function TableLogs() {
 
     return () => clearInterval(interval);
   }, [dateTo.mode]);
+
+  React.useEffect(() => {
+    if (!selectedRecordId) {
+      return;
+    }
+
+    if (!modalRecordIds.includes(selectedRecordId)) {
+      setSelectedRecordId(null);
+    }
+  }, [modalRecordIds, selectedRecordId]);
 
   return (
     <>
@@ -522,7 +537,7 @@ export function TableLogs() {
               </TableHeader>
               <TableBody>
                 {table.getRowModel().rows.length > 0 ? (
-                  table.getRowModel().rows.map((row) => (
+                  tableRows.map((row) => (
                     <TableRow key={row.id}>
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
@@ -533,7 +548,7 @@ export function TableLogs() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                    <TableCell colSpan={columns.length + 1} className="h-24 text-center">
                       No results found.
                     </TableCell>
                   </TableRow>
@@ -545,6 +560,22 @@ export function TableLogs() {
           
         </div>
       </main>
+      {selectedRecordId && tabela ? (
+        <ModalObject
+          id={selectedRecordId}
+          tableName={tabela}
+          isOpen={selectedRecordId !== null}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setSelectedRecordId(null);
+            }
+          }}
+          onPrevious={previousRecordId ? () => setSelectedRecordId(previousRecordId) : undefined}
+          onNext={nextRecordId ? () => setSelectedRecordId(nextRecordId) : undefined}
+          hasPrevious={previousRecordId !== null}
+          hasNext={nextRecordId !== null}
+        />
+      ) : null}
     </>
   );
 }

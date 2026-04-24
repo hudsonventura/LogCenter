@@ -10,11 +10,15 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import api from "@/services/api";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import React from "react";
 import { useState } from "react";
 import { useTimezone } from "./timezone-provider";
 
 import JsonView from "@uiw/react-json-view";
+import { darkTheme } from "@uiw/react-json-view/dark";
+import { lightTheme } from "@uiw/react-json-view/light";
+import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
 type LogDetails = {
@@ -22,6 +26,7 @@ type LogDetails = {
   timestamp?: string;
   level?: number;
   content?: unknown;
+  traceId?: string;
 };
 
 const levelLabels: Record<number, string> = {
@@ -58,14 +63,24 @@ export function ModalObject({
   tableName,
   isOpen,
   onOpenChange,
+  onPrevious,
+  onNext,
+  hasPrevious = false,
+  hasNext = false,
 }: {
   id: string;
   tableName: string;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
 }) {
   const [data, setData] = useState<LogDetails>({});
   const { timezone } = useTimezone();
+  const { resolvedTheme = "light" } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   React.useEffect(() => {
     const getObject = async () => {
@@ -100,6 +115,34 @@ export function ModalObject({
     typeof data.level === "number"
       ? levelBadgeClass[data.level] ?? levelBadgeClass[0]
       : null;
+  const jsonTheme = isDark
+    ? {
+        ...darkTheme,
+        "--w-rjv-background-color": "transparent",
+        "--w-rjv-color": "#e5edf7",
+        "--w-rjv-line-color": "rgba(148, 163, 184, 0.18)",
+        "--w-rjv-arrow-color": "#cbd5e1",
+        "--w-rjv-info-color": "#cbd5e1",
+        "--w-rjv-curlybraces-color": "#f8fafc",
+        "--w-rjv-colon-color": "#f8fafc",
+        "--w-rjv-brackets-color": "#f8fafc",
+        "--w-rjv-key-string": "#7dd3fc",
+        "--w-rjv-key-number": "#f0abfc",
+        "--w-rjv-type-string-color": "#fdba74",
+        "--w-rjv-type-int-color": "#86efac",
+        "--w-rjv-type-float-color": "#86efac",
+        "--w-rjv-type-bigint-color": "#86efac",
+        "--w-rjv-type-boolean-color": "#93c5fd",
+        "--w-rjv-type-date-color": "#86efac",
+        "--w-rjv-type-url-color": "#93c5fd",
+        "--w-rjv-type-null-color": "#93c5fd",
+        "--w-rjv-type-nan-color": "#fcd34d",
+        "--w-rjv-type-undefined-color": "#93c5fd",
+      }
+    : {
+        ...lightTheme,
+        "--w-rjv-background-color": "transparent",
+      };
 
   if (typeof data.content === "object" && data.content !== null) {
     jsonValue = data.content as object;
@@ -116,35 +159,77 @@ export function ModalObject({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1080px] min-w-[300px]">
-        <DialogHeader>
-          <DialogTitle>{data.message ?? "Log details"}</DialogTitle>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <span>{formatTimestamp(data.timestamp)}</span>
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-[1080px] min-w-[300px] overflow-hidden px-14">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="absolute left-2 top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full"
+          onClick={onPrevious}
+          disabled={!hasPrevious}
+          aria-label="Previous log"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="absolute right-2 top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full"
+          onClick={onNext}
+          disabled={!hasNext}
+          aria-label="Next log"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </Button>
+        <DialogHeader className="min-w-0">
+          
+          <DialogTitle>
             {levelLabel && levelClass ? (
-              <Badge className={`min-w-[76px] justify-center ${levelClass}`}>
+              <Badge className={`min-w-[66px] justify-center ${levelClass}`}>
                 {levelLabel}
               </Badge>
-            ) : null}
+              
+            ) : null} 
+              <span className="ml-2">
+             {data.message ?? "Log details"}
+              </span>
+            </DialogTitle>
+          <span>TraceId: 
+            {data.traceId !== null ?(
+              <span> {data.traceId}</span>
+            ): " -"}
+          </span>
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <span>{formatTimestamp(data.timestamp)}</span>
+            
+            
           </div>
+          
 
-          <DialogDescription className="w-full">
+          <DialogDescription className="w-full min-w-0">
             <div
               style={{
                 maxHeight: "400px", // Definindo a altura máxima para ativar o scroll
-                overflow: "auto", // Habilita o scroll vertical se o conteúdo exceder a altura
                 marginTop: "1em",
               }}
-              className="min-w-full"
+              className="w-full min-w-0 max-w-full overflow-x-auto overflow-y-auto rounded-md border border-border/70 bg-slate-50/70 p-4 text-slate-900 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-50"
             >
               {!jsonValue ? (
-                <pre style={{ whiteSpace: "pre-wrap" }}>{String(data.content)}</pre>
+                <pre
+                  style={{ whiteSpace: "pre-wrap" }}
+                  className="w-full min-w-0 max-w-full text-sm leading-6 text-slate-900 dark:text-slate-50"
+                >
+                  {String(data.content)}
+                </pre>
               ) : (
-                <JsonView 
-                  value={jsonValue} 
+                <JsonView
+                  className="max-w-full min-w-0"
+                  value={jsonValue}
+                  style={jsonTheme}
                   shortenTextAfterLength={1000}
+                  displayDataTypes={false}
                 />
-                
               )}
             </div>
           </DialogDescription>
