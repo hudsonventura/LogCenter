@@ -77,7 +77,7 @@ public class Response
         string exception = (Exception is not null) ? $"\n\n{Exception}" : "";
 
 
-        return $"Response\n{StatusCode} {ReasonPhrase}\nSent to Address: {SentToAddress}\n{headers_string}{body}{exception}";
+        return $"{StatusCode} {ReasonPhrase}\nSent to Address: {SentToAddress}\n{headers_string}{body}{exception}";
     }
 }
 

@@ -67,7 +67,7 @@ public sealed class Request
             : string.Empty;
 
 
-        return $"Request\n{Method} {CompleteURL}{parameters}\n{headers_string}\n\n{Body}";
+        return $"{Method} {CompleteURL}{parameters}\n{headers_string}\n\n{Body}";
     }
 }
 

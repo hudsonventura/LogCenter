@@ -117,7 +117,7 @@ public sealed class InterceptorMiddleware
 
         if (_options.LogGetRequest || !HttpMethods.IsGet(request.Method))
         {
-            _ = OnReceiveRequestAsync(request, traceId, requestStartedAt);
+            QueueSendRequest(request, traceId, requestStartedAt);
         }
 
         context.Response.Headers[_options.TraceIdReponseHeader] = traceId;
@@ -143,7 +143,7 @@ public sealed class InterceptorMiddleware
 
             if (_options.LogGetRequest || !HttpMethods.IsGet(request.Method))
             {
-                _ = OnSendResponseAsync(response, traceId, responseCompletedAt);
+                QueueSendResponse(response, traceId, responseCompletedAt);
             }
         }
         catch (Exception e)
@@ -157,7 +157,7 @@ public sealed class InterceptorMiddleware
             context.Response.StatusCode = 500;
 
             Response response = await Response.Convert(context, e);
-            _ = OnSendResponseAsync(response, traceId, responseCompletedAt);
+            QueueSendResponse(response, traceId, responseCompletedAt);
 
             if (!_options.HideResponseExceptions)
             {
@@ -216,13 +216,31 @@ public sealed class InterceptorMiddleware
                 Content = JsonContent.Create(payload)
             };
 
-            using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+            using var response = await _httpClient
+                .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                .ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[LogCenter.RequestInterceptor] Fail sending request log: {ex.Message}");
         }
+    }
+
+    private void QueueSendRequest(Request request, string traceId, DateTimeOffset timestamp)
+    {
+        _ = Task.Run(async () =>
+        {
+            await OnReceiveRequestAsync(request, traceId, timestamp).ConfigureAwait(false);
+        });
+    }
+
+    private void QueueSendResponse(Response response, string traceId, DateTimeOffset timestamp)
+    {
+        _ = Task.Run(async () =>
+        {
+            await OnSendResponseAsync(response, traceId, timestamp).ConfigureAwait(false);
+        });
     }
 
     private bool IsEnabled(int level) =>

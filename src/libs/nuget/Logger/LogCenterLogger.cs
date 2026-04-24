@@ -67,9 +67,17 @@ internal sealed class LogCenterLogger : ILogger
             StructuredProperties = structured
         };
 
-        _ = SendAsync(payload);
+        QueueSend(payload);
 
         ShowConsole(logLevel, message);
+    }
+
+    private void QueueSend(LogCenterLogPayload payload)
+    {
+        _ = Task.Run(async () =>
+        {
+            await SendAsync(payload).ConfigureAwait(false);
+        });
     }
 
     private async Task SendAsync(LogCenterLogPayload payload)
@@ -82,7 +90,9 @@ internal sealed class LogCenterLogger : ILogger
             }
             using var request = BuildRequestRecordRequest(payload);
 
-            using var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+            using var response = await _httpClient
+                .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                .ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
                 return;
@@ -94,7 +104,9 @@ internal sealed class LogCenterLogger : ILogger
             }
 
             using var legacyRequest = BuildLegacyRequest(payload);
-            using var legacyResponse = await _httpClient.SendAsync(legacyRequest).ConfigureAwait(false);
+            using var legacyResponse = await _httpClient
+                .SendAsync(legacyRequest, HttpCompletionOption.ResponseHeadersRead)
+                .ConfigureAwait(false);
             legacyResponse.EnsureSuccessStatusCode();
         }
         catch (Exception ex)
