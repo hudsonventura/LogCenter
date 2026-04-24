@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import {
   ColumnDef,
   ColumnFiltersState,
+  ColumnSizingState,
   SortingState,
   VisibilityState,
   flexRender,
@@ -105,10 +106,22 @@ const formatTimestamp = (value: string) => {
   return String(value).replace("T", " ").replace(/Z$/, "");
 };
 
+const columnWidths = {
+  level: 60,
+  category: 132,
+  timestamp: 210,
+  traceId: 350,
+  message: 320,
+  content: 360,
+  actions: 72,
+} as const;
+
 export const columns: ColumnDef<LogRecord>[] = [
   {
     accessorKey: "level",
     header: "Level",
+    size: columnWidths.level,
+    minSize: 50,
     cell: ({ row }) => (
       <Badge
         className={`min-w-[76px] justify-center ${levelBadgeClass[row.original.level] ?? levelBadgeClass[RecordLevel.Trace]}`}
@@ -120,6 +133,8 @@ export const columns: ColumnDef<LogRecord>[] = [
   {
     accessorKey: "category",
     header: "Category",
+    size: columnWidths.category,
+    minSize: 60,
     cell: ({ row }) => {
       const category = row.original.category;
       const label =
@@ -135,6 +150,17 @@ export const columns: ColumnDef<LogRecord>[] = [
     },
   },
   {
+    accessorKey: "timestamp",
+    header: () => <div className="text-left">Timestamp</div>,
+    size: columnWidths.timestamp,
+    minSize: 60,
+    cell: ({ row }) => (
+      <div className="text-left font-mono text-xs sm:text-sm">
+        {formatTimestamp(row.original.timestamp)}
+      </div>
+    ),
+  },
+  {
     accessorKey: "traceId",
     header: ({ column }) => (
       <Button
@@ -144,26 +170,21 @@ export const columns: ColumnDef<LogRecord>[] = [
         Trace ID
       </Button>
     ),
+    size: columnWidths.traceId,
+    minSize: 125,
     cell: ({ row }) => (
-      <div className="max-w-[220px] truncate lowercase">
+      <div className="truncate lowercase">
         {row.original.traceId || "-"}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "timestamp",
-    header: () => <div className="text-left">Timestamp</div>,
-    cell: ({ row }) => (
-      <div className="text-left font-mono text-xs sm:text-sm">
-        {formatTimestamp(row.original.timestamp)}
       </div>
     ),
   },
   {
     accessorKey: "message",
     header: () => <div className="text-left">Message</div>,
+    size: columnWidths.message,
+    minSize: 150,
     cell: ({ row }) => (
-      <div className="max-w-[280px] whitespace-pre-wrap break-words text-left">
+      <div className="whitespace-pre-wrap break-words text-left">
         {row.original.message}
       </div>
     ),
@@ -171,12 +192,14 @@ export const columns: ColumnDef<LogRecord>[] = [
   {
     accessorKey: "content",
     header: () => <div className="text-left">Content</div>,
+    size: columnWidths.content,
+    minSize: 250,
     cell: ({ row }) => {
       const { content } = row.original;
 
       if (typeof content === "string") {
         return (
-          <div className="max-w-[320px] whitespace-pre-wrap break-words text-left">
+          <div className="whitespace-pre-wrap break-words text-left">
             {content.substring(0, 230)}
             {content.length > 230 ? "..." : ""}
           </div>
@@ -186,7 +209,7 @@ export const columns: ColumnDef<LogRecord>[] = [
       const json = JSON.stringify(content);
 
       return (
-        <div className="max-w-[320px] whitespace-pre-wrap break-words text-left">
+        <div className="whitespace-pre-wrap break-words text-left">
           {json?.substring(0, 230)}
           {json && json.length > 230 ? "..." : ""}
         </div>
@@ -245,6 +268,7 @@ export function TableLogs() {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     content: false,
   });
+  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
   const [dateFrom, setDateFrom] = React.useState<DatePickerValue>(() => {
     const datetime = params.get("datetime1");
     if (datetime) {
@@ -289,6 +313,8 @@ export function TableLogs() {
         {
           id: "actions",
           enableHiding: false,
+          size: columnWidths.actions,
+          minSize: 72,
           cell: ({ row }) => (
             <LogActionsCell
               record={row.original}
@@ -301,14 +327,18 @@ export function TableLogs() {
     ),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onColumnSizingChange: setColumnSizing,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
+    enableColumnResizing: true,
+    columnResizeMode: "onChange",
     state: {
       sorting,
       columnFilters,
       columnVisibility,
+      columnSizing,
     },
   });
   const tableRows = table.getRowModel().rows;
@@ -529,15 +559,29 @@ export function TableLogs() {
           </div>
 
           <div className="mt-4 rounded-md border">
-            <Table>
+            <Table className="table-fixed">
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      <TableHead
+                        key={header.id}
+                        className="relative select-none"
+                        style={{ width: header.getSize() }}
+                      >
+                        {header.isPlaceholder ? null : (
+                          <>
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            <div
+                              onDoubleClick={() => header.column.resetSize()}
+                              onMouseDown={header.getResizeHandler()}
+                              onTouchStart={header.getResizeHandler()}
+                              className={`absolute right-0 top-0 h-full w-2 cursor-col-resize select-none touch-none ${
+                                header.column.getIsResizing() ? "bg-primary/40" : "bg-transparent hover:bg-border"
+                              }`}
+                            />
+                          </>
+                        )}
                       </TableHead>
                     ))}
                   </TableRow>
@@ -548,7 +592,10 @@ export function TableLogs() {
                   tableRows.map((row) => (
                     <TableRow key={row.id}>
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
+                        <TableCell
+                          key={cell.id}
+                          style={{ width: cell.column.getSize() }}
+                        >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       ))}
