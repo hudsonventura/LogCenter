@@ -47,6 +47,7 @@ import { ModalObject } from "../ModalObject";
 import { DatePickerValue, DateTimePicker, resolveDatePickerValue } from "../DateTimePicker";
 import { useTimezone } from "../timezone-provider";
 import LogTimelineChart from "../charts/LogTimelineChart";
+import { Eye } from "lucide-react"
 
 export type LogRecord = {
   id: string;
@@ -180,11 +181,14 @@ function LogActionsCell({
 }) {
   return (
     <>
-      <DropdownMenu>
+      <Button variant="outline" size="icon" aria-label="Submit" onClick={() => onOpenDetails(record.id)}>
+        <Eye />
+      </Button>
+      {/* <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">
             <span className="sr-only">Open menu</span>
-            <MoreHorizontal className="h-4 w-4" />
+            <MoreHorizontal className="h-4 w-4"  />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -198,11 +202,9 @@ function LogActionsCell({
           >
             Copy ID
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onOpenDetails(record.id)}>
-            Details
-          </DropdownMenuItem>
+          
         </DropdownMenuContent>
-      </DropdownMenu>
+      </DropdownMenu> */}
     </>
   );
 }
