@@ -6,8 +6,6 @@ namespace LogCenter.RequestInterceptor;
 
 public sealed class Request
 {
-    [System.Text.Json.Serialization.JsonPropertyOrder(0)]
-    public string Type { get; private set; } = "Request";
 
     [System.Text.Json.Serialization.JsonPropertyOrder(1)]
     public string ReceivedFromAddress { get; private set; }
@@ -18,7 +16,6 @@ public sealed class Request
     public string Host { get; private set; }
     public string Path { get; private set; }
     public Dictionary<string, string> Query { get; private set; }
-    public List<RequestParameter> Parameters { get; private set; }
     public string CompleteURL { get; private set; }
     public string Body { get; private set; }
 
@@ -26,11 +23,7 @@ public sealed class Request
     {
         HttpRequest request = context.Request;
         var completeURL = $"{request.Scheme}://{request.Host}{request.PathBase}{request.Path}{request.QueryString}";
-        var parameters = request.Query
-            .SelectMany(
-                static query => query.Value,
-                static (query, value) => new RequestParameter(query.Key, value ?? string.Empty))
-            .ToList();
+
 
 
         return new Request(){
@@ -40,7 +33,6 @@ public sealed class Request
             Path = $"{request.PathBase}{request.Path}",
             CompleteURL = completeURL,
             Query = request.Query.ToDictionary(q => q.Key, q => q.Value.ToString()),
-            Parameters = parameters,
             Headers = request.Headers.ToDictionary(q => q.Key, q => q.Value.ToString()),
             Body = await ReadBody(request),
         };
@@ -70,8 +62,8 @@ public sealed class Request
     public override string ToString()
     {
         string headers_string = string.Join("\n", Headers.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
-        string parameters = Parameters.Count > 0
-            ? "\nParams: " + string.Join(", ", Parameters.Select(static parameter => $"{parameter.Name}={parameter.Value}"))
+        string parameters = Query.Count > 0
+            ? "\nParams: " + string.Join(", ", Query.Select(static kvp => $"{kvp.Key}={kvp.Value}"))
             : string.Empty;
 
 
@@ -79,4 +71,3 @@ public sealed class Request
     }
 }
 
-public sealed record RequestParameter(string Name, string Value);

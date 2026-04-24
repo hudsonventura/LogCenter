@@ -7,8 +7,6 @@ namespace LogCenter.RequestInterceptor;
 
 public class Response
 {
-    [System.Text.Json.Serialization.JsonPropertyOrder(0)]
-    public string Type { get; private set; } = "Response";
 
     [System.Text.Json.Serialization.JsonPropertyOrder(1)]
     public string SentToAddress { get; private set; }
