@@ -145,7 +145,7 @@ public class DBRepository : IDisposable
         string TraceId, 
         string message, 
         string json, 
-        DateTime? timestamp,
+        DateTime timestamp,
         LogCategory category
         )
     {
@@ -162,7 +162,7 @@ public class DBRepository : IDisposable
         command.Parameters.Add(new NpgsqlParameter("level", NpgsqlTypes.NpgsqlDbType.Integer) { Value = (int)level });
         command.Parameters.Add(new NpgsqlParameter("traceid", NpgsqlTypes.NpgsqlDbType.Text) { Value = TraceId ?? (object)DBNull.Value });
         command.Parameters.Add(new NpgsqlParameter("message", NpgsqlTypes.NpgsqlDbType.Text) { Value = message });
-        command.Parameters.Add(new NpgsqlParameter("timestamp", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = timestamp });
+        command.Parameters.Add(new NpgsqlParameter("timestamp", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = timestamp.ToUniversalTime() });
         command.Parameters.Add(new NpgsqlParameter("category", NpgsqlTypes.NpgsqlDbType.Integer) { Value = (int)category });
         // Adiciona o parâmetro 'value' com o JSON
         command.Parameters.Add(new NpgsqlParameter("value", NpgsqlTypes.NpgsqlDbType.Jsonb) { Value = json != null ? json : DBNull.Value });
