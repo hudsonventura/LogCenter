@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -14,7 +14,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 
 import HeaderBar from "@/components/HeaderBar";
@@ -256,6 +256,7 @@ function LogActionsCell({
 }
 
 export function TableLogs() {
+  const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const tabela =
@@ -435,11 +436,19 @@ export function TableLogs() {
       <HeaderBar />
       <EnsureLogin />
       <main className="mx-auto flex w-full max-w-none flex-col gap-4 px-4 py-5 lg:px-6">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight">Logs from {tabela}</h1>
-          <p className="text-sm text-muted-foreground">
-            Explore table data, filter by time window and inspect log details.
-          </p>
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label="Back to tables"
+            onClick={() => navigate("/tables")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="space-y-1">
+            <h1 className="text-3xl font-semibold tracking-tight">Logs from {tabela}</h1>
+          </div>
         </div>
 
         <LogTimelineChart rawData={visibleData} dateFrom={resolvedDateFrom} dateTo={resolvedDateTo} />

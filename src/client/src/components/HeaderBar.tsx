@@ -51,7 +51,7 @@ export default function HeaderBar() {
 
   return (
     <header className="sticky top-0 z-20 border-b bg-background/95 px-4 py-3 shadow-sm backdrop-blur">
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4">
+      <div className="mx-auto flex w-full max-w-none items-center justify-between gap-4 lg:px-2">
         <Button variant="ghost" className="h-auto gap-3 px-2">
           <img src="/logo.png" alt="Logo" className="h-10 w-10" />
           <div className="text-left">
