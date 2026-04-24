@@ -27,6 +27,7 @@ type LogDetails = {
   level?: number;
   content?: unknown;
   traceId?: string;
+  category?: number;
 };
 
 const levelLabels: Record<number, string> = {
@@ -49,6 +50,15 @@ const levelBadgeClass: Record<number, string> = {
   5: "bg-red-600 text-white dark:bg-red-700 dark:text-red-50",
   6: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
   7: "bg-red-700 text-white dark:bg-red-800 dark:text-red-50",
+};
+
+const categoryLabels: Record<number, string> = {
+  0: "Log",
+  1: "Result",
+  2: "Exception",
+  3: "HttpRequest",
+  4: "HttpResponse",
+  5: "HttpExchange",
 };
 
 const formatTimestamp = (value?: string) => {
@@ -114,6 +124,10 @@ export function ModalObject({
   const levelClass =
     typeof data.level === "number"
       ? levelBadgeClass[data.level] ?? levelBadgeClass[0]
+      : null;
+  const categoryLabel =
+    typeof data.category === "number"
+      ? categoryLabels[data.category] ?? `Unknown (${data.category})`
       : null;
   const jsonTheme = isDark
     ? {
@@ -195,7 +209,12 @@ export function ModalObject({
              {data.message ?? "Log details"}
               </span>
             </DialogTitle>
-          <span>TraceId: 
+          <span>
+            {categoryLabel ? (
+              <Badge className="min-w-[110px] justify-center">
+                {categoryLabel}
+              </Badge>
+            ) : null}
             {data.traceId !== null ?(
               <span> {data.traceId}</span>
             ): " -"}

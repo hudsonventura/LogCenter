@@ -14,7 +14,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ChevronDown, MoreHorizontal } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 
 import HeaderBar from "@/components/HeaderBar";
@@ -25,9 +25,6 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -52,6 +49,7 @@ import { Eye } from "lucide-react"
 export type LogRecord = {
   id: string;
   level: RecordLevel;
+  category?: number;
   traceId: string | null;
   message: string;
   content: unknown;
@@ -91,6 +89,15 @@ const levelBadgeClass: Record<number, string> = {
   [RecordLevel.Fatal]: "bg-red-600 text-white dark:bg-red-700 dark:text-red-50",
 };
 
+const categoryLabels: Record<number, string> = {
+  0: "Log",
+  1: "Result",
+  2: "Exception",
+  3: "HttpRequest",
+  4: "HttpResponse",
+  5: "HttpExchange",
+};
+
 const allLevels = Object.values(RecordLevel).filter(
   (value): value is RecordLevel => typeof value === "number"
 );
@@ -110,6 +117,23 @@ export const columns: ColumnDef<LogRecord>[] = [
         {levelLabels[row.original.level] ?? "Unknown"}
       </Badge>
     ),
+  },
+  {
+    accessorKey: "category",
+    header: "Category",
+    cell: ({ row }) => {
+      const category = row.original.category;
+      const label =
+        typeof category === "number"
+          ? categoryLabels[category] ?? `Unknown (${category})`
+          : "-";
+
+      return (
+        <Badge variant="outline" className="min-w-[110px] justify-center">
+          {label}
+        </Badge>
+      );
+    },
   },
   {
     accessorKey: "traceId",
@@ -382,7 +406,7 @@ export function TableLogs() {
     <>
       <HeaderBar />
       <EnsureLogin />
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-5">
+      <main className="mx-auto flex w-full max-w-none flex-col gap-4 px-4 py-5 lg:px-6">
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold tracking-tight">Logs from {tabela}</h1>
           <p className="text-sm text-muted-foreground">

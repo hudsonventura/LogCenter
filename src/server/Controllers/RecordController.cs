@@ -99,7 +99,7 @@ public class RecordController : ControllerBase
         {
             //tenta salvar na tabela do meu index.
             //se der certo, 200
-            id = _db.Insert(table, obj.Level, obj.TraceId, obj.Message, json, obj.Timestamp);
+            id = _db.Insert(table, obj.Level, obj.TraceId, obj.Message, json, obj.Timestamp, obj.Category);
             return Created(id.ToString(), id);
         }
         catch (System.Exception error1)
@@ -128,7 +128,7 @@ public class RecordController : ControllerBase
                 _db.CreateDateTimeIndex(table);
                 Console.Write("OK! ... ");
 
-                id = _db.Insert(table, obj.Level, obj.TraceId, obj.Message, json, obj.Timestamp);
+                id = _db.Insert(table, obj.Level, obj.TraceId, obj.Message, json, obj.Timestamp, obj.Category);
                 return Created($"/{table}/{id}", $"/{table}/{id}");
             }
             catch (System.Exception error2)
@@ -205,7 +205,7 @@ public class RecordController : ControllerBase
         if(response.Count() == 0){
             return NoContent();
         }
-        return Ok(response.OrderByDescending(x => x.timestamp).ToList());
+        return Ok(response.OrderByDescending(x => x.Timestamp).ToList());
     }
 
 

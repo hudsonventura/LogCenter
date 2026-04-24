@@ -80,6 +80,7 @@ public class DBRepository : IDisposable
                                 timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                 message VARCHAR(255) NOT NULL,
                                 traceid VARCHAR(100) NULL,
+                                category SMALLINT CHECK (category >= 0 AND category <= 9),
                                 content JSONB NULL
                             );";
         using var command = new NpgsqlCommand(txt_command, _conn);
@@ -138,7 +139,15 @@ public class DBRepository : IDisposable
 
     }
 
-    public Guid Insert(string table, Level level, string TraceId, string message, string json, DateTime? timestamp)
+    public Guid Insert(
+        string table, 
+        Level level, 
+        string TraceId, 
+        string message, 
+        string json, 
+        DateTime? timestamp,
+        LogCategory category
+        )
     {
         ValidateTable(table);
 
@@ -146,7 +155,7 @@ public class DBRepository : IDisposable
         Guid id = SnowflakeGuid.NewGuid();
 
         // Cria o comando de inserção
-        using var command = new NpgsqlCommand($"INSERT INTO log_{table} (id, level, traceid, message, timestamp, content) VALUES (@id, @level, @traceid, @message, @timestamp, @value::jsonb)", _conn);
+        using var command = new NpgsqlCommand($"INSERT INTO log_{table} (id, level, traceid, message, timestamp, content, category) VALUES (@id, @level, @traceid, @message, @timestamp, @value::jsonb, @category)", _conn);
 
         // Define o parâmetro 'id' explicitamente como BIGINT
         command.Parameters.Add(new NpgsqlParameter("id", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = id });
@@ -154,7 +163,7 @@ public class DBRepository : IDisposable
         command.Parameters.Add(new NpgsqlParameter("traceid", NpgsqlTypes.NpgsqlDbType.Text) { Value = TraceId ?? (object)DBNull.Value });
         command.Parameters.Add(new NpgsqlParameter("message", NpgsqlTypes.NpgsqlDbType.Text) { Value = message });
         command.Parameters.Add(new NpgsqlParameter("timestamp", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = timestamp });
-
+        command.Parameters.Add(new NpgsqlParameter("category", NpgsqlTypes.NpgsqlDbType.Integer) { Value = (int)category });
         // Adiciona o parâmetro 'value' com o JSON
         command.Parameters.Add(new NpgsqlParameter("value", NpgsqlTypes.NpgsqlDbType.Jsonb) { Value = json != null ? json : DBNull.Value });
 
@@ -170,7 +179,7 @@ public class DBRepository : IDisposable
         string selectedContent = query.bring_content ? "content" : "NULL::jsonb as content";
         
         string sql = @$"
-            SELECT id, level, timestamp AT TIME ZONE 'UTC' as timestamp, traceid, message, {selectedContent}
+            SELECT id, level, category, timestamp AT TIME ZONE 'UTC' as timestamp, traceid, message, {selectedContent}
             FROM log_{table} 
             WHERE timestamp AT TIME ZONE 'UTC' BETWEEN @datetime1 AND @datetime2
             AND (content::text ILIKE @search OR traceid::text ILIKE @search OR message::text ILIKE @search)
@@ -195,11 +204,11 @@ public class DBRepository : IDisposable
         // Ajustando timezone manualmente após a consulta
         foreach (var record in results)
         {
-            record.timestamp = record.timestamp.Add(_tz.GetUtcOffset(record.timestamp));
+            record.Timestamp = record.Timestamp.Add(_tz.GetUtcOffset(record.Timestamp));
         }
 
         // Retorna a lista de resultados
-        return results.OrderByDescending(x => x.id).ToList();
+        return results.OrderByDescending(x => x.Id).ToList();
     }
 
 
@@ -227,9 +236,9 @@ public class DBRepository : IDisposable
         string query = @$"SELECT * FROM log_{table} WHERE id = @id";
         Record result = _conn.QueryFirstOrDefault<Record>(query, new { id });
 
-        if (result != null && !string.IsNullOrEmpty(result.content))
+        if (result != null && !string.IsNullOrEmpty(result.Content))
         {
-            result.content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(result.content);
+            result.Content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(result.Content);
         }
 
         return result;
