@@ -1,0 +1,44 @@
+info:
+  name: HttpRequest Test
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{url}}/:table"
+  params:
+    - name: table
+      value: example_console
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        //"timestamp":"2026-04-24T14:30:04.8938153+00:00",
+        "level": 3,
+        "traceId":"00-58c2727a0c45c423507c7b633bc78497-79f0d3a4321c304c-00",
+        "message":"Request finished HTTP/1.1 GET http://localhost:5000/WeatherForecast - 200 - application/json;\u002Bcharset=utf-8 36763.7144ms",
+        "exception":null,"applicationName":null,
+        "Content":{
+          "ElapsedMilliseconds":36763.7144,
+          "StatusCode":200,
+          "ContentType":"application/json; charset=utf-8",
+          "ContentLength":null,
+          "Protocol":"HTTP/1.1",
+          "Method":"GET",
+          "Scheme":"http",
+          "Host":"localhost:5000",
+          "PathBase":"",
+          "Path":"/WeatherForecast",
+          "QueryString":"",
+          "Body": {"teste": 123}
+        },
+        "category":0
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
