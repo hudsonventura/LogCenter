@@ -6,6 +6,7 @@ internal sealed class LogCenterLoggerProvider : ILoggerProvider
 {
     private readonly LogCenterOptions _options;
     private readonly HttpClient _httpClient;
+    private readonly LogCenterPendingSendTracker _pendingSendTracker = new();
 
     public LogCenterLoggerProvider(LogCenterOptions options)
     {
@@ -22,9 +23,13 @@ internal sealed class LogCenterLoggerProvider : ILoggerProvider
     }
 
     public ILogger CreateLogger(string categoryName) =>
-        new LogCenterLogger(categoryName, _httpClient, _options);
+        new LogCenterLogger(categoryName, _httpClient, _options, _pendingSendTracker);
 
-    public void Dispose() => _httpClient?.Dispose();
+    public void Dispose()
+    {
+        _pendingSendTracker.WaitForPendingSendsAsync().GetAwaiter().GetResult();
+        _httpClient.Dispose();
+    }
 
 
 }

@@ -21,15 +21,18 @@ internal sealed class LogCenterLogger : ILogger
     private readonly string _categoryName;
     private readonly HttpClient _httpClient;
     private readonly LogCenterOptions _options;
+    private readonly LogCenterPendingSendTracker _pendingSendTracker;
 
     public LogCenterLogger(
         string categoryName,
         HttpClient httpClient,
-        LogCenterOptions options)
+        LogCenterOptions options,
+        LogCenterPendingSendTracker pendingSendTracker)
     {
         _categoryName = categoryName ?? throw new ArgumentNullException(nameof(categoryName));
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        _options = options;
+        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _pendingSendTracker = pendingSendTracker ?? throw new ArgumentNullException(nameof(pendingSendTracker));
     }
 
     public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
@@ -53,17 +56,23 @@ internal sealed class LogCenterLogger : ILogger
             state,
             JsonOptions,
             _options.StripDestructuringAtPrefix);
-        var payload = new LogCenterLogPayload
+        var payload = new RequestRecord
         {
-            Table = _options.Table,
-            Timestamp = now,
-            Level = logLevel.ToString(),
-            TraceId = TryExtractTraceId(structured) ?? Activity.Current?.Id,
-            Category = ResolveLogCategory(structured, exception),
+            // Table = _options.Table,
+            // Level = logLevel.ToString(),
+            // Category = ResolveLogCategory(structured, exception),
+            // ApplicationName = _options.ApplicationName,
+            // Exception = exception?.ToString(),
+    
+
             Message = message,
-            ApplicationName = _options.ApplicationName,
-            Exception = exception?.ToString(),
-            StructuredProperties = structured
+            Category = LogCategory.HttpRequest,
+            Timestamp = now.UtcDateTime,
+            Level = logLevel,
+            TraceId = TryExtractTraceId(structured) ?? Activity.Current?.Id,
+            Content = structured,
+            //MessageTemplate = messageTemplate,
+            //Exception = exception
         };
 
         QueueSend(payload);
@@ -71,15 +80,28 @@ internal sealed class LogCenterLogger : ILogger
         ShowConsole(logLevel, message);
     }
 
-    private void QueueSend(LogCenterLogPayload payload)
+    private void QueueSend(RequestRecord payload)
     {
+        if (!_pendingSendTracker.TryBegin())
+        {
+            SendAsync(payload).GetAwaiter().GetResult();
+            return;
+        }
+
         _ = Task.Run(async () =>
         {
-            await SendAsync(payload).ConfigureAwait(false);
+            try
+            {
+                await SendAsync(payload).ConfigureAwait(false);
+            }
+            finally
+            {
+                _pendingSendTracker.Complete();
+            }
         });
     }
 
-    private async Task SendAsync(LogCenterLogPayload payload)
+    private async Task SendAsync(RequestRecord payload)
     {
         try
         {
@@ -96,17 +118,7 @@ internal sealed class LogCenterLogger : ILogger
             if (response.IsSuccessStatusCode)
                 return;
 
-            if (!ShouldFallbackToLegacyEndpoint(response))
-            {
-                response.EnsureSuccessStatusCode();
-                return;
-            }
 
-            using var legacyRequest = BuildLegacyRequest(payload);
-            using var legacyResponse = await _httpClient
-                .SendAsync(legacyRequest, HttpCompletionOption.ResponseHeadersRead)
-                .ConfigureAwait(false);
-            legacyResponse.EnsureSuccessStatusCode();
         }
         catch (Exception ex)
         {
@@ -114,36 +126,13 @@ internal sealed class LogCenterLogger : ILogger
         }
     }
 
-    private HttpRequestMessage BuildLegacyRequest(LogCenterLogPayload payload)
-    {
-        var request = new HttpRequestMessage(HttpMethod.Post, ResolveLegacyRequestUri());
-        request.Headers.Add("Level", payload.Level);
-        request.Headers.Add("Timestamp", payload.Timestamp.ToString("o"));
-        request.Headers.Add("Message", payload.Message);
 
-        if (!string.IsNullOrWhiteSpace(payload.TraceId))
-            request.Headers.Add("TraceId", payload.TraceId);
 
-        var content = BuildRequestContent(payload);
-        if (content is not null)
-            request.Content = JsonContent.Create(content);
-
-        return request;
-    }
-
-    private HttpRequestMessage BuildRequestRecordRequest(LogCenterLogPayload payload)
+    private HttpRequestMessage BuildRequestRecordRequest(RequestRecord payload)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, ResolveLegacyRequestUri())
         {
-            Content = JsonContent.Create(new
-            {
-                Message = payload.Message,
-                Category = payload.Category,
-                Timestamp = payload.Timestamp.UtcDateTime,
-                Level = ResolveLevel(payload),
-                TraceId = payload.TraceId,
-                Content = BuildRequestContent(payload)
-            })
+            Content = JsonContent.Create(payload, options: JsonOptions)
         };
 
         return request;
