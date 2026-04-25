@@ -79,6 +79,33 @@ public class Response
 
         return $"{StatusCode} {ReasonPhrase}\nSent to Address: {SentToAddress}\n{headers_string}{body}{exception}";
     }
+
+    internal object ToStructuredPayload() =>
+        new
+        {
+            SentToAddress,
+            StatusCode,
+            ReasonPhrase,
+            Headers,
+            Body = TryParseJsonBody(Body),
+            Error
+        };
+
+    private static object? TryParseJsonBody(string? body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+            return body;
+
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+            return document.RootElement.Clone();
+        }
+        catch (JsonException)
+        {
+            return body;
+        }
+    }
 }
 
 public sealed class ExceptionSnapshot

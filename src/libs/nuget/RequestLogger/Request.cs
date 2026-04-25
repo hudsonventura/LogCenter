@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 
 
@@ -69,5 +70,33 @@ public sealed class Request
 
         return $"{Method} {CompleteURL}{parameters}\n{headers_string}\n\n{Body}";
     }
-}
 
+    internal object ToStructuredPayload() =>
+        new
+        {
+            ReceivedFromAddress,
+            Method,
+            Headers,
+            Host,
+            Path,
+            Query,
+            CompleteURL,
+            Body = TryParseJsonBody(Body)
+        };
+
+    private static object? TryParseJsonBody(string body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+            return body;
+
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+            return document.RootElement.Clone();
+        }
+        catch (JsonException)
+        {
+            return body;
+        }
+    }
+}

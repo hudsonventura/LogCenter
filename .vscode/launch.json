@@ -28,7 +28,6 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet: build Example aspnet",
-            "postDebugTask": "Cleanup Debug",
             "program": "${workspaceFolder}/examples/aspnet/bin/Debug/net10.0/aspnet_example.dll",
             "args": [],
             "cwd": "${workspaceFolder}",

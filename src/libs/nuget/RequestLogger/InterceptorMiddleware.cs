@@ -157,7 +157,7 @@ public sealed class InterceptorMiddleware
         object payload = _options.FormatType switch
         {
             InterceptorOptions.SaveFormatType.HTTPText => request.ToString(),
-            _ => request
+            _ => request.ToStructuredPayload()
         };
 
         return SendAsync(new RequestRecord
@@ -176,7 +176,7 @@ public sealed class InterceptorMiddleware
         object payload = _options.FormatType switch
         {
             InterceptorOptions.SaveFormatType.HTTPText => response.ToString(),
-            _ => response
+            _ => response.ToStructuredPayload()
         };
 
         return SendAsync(new RequestRecord
