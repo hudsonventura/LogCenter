@@ -58,15 +58,8 @@ internal sealed class LogCenterLogger : ILogger
             _options.StripDestructuringAtPrefix);
         var payload = new RequestRecord
         {
-            // Table = _options.Table,
-            // Level = logLevel.ToString(),
-            // Category = ResolveLogCategory(structured, exception),
-            // ApplicationName = _options.ApplicationName,
-            // Exception = exception?.ToString(),
-    
-
             Message = message,
-            Category = LogCategory.HttpRequest,
+            Category = LogCategory.Log,
             Timestamp = now.UtcDateTime,
             Level = logLevel,
             TraceId = TryExtractTraceId(structured) ?? Activity.Current?.Id,
