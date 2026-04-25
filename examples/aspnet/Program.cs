@@ -19,13 +19,13 @@ var logCenterOptions = new InterceptorOptions
     LogGetRequest = true
 };
 
-builder.Services.AddSingleton(logCenterOptions);
+
 builder.Services.AddSingleton<LogCenterOptions>(logCenterOptions);
 
-// Remove todos os loggers padrão (console, debug, etc)
+// Remove default logging (console, debug, etc)
 builder.Logging.ClearProviders();
 
-// Adiciona apenas o LogCenter
+// Add only LogCenter provider, to use as ILogger in the controllers and other services. It will send logs to the configured LogCenter URL.
 builder.Logging.AddLogCenter(logCenterOptions);
 
 var app = builder.Build();
@@ -38,6 +38,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRequestInterceptor();
+
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();

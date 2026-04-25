@@ -159,10 +159,11 @@ public sealed class InterceptorMiddleware
             Response response = await Response.Convert(context, e);
             QueueSendResponse(response, traceId, responseCompletedAt);
 
-            if (!_options.HideResponseExceptions)
-            {
-                await context.Response.WriteAsync(e.ToString());
-            }
+            //I don't remeber for what reason I added this HideResponseExceptions option
+            //if (!_options.HideResponseExceptions)
+            //{
+            //    await context.Response.WriteAsync(e.ToString());
+            //}
         }
     }
 
