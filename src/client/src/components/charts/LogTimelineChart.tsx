@@ -19,6 +19,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
+import { getLogLevelChartTheme, getLogLevelLabel } from "@/lib/log-levels";
 
 type TimelineRecord = {
   level: number;
@@ -41,14 +42,34 @@ const logLevels: Record<
     };
   }
 > = {
-  0: { name: "Trace", theme: { light: "#334155", dark: "#e2e8f0" } },
-  1: { name: "Info", theme: { light: "#075985", dark: "#489ac0" } },
-  2: { name: "Debug", theme: { light: "#3f3f46", dark: "#12241e" } },
-  3: { name: "Warning", theme: { light: "#92400e", dark: "#fcd34d" } },
-  4: { name: "Error", theme: { light: "#ff0000", dark: "#ff2b2b" } },
-  5: { name: "Critical", theme: { light: "#ff0000", dark: "#ff2b2b" } },
-  7: { name: "Fatal", theme: { light: "#ff0000", dark: "#ff2b2b" } },
-  6: { name: "Success", theme: { light: "#166534", dark: "#15be4b" } },
+  0: { name: getLogLevelLabel(0), theme: getLogLevelChartTheme(0) },
+  1: { name: getLogLevelLabel(1), theme: getLogLevelChartTheme(1) },
+  2: { name: getLogLevelLabel(2), theme: getLogLevelChartTheme(2) },
+  3: { name: getLogLevelLabel(3), theme: getLogLevelChartTheme(3) },
+  4: { name: getLogLevelLabel(4), theme: getLogLevelChartTheme(4) },
+  5: { name: getLogLevelLabel(5), theme: getLogLevelChartTheme(5) },
+  99: { name: getLogLevelLabel(99), theme: getLogLevelChartTheme(99) },
+  200: { name: getLogLevelLabel(200), theme: getLogLevelChartTheme(200) },
+  201: { name: getLogLevelLabel(201), theme: getLogLevelChartTheme(201) },
+  202: { name: getLogLevelLabel(202), theme: getLogLevelChartTheme(202) },
+  204: { name: getLogLevelLabel(204), theme: getLogLevelChartTheme(204) },
+  301: { name: getLogLevelLabel(301), theme: getLogLevelChartTheme(301) },
+  302: { name: getLogLevelLabel(302), theme: getLogLevelChartTheme(302) },
+  304: { name: getLogLevelLabel(304), theme: getLogLevelChartTheme(304) },
+  400: { name: getLogLevelLabel(400), theme: getLogLevelChartTheme(400) },
+  401: { name: getLogLevelLabel(401), theme: getLogLevelChartTheme(401) },
+  403: { name: getLogLevelLabel(403), theme: getLogLevelChartTheme(403) },
+  404: { name: getLogLevelLabel(404), theme: getLogLevelChartTheme(404) },
+  405: { name: getLogLevelLabel(405), theme: getLogLevelChartTheme(405) },
+  408: { name: getLogLevelLabel(408), theme: getLogLevelChartTheme(408) },
+  409: { name: getLogLevelLabel(409), theme: getLogLevelChartTheme(409) },
+  422: { name: getLogLevelLabel(422), theme: getLogLevelChartTheme(422) },
+  429: { name: getLogLevelLabel(429), theme: getLogLevelChartTheme(429) },
+  500: { name: getLogLevelLabel(500), theme: getLogLevelChartTheme(500) },
+  501: { name: getLogLevelLabel(501), theme: getLogLevelChartTheme(501) },
+  502: { name: getLogLevelLabel(502), theme: getLogLevelChartTheme(502) },
+  503: { name: getLogLevelLabel(503), theme: getLogLevelChartTheme(503) },
+  504: { name: getLogLevelLabel(504), theme: getLogLevelChartTheme(504) },
 };
 
 const buildMinuteBuckets = (start: Date, end: Date) => {

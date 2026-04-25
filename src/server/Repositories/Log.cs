@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using Microsoft.Extensions.Logging;
 using server.Domain;
 
 namespace server.Repositories;
@@ -17,9 +18,8 @@ public class Log
         var payload = new RequestRecord
         {
             Message = execution_id,
-            Category = LogCategory.Log,
             Timestamp = DateTime.UtcNow,
-            Level = level,
+            Level = RecordLevelMapper.FromMicrosoft(level),
             Content = log
         };
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,"/LogCenter_JobExecution")

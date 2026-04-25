@@ -13,10 +13,6 @@ public class RequestRecord
     /// </summary>
     public string Message { get; set; } = string.Empty;
 
-    /// <summary>
-    /// 
-    /// </summary> 
-    public LogCategory Category { get; set; } = LogCategory.Log;
 
     /// <summary>
     /// 

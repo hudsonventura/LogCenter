@@ -9,7 +9,6 @@ internal sealed class RequestRecord
 {
     public string Message { get; set; } = string.Empty;
 
-    public LogCategory Category { get; set; } = LogCategory.Log;
 
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 

@@ -18,5 +18,4 @@ internal sealed class LogCenterLogPayload
     /// Com <see cref="LogCenterOptions.StripDestructuringAtPrefix"/>, a chave enviada pode ser <c>teste</c> em vez de <c>@teste</c>.
     /// </summary>
     public Dictionary<string, JsonElement>? StructuredProperties { get; set; }
-    public LogCategory Category { get; internal set; }
 }

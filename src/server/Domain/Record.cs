@@ -12,7 +12,7 @@ public class Record
     /// <summary>
     /// Represents a type of record
     /// </summary>
-    public LogLevel Level { get; set; }
+    public RecordLevel Level { get; set; }
 
     /// <summary>
     /// You can use this to put an ID, type, extra info or any other information. Limited to 255 characters
@@ -38,10 +38,5 @@ public class Record
     /// </summary>
     public dynamic Content { get; set; }
 
-
-    /// <summary>
-    /// A category to classify your record. It can be used to filter and search records.
-    /// </summary>
-    public LogCategory Category { get; set; }
 
 }

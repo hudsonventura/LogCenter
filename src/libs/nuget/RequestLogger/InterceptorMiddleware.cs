@@ -163,9 +163,9 @@ public sealed class InterceptorMiddleware
         return SendAsync(new RequestRecord
         {
             Message = "HTTP request received",
-            Category = LogCategory.HttpRequest,
+
             Timestamp = timestamp.UtcDateTime,
-            Level = ResolveLevel(LogLevel.Trace),
+            Level = 99,
             TraceId = traceId,
             Content = payload
         });
@@ -182,9 +182,8 @@ public sealed class InterceptorMiddleware
         return SendAsync(new RequestRecord
         {
             Message = "HTTP response sent",
-            Category = LogCategory.HttpResponse,
             Timestamp = timestamp.UtcDateTime,
-            Level = ResolveLevel(MapLogLevel(response.StatusCode)),
+            Level = response.StatusCode,
             TraceId = traceId,
             Content = payload
         });

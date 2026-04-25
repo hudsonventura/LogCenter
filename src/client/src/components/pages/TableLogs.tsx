@@ -44,63 +44,25 @@ import { ModalObject } from "../ModalObject";
 import { DatePickerValue, DateTimePicker, resolveDatePickerValue } from "../DateTimePicker";
 import { useTimezone } from "../timezone-provider";
 import LogTimelineChart from "../charts/LogTimelineChart";
+import {
+  allKnownRecordLevels,
+  getLogLevelBadgeClass,
+  getLogLevelLabel,
+} from "@/lib/log-levels";
 import { Eye } from "lucide-react"
 
 export type LogRecord = {
   id: string;
-  level: RecordLevel;
-  category?: number;
+  level: number;
   traceId: string | null;
   message: string;
   content: unknown;
   timestamp: string;
 };
 
-export enum RecordLevel {
-  Trace = 0,
-  Info = 1,
-  Debug = 2,
-  Warning = 3,
-  Error = 4,
-  Critical = 5,
-  Success = 6,
-  Fatal = 7,
-}
 
-const levelLabels: Record<number, string> = {
-  [RecordLevel.Trace]: "Trace",
-  [RecordLevel.Info]: "Info",
-  [RecordLevel.Debug]: "Debug",
-  [RecordLevel.Warning]: "Warning",
-  [RecordLevel.Error]: "Error",
-  [RecordLevel.Critical]: "Critical",
-  [RecordLevel.Success]: "Success",
-  [RecordLevel.Fatal]: "Fatal",
-};
 
-const levelBadgeClass: Record<number, string> = {
-  [RecordLevel.Trace]: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-100",
-  [RecordLevel.Info]: "bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300",
-  [RecordLevel.Debug]: "bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-100",
-  [RecordLevel.Warning]: "bg-yellow-700 text-white w dark:bgdark:bg-amber-500/15 dark:text-amber-300",
-  [RecordLevel.Error]: "bg-red-600 text-white dark:bg-red-700 dark:text-red-50",
-  [RecordLevel.Critical]: "bg-red-600 text-white dark:bg-red-700 dark:text-red-50",
-  [RecordLevel.Success]: "bg-green-700 text-white dark:bg-green-950 dark:text-green-300",
-  [RecordLevel.Fatal]: "bg-red-600 text-white dark:bg-red-700 dark:text-red-50",
-};
-
-const categoryLabels: Record<number, string> = {
-  0: "Log",
-  1: "Result",
-  2: "Exception",
-  3: "HttpRequest",
-  4: "HttpResponse",
-  5: "HttpExchange",
-};
-
-const allLevels = Object.values(RecordLevel).filter(
-  (value): value is RecordLevel => typeof value === "number"
-);
+const allLevels = allKnownRecordLevels;
 
 const formatTimestamp = (value: string) => {
   return String(value).replace("T", " ").replace(/Z$/, "");
@@ -108,9 +70,8 @@ const formatTimestamp = (value: string) => {
 
 const columnWidths = {
   level: 60,
-  category: 132,
-  timestamp: 210,
-  traceId: 350,
+  timestamp: 130,
+  traceId: 210,
   message: 320,
   content: 360,
   actions: 72,
@@ -120,40 +81,21 @@ export const columns: ColumnDef<LogRecord>[] = [
   {
     accessorKey: "level",
     header: "Level",
-    size: columnWidths.level,
-    minSize: 50,
+    size: 80,
+    minSize: 80,
     cell: ({ row }) => (
       <Badge
-        className={`min-w-[76px] justify-center ${levelBadgeClass[row.original.level] ?? levelBadgeClass[RecordLevel.Trace]}`}
+        className={`min-w-[76px] justify-center ${getLogLevelBadgeClass(row.original.level)}`}
       >
-        {levelLabels[row.original.level] ?? "Unknown"}
+        {getLogLevelLabel(row.original.level)}
       </Badge>
     ),
   },
   {
-    accessorKey: "category",
-    header: "Category",
-    size: columnWidths.category,
-    minSize: 60,
-    cell: ({ row }) => {
-      const category = row.original.category;
-      const label =
-        typeof category === "number"
-          ? categoryLabels[category] ?? `Unknown (${category})`
-          : "-";
-
-      return (
-        <Badge variant="outline" className="min-w-[110px] justify-center">
-          {label}
-        </Badge>
-      );
-    },
-  },
-  {
     accessorKey: "timestamp",
     header: () => <div className="text-left">Timestamp</div>,
-    size: columnWidths.timestamp,
-    minSize: 60,
+    size: 80,
+    minSize: 80,
     cell: ({ row }) => (
       <div className="text-left font-mono text-xs sm:text-sm">
         {formatTimestamp(row.original.timestamp)}
@@ -170,8 +112,8 @@ export const columns: ColumnDef<LogRecord>[] = [
         Trace ID
       </Button>
     ),
-    size: columnWidths.traceId,
-    minSize: 125,
+    size: 100,
+    minSize: 100,
     cell: ({ row }) => (
       <div className="truncate lowercase">
         {row.original.traceId || "-"}
@@ -291,7 +233,7 @@ export function TableLogs() {
     params.get("bring_content") === "true"
   );
   const [selectedRecordId, setSelectedRecordId] = React.useState<string | null>(null);
-  const [selectedLevels, setSelectedLevels] = React.useState<RecordLevel[]>(allLevels);
+  const [selectedLevels, setSelectedLevels] = React.useState<number[]>(allLevels);
   const [liveNowTick, setLiveNowTick] = React.useState(new Date());
   const resolvedDateFrom = React.useMemo(
     () => resolveDatePickerValue(dateFrom, liveNowTick),
@@ -510,7 +452,7 @@ export function TableLogs() {
                         });
                       }}
                     >
-                      {levelLabels[level]}
+                      {getLogLevelLabel(level)}
                     </DropdownMenuCheckboxItem>
                   ))}
                 </DropdownMenuContent>

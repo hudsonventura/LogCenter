@@ -20,6 +20,7 @@ import { darkTheme } from "@uiw/react-json-view/dark";
 import { lightTheme } from "@uiw/react-json-view/light";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
+import { getLogLevelBadgeClass, getLogLevelLabel } from "@/lib/log-levels";
 
 type LogDetails = {
   message?: string;
@@ -27,39 +28,9 @@ type LogDetails = {
   level?: number;
   content?: unknown;
   traceId?: string;
-  category?: number;
 };
 
-const levelLabels: Record<number, string> = {
-  0: "Trace",
-  1: "Info",
-  2: "Debug",
-  3: "Warning",
-  4: "Error",
-  5: "Critical",
-  6: "Success",
-  7: "Fatal",
-};
 
-const levelBadgeClass: Record<number, string> = {
-  0: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-100",
-  1: "bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300",
-  2: "bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-100",
-  3: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
-  4: "bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300",
-  5: "bg-red-600 text-white dark:bg-red-700 dark:text-red-50",
-  6: "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
-  7: "bg-red-700 text-white dark:bg-red-800 dark:text-red-50",
-};
-
-const categoryLabels: Record<number, string> = {
-  0: "Log",
-  1: "Result",
-  2: "Exception",
-  3: "HttpRequest",
-  4: "HttpResponse",
-  5: "HttpExchange",
-};
 
 const formatTimestamp = (value?: string) => {
   if (!value) {
@@ -120,14 +91,10 @@ export function ModalObject({
 
   let jsonValue: object | undefined;
   const levelLabel =
-    typeof data.level === "number" ? levelLabels[data.level] ?? "Unknown" : null;
+    typeof data.level === "number" ? getLogLevelLabel(data.level) : null;
   const levelClass =
     typeof data.level === "number"
-      ? levelBadgeClass[data.level] ?? levelBadgeClass[0]
-      : null;
-  const categoryLabel =
-    typeof data.category === "number"
-      ? categoryLabels[data.category] ?? `Unknown (${data.category})`
+      ? getLogLevelBadgeClass(data.level)
       : null;
   const jsonTheme = isDark
     ? {
@@ -209,16 +176,7 @@ export function ModalObject({
              {data.message ?? "Log details"}
               </span>
             </DialogTitle>
-          <span>
-            {categoryLabel ? (
-              <Badge className="min-w-[110px] justify-center">
-                {categoryLabel}
-              </Badge>
-            ) : null}
-            {data.traceId !== null ?(
-              <span> {data.traceId}</span>
-            ): " -"}
-          </span>
+
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <span>{formatTimestamp(data.timestamp)}</span>
             

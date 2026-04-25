@@ -59,7 +59,6 @@ internal sealed class LogCenterLogger : ILogger
         var payload = new RequestRecord
         {
             Message = message,
-            Category = LogCategory.Log,
             Timestamp = now.UtcDateTime,
             Level = logLevel,
             TraceId = TryExtractTraceId(structured) ?? Activity.Current?.Id,
@@ -192,27 +191,6 @@ internal sealed class LogCenterLogger : ILogger
         return 1;
     }
 
-    private static LogCategory ResolveLogCategory(
-        Dictionary<string, JsonElement>? structuredProperties,
-        Exception? exception)
-    {
-        if (structuredProperties is not null)
-        {
-            if (structuredProperties.ContainsKey("HttpExchangeLog"))
-                return LogCategory.HttpExchange;
-
-            if (structuredProperties.ContainsKey("Response"))
-                return LogCategory.HttpResponse;
-
-            if (structuredProperties.ContainsKey("Request"))
-                return LogCategory.HttpRequest;
-        }
-
-        if (exception is not null)
-            return LogCategory.Exception;
-
-        return LogCategory.Log;
-    }
 
     private static string? TryExtractTraceId(Dictionary<string, JsonElement>? structuredProperties)
     {

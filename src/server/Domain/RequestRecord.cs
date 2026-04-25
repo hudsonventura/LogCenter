@@ -12,10 +12,6 @@ public class RequestRecord
     /// </summary>
     public string Message { get; set; } = string.Empty;
 
-    /// <summary>
-    /// 
-    /// </summary> 
-    public LogCategory Category { get; set; } = LogCategory.Log;
 
     /// <summary>
     /// 
@@ -25,7 +21,7 @@ public class RequestRecord
     /// <summary>
     /// 
     /// </summary> 
-    public LogLevel Level { get; set; } = LogLevel.Information;
+    public RecordLevel Level { get; set; } = RecordLevel.Information;
 
     /// <summary>
     /// 

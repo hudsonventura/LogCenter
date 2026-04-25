@@ -76,11 +76,10 @@ public class DBRepository : IDisposable
 
         string txt_command = @$"CREATE TABLE log_{table} (
                                 id UUID PRIMARY KEY,
-                                level SMALLINT CHECK (level >= 0 AND level <= 9),
+                                level smallserial,
                                 timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                 message VARCHAR(255) NOT NULL,
                                 traceid VARCHAR(100) NULL,
-                                category SMALLINT CHECK (category >= 0 AND category <= 9),
                                 content JSONB NULL
                             );";
         using var command = new NpgsqlCommand(txt_command, _conn);
@@ -141,12 +140,11 @@ public class DBRepository : IDisposable
 
     public Guid Insert(
         string table, 
-        LogLevel level, 
+        RecordLevel level, 
         string TraceId, 
         string message, 
         string json, 
-        DateTime timestamp,
-        LogCategory category
+        DateTime timestamp
         )
     {
         ValidateTable(table);
@@ -155,7 +153,7 @@ public class DBRepository : IDisposable
         Guid id = SnowflakeGuid.NewGuid();
 
         // Cria o comando de inserção
-        using var command = new NpgsqlCommand($"INSERT INTO log_{table} (id, level, traceid, message, timestamp, content, category) VALUES (@id, @level, @traceid, @message, @timestamp, @value::jsonb, @category)", _conn);
+        using var command = new NpgsqlCommand($"INSERT INTO log_{table} (id, level, traceid, message, timestamp, content) VALUES (@id, @level, @traceid, @message, @timestamp, @value::jsonb)", _conn);
 
         // Define o parâmetro 'id' explicitamente como BIGINT
         command.Parameters.Add(new NpgsqlParameter("id", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = id });
@@ -163,7 +161,6 @@ public class DBRepository : IDisposable
         command.Parameters.Add(new NpgsqlParameter("traceid", NpgsqlTypes.NpgsqlDbType.Text) { Value = TraceId ?? (object)DBNull.Value });
         command.Parameters.Add(new NpgsqlParameter("message", NpgsqlTypes.NpgsqlDbType.Text) { Value = message });
         command.Parameters.Add(new NpgsqlParameter("timestamp", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = timestamp.ToUniversalTime() });
-        command.Parameters.Add(new NpgsqlParameter("category", NpgsqlTypes.NpgsqlDbType.Integer) { Value = (int)category });
         // Adiciona o parâmetro 'value' com o JSON
         command.Parameters.Add(new NpgsqlParameter("value", NpgsqlTypes.NpgsqlDbType.Jsonb) { Value = json != null ? json : DBNull.Value });
 
