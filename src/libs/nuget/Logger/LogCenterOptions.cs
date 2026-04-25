@@ -8,17 +8,6 @@ namespace LogCenter;
 /// </summary>
 public class LogCenterOptions
 {
-
-    /// <summary>Quando false, o provider não envia requisições (útil para testes ou ambiente local).</summary>
-    public bool Enabled { get; set; } = true;
-
-    /// <summary>URL base do serviço que recebe os logs (ex.: https://logs.exemplo.com).</summary>
-    public Uri? BaseAddress { get; set; }
-
-    /// <summary>Caminho relativo ao enviar POST (ex.: /api/logs).</summary>
-    public string LogEndpoint { get; set; } = "/api/logs";
-
-
     /// <summary>Nível mínimo registrado por este provider.</summary>
     public LogLevel MinimumLevel { get; set; } = LogLevel.Trace;
 

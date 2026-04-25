@@ -50,9 +50,6 @@ public static class InterceptorMiddlewareExtensions
     private static InterceptorOptions ToInterceptorOptions(LogCenterOptions options) =>
         new()
         {
-            Enabled = options.Enabled,
-            BaseAddress = options.BaseAddress,
-            LogEndpoint = options.LogEndpoint,
             MinimumLevel = options.MinimumLevel,
             ApplicationName = options.ApplicationName,
             StripDestructuringAtPrefix = options.StripDestructuringAtPrefix,
@@ -66,7 +63,7 @@ public static class InterceptorMiddlewareExtensions
     {
         var httpClient = new HttpClient
         {
-            BaseAddress = ResolveBaseAddress(options),
+            BaseAddress = new Uri(options.Url),
             Timeout = TimeSpan.FromMilliseconds(options.Timeout)
         };
 
@@ -76,19 +73,7 @@ public static class InterceptorMiddlewareExtensions
         return httpClient;
     }
 
-    private static Uri? ResolveBaseAddress(LogCenterOptions options)
-    {
-        if (options.BaseAddress is not null)
-            return options.BaseAddress;
 
-        if (!string.IsNullOrWhiteSpace(options.Url))
-            return new Uri(options.Url, UriKind.Absolute);
-
-        if (options.Enabled)
-            throw new InvalidOperationException("LogCenterOptions.Url or LogCenterOptions.BaseAddress is required when logging is enabled.");
-
-        return null;
-    }
 }
 
 public sealed class InterceptorMiddleware
@@ -245,7 +230,7 @@ public sealed class InterceptorMiddleware
     }
 
     private bool IsEnabled(int level) =>
-        _options.Enabled && level >= ResolveLevel(_options.MinimumLevel);
+        level >= ResolveLevel(_options.MinimumLevel);
 
     private string ResolveRequestUri()
     {

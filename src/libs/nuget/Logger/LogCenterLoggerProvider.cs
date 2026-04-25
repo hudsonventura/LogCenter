@@ -13,7 +13,7 @@ internal sealed class LogCenterLoggerProvider : ILoggerProvider
 
         _httpClient = new HttpClient
         {
-            BaseAddress = ResolveBaseAddress(_options),
+            BaseAddress = new Uri(_options.Url),
             Timeout = TimeSpan.FromMilliseconds(_options.Timeout)
         };
 
@@ -26,17 +26,5 @@ internal sealed class LogCenterLoggerProvider : ILoggerProvider
 
     public void Dispose() => _httpClient?.Dispose();
 
-    private static Uri? ResolveBaseAddress(LogCenterOptions options)
-    {
-        if (options.BaseAddress is not null)
-            return options.BaseAddress;
 
-        if (!string.IsNullOrWhiteSpace(options.Url))
-            return new Uri(options.Url, UriKind.Absolute);
-
-        if (options.Enabled)
-            throw new InvalidOperationException("LogCenterOptions.Url or LogCenterOptions.BaseAddress is required when logging is enabled.");
-
-        return null;
-    }
 }

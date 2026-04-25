@@ -35,8 +35,7 @@ internal sealed class LogCenterLogger : ILogger
     public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
 
     public bool IsEnabled(LogLevel logLevel) =>
-        _options.Enabled
-        && logLevel != LogLevel.None
+        logLevel != LogLevel.None
         && logLevel >= _options.MinimumLevel;
 
     public void Log<TState>(
