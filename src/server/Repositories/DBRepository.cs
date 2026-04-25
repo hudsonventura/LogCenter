@@ -141,7 +141,7 @@ public class DBRepository : IDisposable
 
     public Guid Insert(
         string table, 
-        Level level, 
+        LogLevel level, 
         string TraceId, 
         string message, 
         string json, 

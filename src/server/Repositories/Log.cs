@@ -6,7 +6,7 @@ namespace server.Repositories;
 public class Log
 {
 
-    internal static void RegisterLog(Level level, string execution_id, string log)
+    internal static void RegisterLog(LogLevel level, string execution_id, string log)
     {
         HttpClient _client = new HttpClient();
         _client = new HttpClient();

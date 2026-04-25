@@ -12,7 +12,7 @@ public class Record
     /// <summary>
     /// Represents a type of record
     /// </summary>
-    public Level Level { get; set; }
+    public LogLevel Level { get; set; }
 
     /// <summary>
     /// You can use this to put an ID, type, extra info or any other information. Limited to 255 characters

@@ -25,7 +25,7 @@ public class RequestRecord
     /// <summary>
     /// 
     /// </summary> 
-    public Level Level { get; set; } = Level.Info;
+    public LogLevel Level { get; set; } = LogLevel.Information;
 
     /// <summary>
     /// 

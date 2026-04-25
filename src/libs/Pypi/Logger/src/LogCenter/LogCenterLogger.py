@@ -19,7 +19,7 @@ class LogCenterLogger:
 
 
 
-    def _log_private(self, level, message, data=None, timestamp=None, traceId:str=None):
+    def _log_private(self, level, message, data=None, timestamp=None, traceId:str=None, category:int|None=None):
         headers = {
             "Authorization": f"Bearer {self.token}",
             "Content-Type": "application/json"
@@ -28,7 +28,7 @@ class LogCenterLogger:
         trace_id = traceId if traceId is not None else self.trace_id
         payload = {
             "message": message,
-            "category": self._resolve_category(message),
+            "category": self._resolve_category(message, category),
             "timestamp": timestamp,
             "level": self._resolve_level(level),
             "traceId": trace_id,
@@ -52,18 +52,18 @@ class LogCenterLogger:
         else:
             print(f"{timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')} [{level.upper()}] {message}")
 
-    def Log(self, level, message, data=None,traceId:str=None):
+    def Log(self, level, message, data=None,traceId:str=None, category:int|None=None):
         """Start a thread to send the log to LogCenter"""
         timestamp = datetime.now(timezone.utc)
         self._ConsoleLog(level, message, data, timestamp)
-        self._log_private(level, message, data, timestamp.isoformat(timespec='microseconds'), traceId)
+        self._log_private(level, message, data, timestamp.isoformat(timespec='microseconds'), traceId, category)
 
-    def LogAsync(self, level, message, data=None, traceId:str=None):
+    def LogAsync(self, level, message, data=None, traceId:str=None, category:int|None=None):
         """Send the log to LogCenter, and wait for a response"""
         timestamp = datetime.now(timezone.utc)
         self._ConsoleLog(level, message, data, timestamp)
         def chamar_log():
-            self._log_private(level, message, data, timestamp.isoformat(timespec='microseconds'), traceId)
+            self._log_private(level, message, data, timestamp.isoformat(timespec='microseconds'), traceId, category)
 
         # Criar e iniciar a thread
         thread = threading.Thread(target=chamar_log)
@@ -83,7 +83,10 @@ class LogCenterLogger:
             "fatal": 7,
         }.get(normalized, 1)
 
-    def _resolve_category(self, message):
+    def _resolve_category(self, message, category=None):
+        if category is not None:
+            return category
+
         normalized = str(message).strip().lower()
         if normalized == "request":
             return 3
