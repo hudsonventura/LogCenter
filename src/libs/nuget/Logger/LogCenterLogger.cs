@@ -56,6 +56,12 @@ internal sealed class LogCenterLogger : ILogger
             state,
             JsonOptions,
             _options.StripDestructuringAtPrefix);
+        if (exception is not null)
+        {
+            structured ??= new Dictionary<string, JsonElement>(StringComparer.Ordinal);
+            structured["Exception"] = LogCenterStructuredState.SerializeValue(exception, JsonOptions);
+        }
+
         var payload = new RequestRecord
         {
             Message = message,
@@ -64,7 +70,6 @@ internal sealed class LogCenterLogger : ILogger
             TraceId = TryExtractTraceId(structured) ?? Activity.Current?.Id,
             Content = structured,
             //MessageTemplate = messageTemplate,
-            //Exception = exception
         };
 
         QueueSend(payload);

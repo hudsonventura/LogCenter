@@ -38,6 +38,9 @@ internal static class LogCenterStructuredState
         return dict;
     }
 
+    public static JsonElement SerializeValue(object? value, JsonSerializerOptions jsonOptions) =>
+        SerializeStructuredValue(value, jsonOptions);
+
     private static JsonElement SerializeStructuredValue(object? value, JsonSerializerOptions jsonOptions)
     {
         if (value is JsonElement jsonElement)
