@@ -1,24 +1,18 @@
-# Etapa 1: Construção
-FROM node:18 AS build
+FROM node:20-alpine AS build
 
-# Define o diretório de trabalho no container
 WORKDIR /app
 
-# Copia o package.json
-COPY package.json ./
+COPY package.json package-lock.json ./
+RUN npm ci
 
-
-# Instala as dependências
-RUN npm install
-
-# Copia os diretórios public e src
-COPY public/ ./public
-COPY src/ ./src
-
-# Copia qualquer outro arquivo necessário (como .env, vite.config.js, etc.)
 COPY . .
-
-# Constrói a aplicação para produção
 RUN npm run build
 
-CMD ["npm", "start"]
+FROM nginx:1.29-alpine AS runtime
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
