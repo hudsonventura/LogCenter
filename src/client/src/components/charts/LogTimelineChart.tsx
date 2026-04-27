@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { format } from "date-fns";
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
@@ -72,20 +73,66 @@ const logLevels: Record<
   504: { name: getLogLevelLabel(504), theme: getLogLevelChartTheme(504) },
 };
 
-const buildMinuteBuckets = (start: Date, end: Date) => {
+const minute = 60000;
+const maxChartPoints = 240;
+
+const resolveBucketMinutes = (start: Date, end: Date) => {
+  const rangeInMinutes = Math.max(
+    1,
+    Math.ceil((end.getTime() - start.getTime()) / minute)
+  );
+
+  if (rangeInMinutes <= maxChartPoints) {
+    return 1;
+  }
+
+  if (rangeInMinutes <= 24 * 60) {
+    return 5;
+  }
+
+  if (rangeInMinutes <= 7 * 24 * 60) {
+    return 60;
+  }
+
+  if (rangeInMinutes <= 31 * 24 * 60) {
+    return 6 * 60;
+  }
+
+  return 24 * 60;
+};
+
+const getBucketDate = (date: Date, bucketMinutes: number) => {
+  const bucketSize = bucketMinutes * minute;
+  return new Date(Math.floor(date.getTime() / bucketSize) * bucketSize);
+};
+
+const getBucketLabelFormat = (bucketMinutes: number, start: Date, end: Date) => {
+  if (bucketMinutes >= 24 * 60) {
+    return "MM/dd";
+  }
+
+  if (bucketMinutes >= 60 || end.getTime() - start.getTime() > 86400000) {
+    return "MM/dd HH:mm";
+  }
+
+  return "HH:mm";
+};
+
+const buildBuckets = (start: Date, end: Date, bucketMinutes: number) => {
   const buckets = new Map<string, Record<string, number | string>>();
-  const current = new Date(start);
+  const current = getBucketDate(start, bucketMinutes);
+  const labelFormat = getBucketLabelFormat(bucketMinutes, start, end);
 
   while (current <= end) {
     const key = format(current, "yyyy-MM-dd HH:mm");
     buckets.set(key, {
-      time: format(current, end.getTime() - start.getTime() > 86400000 ? "MM/dd HH:mm" : "HH:mm"),
+      time: format(current, labelFormat),
       datetime: key,
       ...Object.fromEntries(
         Object.keys(logLevels).map((level) => [`level${level}`, 0])
       ),
     });
-    current.setMinutes(current.getMinutes() + 1);
+    current.setMinutes(current.getMinutes() + bucketMinutes);
   }
 
   return buckets;
@@ -96,49 +143,65 @@ export default function LogTimelineChart({
   dateFrom,
   dateTo,
 }: LogTimelineChartProps) {
-  const buckets = buildMinuteBuckets(dateFrom, dateTo);
+  const dateFromTime = dateFrom.getTime();
+  const dateToTime = dateTo.getTime();
 
-  rawData.forEach((item) => {
-    const parsedDate = new Date(item.timestamp);
+  const { bucketMinutes, chartData, visibleLevels } = React.useMemo(() => {
+    const start = new Date(dateFromTime);
+    const end = new Date(dateToTime);
+    const nextBucketMinutes = resolveBucketMinutes(start, end);
+    const buckets = buildBuckets(start, end, nextBucketMinutes);
+    const activeLevelSet = new Set<number>();
 
-    if (Number.isNaN(parsedDate.getTime())) {
-      return;
-    }
+    rawData.forEach((item) => {
+      if (!logLevels[item.level]) {
+        return;
+      }
 
-    const key = format(parsedDate, "yyyy-MM-dd HH:mm");
-    const currentBucket = buckets.get(key);
+      const parsedDate = new Date(item.timestamp);
 
-    if (!currentBucket) {
-      return;
-    }
+      if (Number.isNaN(parsedDate.getTime())) {
+        return;
+      }
 
-    const bucketKey = `level${item.level}`;
-    const currentValue = Number(currentBucket[bucketKey] || 0);
-    currentBucket[bucketKey] = currentValue + 1;
-  });
+      const key = format(getBucketDate(parsedDate, nextBucketMinutes), "yyyy-MM-dd HH:mm");
+      const currentBucket = buckets.get(key);
 
-  const chartData = Array.from(buckets.values());
-  const activeLevels = Object.keys(logLevels)
-    .map(Number)
-    .filter((level) =>
-      chartData.some((item) => Number(item[`level${level}`] || 0) > 0)
-    );
-  const visibleLevels = activeLevels.length > 0 ? activeLevels : [1];
+      if (!currentBucket) {
+        return;
+      }
 
-  const chartConfig = visibleLevels.reduce((config, level) => {
-    config[`level${level}`] = {
-      label: logLevels[level].name,
-      theme: logLevels[level].theme,
+      const bucketKey = `level${item.level}`;
+      const currentValue = Number(currentBucket[bucketKey] || 0);
+      currentBucket[bucketKey] = currentValue + 1;
+      activeLevelSet.add(item.level);
+    });
+
+    return {
+      bucketMinutes: nextBucketMinutes,
+      chartData: Array.from(buckets.values()),
+      visibleLevels: activeLevelSet.size > 0 ? Array.from(activeLevelSet).sort((a, b) => a - b) : [1],
     };
-    return config;
-  }, {} as ChartConfig);
+  }, [dateFromTime, dateToTime, rawData]);
+
+  const chartConfig = React.useMemo(
+    () =>
+      visibleLevels.reduce((config, level) => {
+        config[`level${level}`] = {
+          label: logLevels[level].name,
+          theme: logLevels[level].theme,
+        };
+        return config;
+      }, {} as ChartConfig),
+    [visibleLevels]
+  );
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Logs by time</CardTitle>
         <CardDescription>
-          Timeline grouped by minute for the selected time window
+          Timeline grouped every {bucketMinutes === 1 ? "minute" : `${bucketMinutes} minutes`}
         </CardDescription>
       </CardHeader>
       <CardContent>

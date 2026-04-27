@@ -5,12 +5,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   ColumnDef,
   ColumnFiltersState,
+  PaginationState,
   ColumnSizingState,
   SortingState,
   VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -66,6 +68,48 @@ const allLevels = allKnownRecordLevels;
 
 const formatTimestamp = (value: string) => {
   return String(value).replace("T", " ").replace(/Z$/, "");
+};
+
+const truncateText = (value: string, maxLength = 230) => {
+  return value.length > maxLength ? `${value.substring(0, maxLength)}...` : value;
+};
+
+const summarizeValue = (value: unknown): unknown => {
+  if (typeof value === "string") {
+    return truncateText(value, 80);
+  }
+
+  if (Array.isArray(value)) {
+    return `[Array(${value.length})]`;
+  }
+
+  if (typeof value === "object" && value !== null) {
+    return "{...}";
+  }
+
+  return value;
+};
+
+const createContentPreview = (content: unknown) => {
+  if (typeof content === "string") {
+    return truncateText(content);
+  }
+
+  if (Array.isArray(content)) {
+    const preview = content.slice(0, 3).map(summarizeValue);
+    return truncateText(JSON.stringify(preview));
+  }
+
+  if (typeof content === "object" && content !== null) {
+    const entries = Object.entries(content as Record<string, unknown>).slice(0, 8);
+    const preview = Object.fromEntries(
+      entries.map(([key, value]) => [key, summarizeValue(value)])
+    );
+
+    return truncateText(JSON.stringify(preview));
+  }
+
+  return String(content ?? "");
 };
 
 const columnWidths = {
@@ -137,23 +181,9 @@ export const columns: ColumnDef<LogRecord>[] = [
     size: columnWidths.content,
     minSize: 250,
     cell: ({ row }) => {
-      const { content } = row.original;
-
-      if (typeof content === "string") {
-        return (
-          <div className="whitespace-pre-wrap break-words text-left">
-            {content.substring(0, 230)}
-            {content.length > 230 ? "..." : ""}
-          </div>
-        );
-      }
-
-      const json = JSON.stringify(content);
-
       return (
         <div className="whitespace-pre-wrap break-words text-left">
-          {json?.substring(0, 230)}
-          {json && json.length > 230 ? "..." : ""}
+          {createContentPreview(row.original.content)}
         </div>
       );
     },
@@ -197,6 +227,8 @@ function LogActionsCell({
   );
 }
 
+const pageSizeOptions = [50, 100, 200, 500];
+
 export function TableLogs() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -208,6 +240,10 @@ export function TableLogs() {
   const [data, setData] = React.useState<LogRecord[]>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [pagination, setPagination] = React.useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 100,
+  });
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
     content: false,
   });
@@ -243,9 +279,13 @@ export function TableLogs() {
     () => resolveDatePickerValue(dateTo, liveNowTick),
     [dateTo, liveNowTick]
   );
+  const selectedLevelSet = React.useMemo(
+    () => new Set(selectedLevels),
+    [selectedLevels]
+  );
   const visibleData = React.useMemo(
-    () => data.filter((record) => selectedLevels.includes(record.level)),
-    [data, selectedLevels]
+    () => data.filter((record) => selectedLevelSet.has(record.level)),
+    [data, selectedLevelSet]
   );
 
   const table = useReactTable({
@@ -271,9 +311,11 @@ export function TableLogs() {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnSizingChange: setColumnSizing,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     enableColumnResizing: true,
     columnResizeMode: "onChange",
@@ -282,10 +324,15 @@ export function TableLogs() {
       columnFilters,
       columnVisibility,
       columnSizing,
+      pagination,
     },
   });
   const tableRows = table.getRowModel().rows;
-  const modalRecordIds = tableRows.map((row) => row.original.id);
+  const navigationRows = table.getPrePaginationRowModel().rows;
+  const modalRecordIds = React.useMemo(
+    () => navigationRows.map((row) => row.original.id),
+    [navigationRows]
+  );
   const selectedIndex =
     selectedRecordId !== null ? modalRecordIds.indexOf(selectedRecordId) : -1;
   const previousRecordId = selectedIndex > 0 ? modalRecordIds[selectedIndex - 1] : null;
@@ -326,6 +373,7 @@ export function TableLogs() {
 
       const nextData = Array.isArray(response.data) ? response.data : [];
       setData(nextData);
+      setPagination((current) => ({ ...current, pageIndex: 0 }));
 
       const url = new URL(window.location.href);
       url.search = searchParams.toString();
@@ -505,8 +553,42 @@ export function TableLogs() {
           
           <div className="flex items-center justify-end gap-2 py-4">
             <div className="mr-auto text-sm text-muted-foreground">
-              Showing {table.getRowModel().rows.length} of {visibleData.length} logs
+              Showing {tableRows.length} of {table.getPrePaginationRowModel().rows.length} logs
             </div>
+            <select
+              className="h-9 rounded-md border bg-background px-2 text-sm"
+              value={pagination.pageSize}
+              onChange={(event) => {
+                table.setPageSize(Number(event.target.value));
+              }}
+            >
+              {pageSizeOptions.map((pageSize) => (
+                <option key={pageSize} value={pageSize}>
+                  {pageSize} per page
+                </option>
+              ))}
+            </select>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
           </div>
 
           <div className="mt-4 rounded-md border">
