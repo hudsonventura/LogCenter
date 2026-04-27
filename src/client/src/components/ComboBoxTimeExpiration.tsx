@@ -1,103 +1,65 @@
 "use client"
 
 import * as React from "react"
-import { ChevronsUpDown } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
-  Command,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
-const values = [
-  {
-    value: 30,
-    label: "30 days",
-  },
-  {
-    value: 180,
-    label: "6 months",
-  },
-  {
-    value: 365,
-    label: "1 year",
-  },
-  {
-    value: 730,
-    label: "2 years",
-  },
-  {
-    value: 195,
-    label: "3 years",
-  },
-  {
-    value: 1865,
-    label: "5 years",
-  },
-  {
-    value: 3650,
-    label: "10 years",
-  },
-]
+type ExpirationUnit = "days" | "months" | "years"
+
+const addExpiration = (amount: number, unit: ExpirationUnit) => {
+  const date = new Date()
+
+  if (unit === "days") {
+    date.setDate(date.getDate() + amount)
+    return date
+  }
+
+  if (unit === "months") {
+    date.setMonth(date.getMonth() + amount)
+    return date
+  }
+
+  date.setFullYear(date.getFullYear() + amount)
+  return date
+}
 
 export function ComboBoxTimeExpiration({ setDate }: { setDate: (date: Date) => void }) {
-  const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState(0)
+  const [amount, setAmount] = React.useState(30)
+  const [unit, setUnit] = React.useState<ExpirationUnit>("days")
 
   React.useEffect(() => {
-    if (value) {
-      const newDate = new Date();
-      newDate.setDate(newDate.getDate() + value); // Soma os dias corretamente
-      setDate(newDate);
-    }
-  }, [setDate, value])
-  
+    setDate(addExpiration(amount, unit))
+  }, [amount, setDate, unit])
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="col-span-3"
-        >
-          {value
-            ? values.find((val) => val.value === value)?.label
-            : "Select the expiration time..."}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="col-span-3">
-        <Command>
-          <CommandInput placeholder="Select the expiration time..." />
-          <CommandList>
-            <CommandGroup>
-              {values.map((val) => (
-                <CommandItem
-                  key={val.value}
-                  value={String(val.value)}
-                  onSelect={() => {
-                    setValue(val.value)
-                    setOpen(false)
-                  }}
-                >
-                
-                  {val.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <div className="grid grid-cols-[minmax(96px,1fr)_minmax(120px,1fr)] gap-2">
+      <Input
+        type="number"
+        min={1}
+        step={1}
+        value={amount}
+        onChange={(event) => {
+          const nextAmount = Number(event.target.value)
+          setAmount(Number.isFinite(nextAmount) && nextAmount > 0 ? nextAmount : 1)
+        }}
+      />
+      <Select value={unit} onValueChange={(value) => setUnit(value as ExpirationUnit)}>
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="days">Days</SelectItem>
+          <SelectItem value="months">Months</SelectItem>
+          <SelectItem value="years">Years</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
   )
 }
