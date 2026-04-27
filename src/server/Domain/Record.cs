@@ -7,12 +7,12 @@ public class Record
     /// <summary>
     /// Snowflake id as a primary key
     /// </summary>
-    public Guid id { get; set; } = SnowflakeGuid.NewGuid();
+    public Guid Id { get; set; } = SnowflakeGuid.NewGuid();
 
     /// <summary>
     /// Represents a type of record
     /// </summary>
-    public Level level { get; set; }
+    public RecordLevel Level { get; set; }
 
     /// <summary>
     /// You can use this to put an ID, type, extra info or any other information. Limited to 255 characters
@@ -26,16 +26,17 @@ public class Record
     /// <summary>
     /// Record created at a datetime
     /// </summary>
-    public DateTime timestamp { get; set; }
+    public DateTime Timestamp { get; set; }
 
     /// <summary>
     /// A message or title to explain the content
     /// </summary>
-    public string message { get; set; }
+    public string Message { get; set; }
     
     /// <summary>
     /// Your content. It can be string or json object
     /// </summary>
-    public dynamic content { get; set; }
+    public dynamic Content { get; set; }
+
 
 }

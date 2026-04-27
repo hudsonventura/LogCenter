@@ -1,12 +1,9 @@
+using System.Diagnostics;
+using System.Net.Http.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using System.Diagnostics;
-
-//using RequestResponseInterceptor;
-//using RequestResponseInterceptor.Implementations;
-
-
+using Microsoft.Extensions.Logging;
 
 namespace LogCenter.RequestInterceptor;
 
@@ -14,154 +11,262 @@ public static class InterceptorMiddlewareExtensions
 {
     public static IApplicationBuilder UseRequestInterceptor(this IApplicationBuilder builder)
     {
-        var options = builder.ApplicationServices.GetRequiredService<LogCenterOptions>();
+        ArgumentNullException.ThrowIfNull(builder);
+        var options = ResolveOptions(builder.ApplicationServices);
+        var httpClient = CreateHttpClient(options);
 
-        return builder.UseMiddleware<InterceptorMiddleware>(options);
+        return builder.UseMiddleware<InterceptorMiddleware>(options, httpClient);
     }
 
-     public static IApplicationBuilder UseRequestInterceptor(this IApplicationBuilder builder,  LogCenterOptions options)
+    public static IApplicationBuilder UseRequestInterceptor(this IApplicationBuilder builder, InterceptorOptions options)
     {
-        return builder.UseMiddleware<InterceptorMiddleware>(options);
-    }
-}
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
+        var httpClient = CreateHttpClient(options);
 
+        return builder.UseMiddleware<InterceptorMiddleware>(options, httpClient);
+    }
+
+    public static IApplicationBuilder UseRequestInterceptor(this IApplicationBuilder builder, LogCenterOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(options);
+        var interceptorOptions = ToInterceptorOptions(options);
+        var httpClient = CreateHttpClient(interceptorOptions);
+
+        return builder.UseMiddleware<InterceptorMiddleware>(interceptorOptions, httpClient);
+    }
+
+    private static InterceptorOptions ResolveOptions(IServiceProvider services)
+    {
+        var interceptorOptions = services.GetService<InterceptorOptions>();
+        if (interceptorOptions is not null)
+            return interceptorOptions;
+
+        var logCenterOptions = services.GetRequiredService<LogCenterOptions>();
+        return logCenterOptions as InterceptorOptions ?? ToInterceptorOptions(logCenterOptions);
+    }
+
+    private static InterceptorOptions ToInterceptorOptions(LogCenterOptions options) =>
+        new()
+        {
+            MinimumLevel = options.MinimumLevel,
+            ApplicationName = options.ApplicationName,
+            StripDestructuringAtPrefix = options.StripDestructuringAtPrefix,
+            Url = options.Url,
+            Table = options.Table,
+            Token = options.Token,
+            Timeout = options.Timeout
+        };
+
+    private static HttpClient CreateHttpClient(LogCenterOptions options)
+    {
+        var httpClient = new HttpClient
+        {
+            BaseAddress = new Uri(options.Url),
+            Timeout = TimeSpan.FromMilliseconds(options.Timeout)
+        };
+
+        if (!string.IsNullOrWhiteSpace(options.Token))
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {options.Token.Trim()}");
+
+        return httpClient;
+    }
+
+
+}
 
 public sealed class InterceptorMiddleware
 {
     private readonly RequestDelegate _next;
-    private LogCenterLogger _logger;
-    private InterceptorOptions _options;
+    private readonly HttpClient _httpClient;
+    private readonly InterceptorOptions _options;
 
-    public InterceptorMiddleware(RequestDelegate next, InterceptorOptions options)
+    public InterceptorMiddleware(
+        RequestDelegate next,
+        InterceptorOptions options,
+        HttpClient httpClient)
     {
         _next = next;
         _options = options;
-        _logger = new LogCenterLogger(options);
+        _httpClient = httpClient;
     }
 
     public async Task Invoke(HttpContext context)
     {
-        Request request = await Request.Convert(context);
-        string traceId = Activity.Current?.Id ?? context?.TraceIdentifier;
+        ArgumentNullException.ThrowIfNull(context);
+        var requestStartedAt = DateTimeOffset.UtcNow;
+        var stopwatch = Stopwatch.StartNew();
 
-        if(_options.LogGetRequest == false && request.Method == "GET"){
-            
-        }else{
-            OnReceiveRequest(request, traceId);
+        Request request = await Request.Convert(context);
+        string traceId = Activity.Current?.Id ?? context.TraceIdentifier;
+
+        if (_options.LogGetRequest || !HttpMethods.IsGet(request.Method))
+        {
+            QueueSendRequest(request, traceId, requestStartedAt);
         }
+
+        context.Response.Headers[_options.TraceIdReponseHeader] = traceId;
+
+        Stream originalbody = context.Response.Body;
+        string responseBody = string.Empty;
+
+        await using var memstream = new MemoryStream();
+        context.Response.Body = memstream;
         
 
-        context.Response.Headers.Add(_options.TraceIdReponseHeader, traceId); // Garantir que o header seja adicionado
-
-        // Salva o body original da response
-        Stream originalbody = context.Response.Body;
-        string response_body = "";
-
-        using (var memstream = new MemoryStream())
-        {
-            context.Response.Body = memstream;
-
-            Exception error = null;
-            try
-            {
-                await _next(context); // Continua o pipeline
-
-                // Captura e restaura o body da response
-                memstream.Position = 0;
-                response_body = new StreamReader(memstream).ReadToEnd();
-                memstream.Position = 0;
-                await memstream.CopyToAsync(originalbody);
-                context.Response.Body = originalbody;
-
-                Response response = await Response.Convert(context, response_body);
-
-                if(_options.LogGetRequest == false && request.Method == "GET"){
-            
-                }else{
-                    OnSendResponse(response, traceId);
-                }
-                
-            }
-            catch (Exception e)
-            {
-                error = e;
-                memstream.Position = 0;
-                response_body = await new StreamReader(memstream).ReadToEndAsync();
-                memstream.Position = 0;
-                await memstream.CopyToAsync(originalbody);
-                context.Response.Body = originalbody;
-                context.Response.StatusCode = 500;
-
-                Response response = await Response.Convert(context, e);
-                OnSendResponse(response, traceId);
-
-                // 🔹 Define o status code antes de lançar a exceção
-                
-                
-
-                if (!_options.HideResponseExceptions)
-                {
-                    await context.Response.WriteAsync(error.ToString());
-                }
-            }
-
-        }
-    }
-
-
-
-
-    public async void OnReceiveRequest(Request request, string traceId)
-    {
-
-        switch (_options.FormatType)
-        {
-            case InterceptorOptions.SaveFormatType.HTTPText: _logger.Log(LogLevel.Trace, "Request", traceId, request.ToString());
-            break;
-
-            default: _logger.Log(LogLevel.Trace, "Request", request);
-            break;
-        }
-
-    }
-
-    public async void OnSendResponse(Response response, string traceId)
-    {      
         try
         {
-            LogLevel level = LogLevel.Information;
-            switch (response.StatusCode.ToString().Substring(0, 1))
+            await _next(context);
+            var responseCompletedAt = DateTimeOffset.UtcNow;
+
+            memstream.Position = 0;
+            responseBody = await new StreamReader(memstream).ReadToEndAsync();
+            memstream.Position = 0;
+            await memstream.CopyToAsync(originalbody);
+            context.Response.Body = originalbody;
+
+            Response response = await Response.Convert(context, responseBody);
+
+            if (_options.LogGetRequest || !HttpMethods.IsGet(request.Method))
             {
-                case "2": level = LogLevel.Success;
-                break;
-
-                case "3": level = LogLevel.Warning;
-                break;
-
-                case "4": level = LogLevel.Error;
-                break;
-
-                case "5": level = LogLevel.Fatal;
-                break;
-
-                default: level = LogLevel.Information;
-                break;
+                stopwatch.Stop();
+                var duration = stopwatch.ElapsedMilliseconds;
+                QueueSendResponse(response, traceId, responseCompletedAt, duration);
             }
+        }
+        catch (Exception e)
+        {
+            var responseCompletedAt = DateTimeOffset.UtcNow;
+            memstream.Position = 0;
+            responseBody = await new StreamReader(memstream).ReadToEndAsync();
+            memstream.Position = 0;
+            await memstream.CopyToAsync(originalbody);
+            context.Response.Body = originalbody;
+            context.Response.StatusCode = 500;
 
-            switch (_options.FormatType)
+            Response response = await Response.Convert(context, e);
+
+            stopwatch.Stop();
+            var duration = stopwatch.ElapsedMilliseconds;
+            QueueSendResponse(response, traceId, responseCompletedAt, duration);
+
+            //I don't remeber for what reason I added this HideResponseExceptions option
+            //if (!_options.HideResponseExceptions)
+            //{
+            //    await context.Response.WriteAsync(e.ToString());
+            //}
+        }
+    }
+
+    public Task OnReceiveRequestAsync(Request request, string traceId, DateTimeOffset timestamp)
+    {
+        object payload = _options.FormatType switch
+        {
+            InterceptorOptions.SaveFormatType.HTTPText => request.ToString(),
+            _ => request.ToStructuredPayload()
+        };
+
+        return SendAsync(new RequestRecord
+        {
+            Message = "HTTP request received",
+
+            Timestamp = timestamp.UtcDateTime,
+            Level = 99,
+            TraceId = traceId,
+            Content = payload
+        });
+    }
+
+    public Task OnSendResponseAsync(Response response, string traceId, DateTimeOffset timestamp, long duration = 0)
+    {
+        object payload = _options.FormatType switch
+        {
+            InterceptorOptions.SaveFormatType.HTTPText => response.ToString(),
+            _ => response.ToStructuredPayload()
+        };
+
+        return SendAsync(new RequestRecord
+        {
+            Message = "HTTP response sent with duration " + duration + " ms",
+            Timestamp = timestamp.UtcDateTime,
+            Level = response.StatusCode,
+            TraceId = traceId,
+            Content = payload
+        });
+    }
+
+    private async Task SendAsync(RequestRecord payload)
+    {
+        if (!IsEnabled(payload.Level) || _httpClient.BaseAddress is null)
+            return;
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, ResolveRequestUri())
             {
-                case InterceptorOptions.SaveFormatType.HTTPText: _logger.Log(level, "Response", traceId, response.ToString());
-                break;
+                Content = JsonContent.Create(payload)
+            };
 
-                default: _logger.Log(level, "Response", response);
-                break;
-            }
-
+            using var response = await _httpClient
+                .SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                .ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao fazer a solicitação: {ex.Message}");
+            Debug.WriteLine($"[LogCenter.RequestInterceptor] Fail sending request log: {ex.Message}");
         }
     }
-    
+
+    private void QueueSendRequest(Request request, string traceId, DateTimeOffset timestamp)
+    {
+        _ = Task.Run(async () =>
+        {
+            await OnReceiveRequestAsync(request, traceId, timestamp).ConfigureAwait(false);
+        });
+    }
+
+    private void QueueSendResponse(Response response, string traceId, DateTimeOffset timestamp, long duration = 0)
+    {
+        _ = Task.Run(async () =>
+        {
+            await OnSendResponseAsync(response, traceId, timestamp, duration).ConfigureAwait(false);
+        });
+    }
+
+    private bool IsEnabled(int level) =>
+        level >= ResolveLevel(_options.MinimumLevel);
+
+    private string ResolveRequestUri()
+    {
+        var table = _options.Table
+            .Trim()
+            .Trim('/')
+            .Replace(" ", "_", StringComparison.Ordinal)
+            .ToLowerInvariant();
+
+        return "/" + table;
+    }
+
+    private static int ResolveLevel(LogLevel level) =>
+        level switch
+        {
+            LogLevel.Trace => 0,
+            LogLevel.Debug => 2,
+            LogLevel.Information => 1,
+            LogLevel.Warning => 3,
+            LogLevel.Error => 4,
+            LogLevel.Critical => 5,
+            _ => 1
+        };
+
+    private static LogLevel MapLogLevel(int statusCode) =>
+        statusCode switch
+        {
+            >= 500 => LogLevel.Critical,
+            >= 400 => LogLevel.Error,
+            >= 300 => LogLevel.Warning,
+            _ => LogLevel.Information
+        };
 }

@@ -1,5 +1,5 @@
 using System.Text;
-using System.Web;
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 
 
@@ -7,8 +7,6 @@ namespace LogCenter.RequestInterceptor;
 
 public sealed class Request
 {
-    [System.Text.Json.Serialization.JsonPropertyOrder(0)]
-    public string Type { get; private set; } = "Request";
 
     [System.Text.Json.Serialization.JsonPropertyOrder(1)]
     public string ReceivedFromAddress { get; private set; }
@@ -25,21 +23,15 @@ public sealed class Request
     internal static async Task<Request> Convert(Microsoft.AspNetCore.Http.HttpContext context)
     {
         HttpRequest request = context.Request;
+        var completeURL = $"{request.Scheme}://{request.Host}{request.PathBase}{request.Path}{request.QueryString}";
 
-        //Query params
-        string query = "";
-        if(request.Query.Count() > 0){
-            query = "?" + string.Join("&", request.Query.Select(q => $"{q.Key}={q.Value}"));
-        }
-
-        var completeURL = $"{request.Scheme}://{request.Host}{request.Path}{query}";
 
 
         return new Request(){
-            ReceivedFromAddress = context.Connection.RemoteIpAddress.ToString(),
+            ReceivedFromAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             Method = request.Method,
             Host = request.Host.ToString(),
-            Path = request.Path.ToString(),
+            Path = $"{request.PathBase}{request.Path}",
             CompleteURL = completeURL,
             Query = request.Query.ToDictionary(q => q.Key, q => q.Value.ToString()),
             Headers = request.Headers.ToDictionary(q => q.Key, q => q.Value.ToString()),
@@ -71,8 +63,40 @@ public sealed class Request
     public override string ToString()
     {
         string headers_string = string.Join("\n", Headers.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
+        string parameters = Query.Count > 0
+            ? "\nParams: " + string.Join(", ", Query.Select(static kvp => $"{kvp.Key}={kvp.Value}"))
+            : string.Empty;
 
 
-        return $"Request\n{Method} {CompleteURL}\n{headers_string}\n\n{Body}";
+        return $"{Method} {CompleteURL}{parameters}\n{headers_string}\n\n{Body}";
+    }
+
+    internal object ToStructuredPayload() =>
+        new
+        {
+            ReceivedFromAddress,
+            Method,
+            Headers,
+            Host,
+            Path,
+            Query,
+            CompleteURL,
+            Body = TryParseJsonBody(Body)
+        };
+
+    private static object? TryParseJsonBody(string body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+            return body;
+
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+            return document.RootElement.Clone();
+        }
+        catch (JsonException)
+        {
+            return body;
+        }
     }
 }

@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/nuget/">
+    <Project Path="src/libs/nuget/RequestLogger/RequestLogger.csproj" />
+  </Folder>
+  <Project Path="examples/aspnet/aspnet_example.csproj" />
+  <Project Path="examples/dotnet/dotnet_example.csproj" />
+  <Project Path="src/libs/nuget/Logger/Logger.csproj" />
+  <Project Path="src/server/server.csproj" />
+  <Project Path="tests/tests.csproj" />
+</Solution>

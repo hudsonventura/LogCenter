@@ -14,21 +14,27 @@ import { toast } from "sonner"
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom"
 import { useEffect } from "react"
+import { getStoredToken, setStoredToken } from "@/lib/auth-storage";
 
 
+
+type LoginForm = {
+	email: string;
+	password: string;
+}
 
 export default function LoginPage() {
-	const { register, handleSubmit } = useForm()
+	const { register, handleSubmit } = useForm<LoginForm>()
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		const token = sessionStorage.getItem("token");
+		const token = getStoredToken();
 		if (token) {
 			navigate("/tables");
 		}
-	}, []);
+	}, [navigate]);
 
-	const onSubmit = async (data: { email: string; password: string }) => {
+	const onSubmit = async (data: LoginForm) => {
 		try {
 			const response = await api.post("/Login", JSON.stringify(data), {
 				headers: {
@@ -37,11 +43,11 @@ export default function LoginPage() {
 			})
 			const token = await response.data;
 			//toast.success(`Welcome back, ${token}!`)
-			sessionStorage.setItem("token", token);
+			setStoredToken(token);
 			// Redirect to dashboard or something
 			navigate("/tables");
 		} catch (error) {
-			toast.error(error.message)
+			toast.error(error instanceof Error ? error.message : "Login failed")
 		}
 	}
 
@@ -113,4 +119,3 @@ export default function LoginPage() {
 		</div>
 	)
 }
-

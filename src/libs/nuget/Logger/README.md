@@ -1,107 +1,113 @@
 # LogCenter.Logger
 
-This lib will help you to send your app's logs to LogCenter. See https://github.com/hudsonventura/LogCenter  
+This package helps you send logs from a .NET console application to LogCenter using the standard `ILogger` abstraction.
+
+See: https://github.com/hudsonventura/LogCenter
 
 ![Web Interface](https://github.com/hudsonventura/LogCenter/blob/main/logo.png?raw=true)
 
-
-
 ### Getting Started
 
+Install the package:
 
-### Basic usage
-First install the lib from Nuget
-``` bash
+```bash
+dotnet add package Microsoft.Extensions.Logging.Console && \
 dotnet add package LogCenter.Logger
 ```
 
 
-Initialize the logger with you LogCenter configs
-``` C#
+### Basic Setup
+
+The example below is based on [`examples/dotnet/Program.cs`](../../../../examples/dotnet/Program.cs).
+
+```csharp
 using LogCenter;
+using Microsoft.Extensions.Logging;
 
-LogCenterLogger logger = new LogCenterLogger(new LogCenterOptions(){
-    url = "http://localhost:9200",
-    table = "example dotnet console",                   //the spaces will be converted to _ (underscore).
-    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....", // Generate this on LogCenter inteface, on you profile photo.
-    consoleLog = true,                                  // Log the message on the console as a comon Console.WriteLine(). Default is true
-    consoleLogEntireObject = true                       // Log the entire objeti to the Console.WriteLine(). Default is false
+var drain = new LogCenterDrain();
+
+using var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder.ClearProviders();
+    builder.AddLogCenter(
+        new LogCenterOptions
+        {
+            // LogCenter's URL
+            url = "http://localhost:9200",
+
+            // Table name 
+            table = "example_interceptor",
+
+            // Generate this on LogCenter inteface, on you profile photo.
+            token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+
+            // The timeout to send the log and data to LogCenter
+            Timeout = 5000
+        },
+        drain);
 });
+
+var logger = loggerFactory.CreateLogger<Program>();
 ```
 
-Logging a simple message in the background without blocking code execution. It'll start a new thread to send the log to LogCenter.
-``` C#
-// Use this 
-logger.Log(LogLevel.Trace, "Hello World");
-```
+### Logging Messages
 
+After configuring the provider, use `ILogger` exactly as you normally would in a console application:
 
-Logging an object in the background without blocking code execution. You can use any type of object, which will be converted to JSON before being sent to LogCenter.
-``` C#
-string message = "Hello World ";
-object anObject = new { 
-    name = "John Doe",
-    age = 30,
-    doc = "123.456.789-00",
-    email = "john.doe@example.com",
-    fone = "11 91234-5678"
+```csharp
+
+var test = new
+{
+    nome = "John Doe Jr. da Silva",
+    idade = 30,
+    email = "john.doe.jr@example.com"
 };
-logger.Log(LogLevel.Trace, message, anObject);
+
+logger.LogInformation("Dados do usuário {@user}", test);
+logger.LogDebug("Hello World - Debug");
+logger.LogInformation("Hello World - Information");
+logger.LogWarning("Hello World - Warning");
+logger.LogError("Hello World - Error");
+logger.LogCritical("Hello World - Critical");
 ```
 
+### Unhandled Exceptions
 
-Logging an object in the foreground while blocking code execution. If you want to log in the current thread and wait for LogCenter's confirmation.  
-Use this if it is the last log execution; otherwise, your app may terminate before your log is sent to LogCenter
-``` C#
-await logger.LogAsync(LogLevel.Critical, "Hello World 2", new { 
-    name = "John Doe",
-    age = 30,
-    doc = "123.456.789-00",
-    email = "john.doe@example.com",
-    fone = "11 91234-5678"
-});
+For console applications, you can log an unhandled exception and wait for the HTTP send to finish before shutdown. The the `drain` at line `var drain = new LogCenterDrain();` and used after, is going to guarantee this functionality.
+
+
+
+### Structured Logging
+
+`LogCenter.Logger` supports structured logging with message templates.
+
+Example:
+
+```csharp
+var user = new
+{
+    nome = "John Doe Jr. da Silva",
+    idade = 30,
+    email = "john.doe.jr@example.com"
+};
+
+logger.LogInformation("Dados do usuário {@user}", user);
 ```
 
+This sends:
+
+- the rendered message
+- the log level
+- timestamp
+- trace information when available
+- structured properties as JSON
+
+That makes the data readable in LogCenter and also searchable as JSON.
 
 
+### Notes
 
-## TraceID
-A **Trace ID** (Tracing Identifier) is a unique identifier assigned to a request as it flows through a distributed system. It helps track the request across multiple services, making it easier to debug and monitor performance.
-
-## 🔹 How It Works:
-1. When a request enters a system (e.g., an API call), a **Trace ID** is generated.
-2. This ID is **propagated** across all microservices and logs as the request moves through the system.
-3. Developers can use it to **trace** the full lifecycle of a request across different services.
-
-
-If you want to reference an ID (a Guid or a string) on LogCenter, you can use the TraceId. Let's see how to and cases:
-
-
-
-``` C#
-/* In this case, you configure an ID (a GUID or a custom string) as a global Trace ID for the execution instance of your app.
- * Here, you are assigning the same Trace ID to all logs for that instance's execution.
- */
-LogCenterLogger logger = new LogCenterLogger(
-    new LogCenterOptions(){
-        ...
-    } 
-    , Guid.NewGuid() //or a string. It's optional. If empty, it will generate a new one Guid, else, you can you your own traceId, Guid or string
-);
-
-// AND / OR
-
-/* In this case, you configure an ID (a GUID or a custom string) for each log entry. It will ignore the global Trace ID (above).
- * Here, you are assigning a Trace ID to each execution. It is useful for multiple thread executions in your app.
- * You can generate a Trace ID at the beginning of each thread and pass it to the Log method call.
- */
-Guid traceId = Guid.NewGuid();
-logger.Log(LogLevel.Info, "Hello World - Info", traceId);
-
-//OR
-
-/* Same as above, but with a personal/custom string
- */
-string myTrace = "My custom trace execution ID";
-logger.Log(LogLevel.Info, "Hello World - Info", myTrace);
-```
+- The package works with the normal `ILogger` API.
+- Logs are sent over HTTP to LogCenter.
+- Structured objects are serialized and stored in a JSON-friendly way.
+- This package is a good fit for console apps, workers, background services, and other non-ASP.NET processes.

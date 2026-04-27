@@ -1,16 +1,35 @@
 // src/services/api.ts
 import axios, { AxiosInstance } from 'axios';
+import { timezoneStorageKey } from '@/components/timezone-provider';
+import { getStoredToken } from '@/lib/auth-storage';
+import { getApiBaseUrl } from '@/lib/api-host';
 
 // Instância do Axios com uma configuração padrão
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_HOST,
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
-    'Authorization':  `Bearer ${window.sessionStorage.getItem('token') || ''}`,
   },
   timeout: 5000, // Tempo limite para requisi es (em milissegundos),
 });
 
+api.interceptors.request.use((config) => {
+  const token = getStoredToken();
+  const timezone =
+    window.localStorage.getItem(timezoneStorageKey) ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone ||
+    'UTC';
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  } else if (config.headers.Authorization) {
+    delete config.headers.Authorization;
+  }
+
+  config.headers.Timezone = timezone;
+
+  return config;
+});
 
 
 export default api;

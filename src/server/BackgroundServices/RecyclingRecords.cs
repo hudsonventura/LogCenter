@@ -55,7 +55,7 @@ public class RecyclingRecords : IHostedService
                         continue;
                     }
 
-                    Log.RegisterLog(Level.Info, execution_id, $"Starting Table Recycling on table '{table.table_name}'... ");
+                    Log.RegisterLog(LogLevel.Information, execution_id, $"Starting Table Recycling on table '{table.table_name}'... ");
 
                     if(table.delete && DateTime.Now.Minute == 0) DeletingRecords(db, table);
                     
@@ -64,7 +64,7 @@ public class RecyclingRecords : IHostedService
                     //jump the vacuum full if vacuum was executed
                     if(execute_vacuum_full && !execute_vacuum) VacuumFullTable(db, table);
 
-                    Log.RegisterLog(Level.Info, execution_id, $"Finished Table Recycling on table '{table.table_name}'");
+                    Log.RegisterLog(LogLevel.Information, execution_id, $"Finished Table Recycling on table '{table.table_name}'");
                 }
             
                 
@@ -79,9 +79,9 @@ public class RecyclingRecords : IHostedService
         DateTime days_before = DateTime.UtcNow.AddDays(-table.delete_input);
         try
         {
-            Log.RegisterLog(Level.Info, execution_id, $"Deleting rows from table '{table.table_name}' added before {days_before.ToString("yyyy/MM/dd")} ... ");
+            Log.RegisterLog(LogLevel.Information, execution_id, $"Deleting rows from table '{table.table_name}' added before {days_before.ToString("yyyy/MM/dd")} ... ");
             db.DeleteRecords(table.table_name, days_before);
-            Log.RegisterLog(Level.Info, execution_id, $"Deleting rows from table '{table.table_name}' added before {days_before.ToString("yyyy/MM/dd")} ... Ok");
+            Log.RegisterLog(LogLevel.Information, execution_id, $"Deleting rows from table '{table.table_name}' added before {days_before.ToString("yyyy/MM/dd")} ... Ok");
         }
         catch (System.Exception error)
         {
@@ -89,7 +89,7 @@ public class RecyclingRecords : IHostedService
             if(error.InnerException != null){
                 msg += error.InnerException.Message;
             }
-            Log.RegisterLog(Level.Error, execution_id, $"Deleting rows from table '{table.table_name}' added before {days_before.ToString("yyyy/MM/dd")} ... Some error was got -> {msg}");
+            Log.RegisterLog(LogLevel.Error, execution_id, $"Deleting rows from table '{table.table_name}' added before {days_before.ToString("yyyy/MM/dd")} ... Some error was got -> {msg}");
         }
     }
 
@@ -97,9 +97,9 @@ public class RecyclingRecords : IHostedService
     {
         try
         {
-            Log.RegisterLog(Level.Info, execution_id, $"Vacuuming table '{table.table_name}' ... ");
+            Log.RegisterLog(LogLevel.Information, execution_id, $"Vacuuming table '{table.table_name}' ... ");
             db.VacuumTable(table.table_name);
-            Log.RegisterLog(Level.Info, execution_id, $"Vacuuming table '{table.table_name}' ...  Ok");
+            Log.RegisterLog(LogLevel.Information, execution_id, $"Vacuuming table '{table.table_name}' ...  Ok");
         }
         catch (System.Exception error)
         {
@@ -107,7 +107,7 @@ public class RecyclingRecords : IHostedService
             if(error.InnerException != null){
                 msg += error.InnerException.Message;
             }
-            Log.RegisterLog(Level.Error, execution_id, $"Vacuuming table '{table.table_name}' ...  Some error was got -> {msg}");
+            Log.RegisterLog(LogLevel.Error, execution_id, $"Vacuuming table '{table.table_name}' ...  Some error was got -> {msg}");
         }
     }
 
@@ -115,9 +115,9 @@ public class RecyclingRecords : IHostedService
     {
         try
         {
-            Log.RegisterLog(Level.Info, execution_id, $"Vacuuming fully table '{table.table_name}' (this may take a long time and the table will be locked) ... ");
+            Log.RegisterLog(LogLevel.Information, execution_id, $"Vacuuming fully table '{table.table_name}' (this may take a long time and the table will be locked) ... ");
             db.VacuumFullTable(table.table_name);
-            Log.RegisterLog(Level.Info, execution_id, $"Vacuuming fully table '{table.table_name}' ... Ok");
+            Log.RegisterLog(LogLevel.Information, execution_id, $"Vacuuming fully table '{table.table_name}' ... Ok");
         }
         catch (System.Exception error)
         {
@@ -125,7 +125,7 @@ public class RecyclingRecords : IHostedService
             if(error.InnerException != null){
                 msg += error.InnerException.Message;
             }
-            Log.RegisterLog(Level.Error, execution_id, $"Vacuuming full table '{table.table_name}' ... Some error was got -> {msg}");
+            Log.RegisterLog(LogLevel.Error, execution_id, $"Vacuuming full table '{table.table_name}' ... Some error was got -> {msg}");
         }
     }
 

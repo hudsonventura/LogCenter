@@ -4,14 +4,9 @@ namespace LogCenter.RequestInterceptor;
 public class InterceptorOptions : LogCenterOptions
 {
     /// <summary>
-    /// Hide Exceptions when 500 Internal server error is returned to the user?    
-    /// </summary>
-    public bool HideResponseExceptions { get ; set; } = false;
-
-    /// <summary>
     /// Log GET requests?
     /// </summary>
-    public bool LogGetRequest { get; set; } = false;
+    public bool LogGetRequest { get; set; } = true;
 
     /// <summary>
     /// Save in HTTP Text or JSON?

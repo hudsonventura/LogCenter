@@ -8,7 +8,11 @@ This lib will help you to send your app's request and responses from aspnet to L
 
 ### Getting Started
 
+You can use the LogCenter with aspnet in two different ways:
+ - as a simple logger using the implementation of ILogger
+ - as request and response logger  
 
+Both are optional. You can choose one or both. Below you can see how to able them.
 
 ``` bash
 dotnet add package LogCenter.RequestLogger
@@ -20,37 +24,47 @@ using LogCenter.RequestInterceptor;
 
 //Set your configs
 InterceptorOptions options = new InterceptorOptions(){
-    url = "http://localhost:9200",                                  // LogCenter's URL
-    table = "example_interceptor",                                  // Table name 
-    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",              // Generate this on LogCenter inteface, on you profile photo.
-    FormatType = InterceptorOptions.SaveFormatType.HTTPText,        // Save in HTTP Text or JSON?
-    HideResponseExceptions = false,                                 // Hide Exceptions when 500 Internal server error (body) is returned to the user? Default is false, but it is recommended able it.   
-    LogGetRequest = false,                                           // Log GET requests?
-    TraceIdReponseHeader = "X-Trace-Id",                             // TraceId header name OPTIONAL. Default is X-Trace-Id
+    // LogCenter's URL
+    url = "http://localhost:9200",
+
+    // Table name 
+    table = "example_interceptor",
+
+    // Generate this on LogCenter inteface, on you profile photo.
+    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    
+    // Save in HTTP Text or JSON? Default is JSON
+    //FormatType = InterceptorOptions.SaveFormatType.HTTPText,
+
+    // Log GET requests? Default is true
+    //LogGetRequest = true,
+
+    // TraceId will be sent on which header? OPTIONAL. Default is X-Trace-Id
+    //TraceIdReponseHeader = "X-Trace-Id",
 };
 
-//inject the configs on dependency injection
-builder.Services.AddSingleton<LogCenterOptions, InterceptorOptions>(op => options);
+// Remove default logging (ILogger, console, debug, etc)
+builder.Logging.ClearProviders();
 
-//inject the logger, to use on your controller
-builder.Services.AddScoped<LogCenterLogger>();
+// Add LogCenter provider, to use as ILogger in the controllers and other services.
+builder.Logging.AddLogCenter(options);
 
 ...
 var app = builder.Build();
 ...
 
-//use the interceptor to log request and response
+// Use the interceptor to log request and response
 app.UseRequestInterceptor();
 ```
 
-On your controller:
+On your controller, you can use ILogger as usually:
 ``` C#
 [ApiController]
 public class WeatherForecastController : ControllerBase
 {
-    private readonly LogCenter.LogCenterLogger _logger;
+    private readonly ILogger<WeatherForecastController> logger _logger;
 
-    public WeatherForecastController(LogCenter.LogCenterLogger logger)
+    public WeatherForecastController(ILogger<WeatherForecastController> logger)
     {
         _logger = logger;
     }
@@ -59,32 +73,36 @@ public class WeatherForecastController : ControllerBase
     [HttpGet(Name = "GetWeatherForecast")]
     public ActionResult Get()
     {
-        _logger.Log(LogCenter.LogLevel.Debug, "Processing ...");
-        _logger.Log(LogCenter.LogLevel.Debug, "The object", test);
-        _logger.Log(LogCenter.LogLevel.Debug, "Ok ...");
+        _logger.LogInformation("Hello World - Info");
+        _logger.LogWarning("Hello World - Warning");
+        _logger.LogCritical("Hello World - Critical");
+        _logger.LogDebug("Hello World - Debug");
+        _logger.LogTrace("Hello World - Trace");
+        _logger.LogError("Hello World - Error {@obj1} {@obj2}", test, new Exception("Test Exception"));
+
 
         return Ok();
     }
 }
 ```
 
-### TraceId
+### About TraceId
 Using this lib, it'ill add the responde header `TraceIdReponseHeader` (see above) in every single reponse. That is the same as aspnet TracerId, when a status code 400 is responded. It is saved on LogCenter. It can be used to localize the error that happend with your API clients.
 ```
 TraceId: 00-4cda521494d8bf2337774936370e2cd3-3cec96b6ee169636-00
 
-#OR
+# OR
 
 X-Trace-Id: 00-4cda521494d8bf2337774936370e2cd3-3cec96b6ee169636-00
 ```  
 
 
 #### About LogCenterOptions.SaveFormatType
-If `HTTPText`, it'll save something like this on the LogCenter. It's better to read, but **it doesn't work with jsonb search**.  
+If `HTTPText`, the request and reponse is going to save like this example on the LogCenter. It's better to read, but **it doesn't work with jsonb search**.  
 
 Request:
 ```
-POST http://localhost:5000/WeatherForecast?QueryParam1=a value&QueryParam2=test
+POST http://localhost:5000/WeatherForecast?QueryParam1=a_value&QueryParam2=test
 Accept: */*
 Connection: keep-alive
 Host: localhost:5000
@@ -106,7 +124,7 @@ Postman-Token: 4467a9c1-2344-44c2-a579-f86cacbefa6e
 Response:
 ```
 400 BadRequest
-Sent to Address: ::1
+Sent to Address: 123.222.10.1
 Content-Type: application/problem+json; charset=utf-8
 Date: Mon, 24 Feb 2025 13:16:51 GMT
 Server: Kestrel
@@ -161,12 +179,12 @@ Request:
     "Content-Length": "57",
     "Accept-Encoding": "gzip, deflate, br"
   },
-  "CompleteURL": "http://localhost:5000/WeatherForecast?QueryParam1=a value&QueryParam2=test",
+  "CompleteURL": "http://localhost:5000/WeatherForecast?QueryParam1=a value_QueryParam2=test",
   "ReceivedFromAddress": "::1"
 }
 ```
 
-Request:
+Response:
 ``` json
 {
   "Body": {

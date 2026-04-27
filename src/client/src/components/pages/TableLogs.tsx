@@ -5,27 +5,26 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   ColumnDef,
   ColumnFiltersState,
+  ColumnSizingState,
   SortingState,
   VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
-import { ChartBar } from "@phosphor-icons/react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
+import { format } from "date-fns";
+
+import HeaderBar from "@/components/HeaderBar";
+import EnsureLogin from "@/components/EnsureLogin";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -37,315 +36,299 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+
 import api from "@/services/api";
-import { format } from "date-fns";
 import { ModalObject } from "../ModalObject";
-import { DateTimePicker } from "../DateTimePicker";
+import { DatePickerValue, DateTimePicker, resolveDatePickerValue } from "../DateTimePicker";
+import { useTimezone } from "../timezone-provider";
+import LogTimelineChart from "../charts/LogTimelineChart";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { TimeZoneSelect } from "../TimeZoneSelect";
+  allKnownRecordLevels,
+  getLogLevelBadgeClass,
+  getLogLevelLabel,
+} from "@/lib/log-levels";
+import { Eye } from "lucide-react"
 
-//Charts
-import NiveisLogsChart from "../charts/NiveisLogsChart";
-import LogBarCharts from "../charts/LogBarCharts";
-import LogLineCharts from "../charts/LogLineCharts";
-import LogPieCharts from "../charts/LogPieCharts";
-import HitsHistogram from "../charts/HitsHistogram";
-import   HeaderBar  from "@/components/HeaderBar";
-import EnsureLogin from "../EnsureLogin";
-
-export type Record = {
-  id: bigint;
-  level: RecordLevel;
-  traceId: string;
-  message: object;
-  content: object;
-  timestamp: Date;
+export type LogRecord = {
+  id: string;
+  level: number;
+  traceId: string | null;
+  message: string;
+  content: unknown;
+  timestamp: string;
 };
 
-export enum RecordLevel {
-  Trace = 0,
-  Info = 1,
-  Debug = 2,
-  Warning = 3,
-  Error = 4,
-  Critical = 5,
-  Success = 6,
-  Fatal = 7
-}
 
-const getCorBadge = (level: RecordLevel) => {
-  switch (level) {
-    case RecordLevel.Info:
-      return "bg-blue-200 text-blue-800";
-    case RecordLevel.Debug:
-      return "bg-gray-200 text-gray-800";
-    case RecordLevel.Warning:
-      return "bg-yellow-200 text-yellow-800";
-    case RecordLevel.Error:
-      return "bg-red-200 text-red-800";
-    case RecordLevel.Critical:
-      return "bg-red-700 text-white";
-    case RecordLevel.Fatal:
-      return "bg-red-700 text-white";
-    case RecordLevel.Success:
-      return "bg-green-700 text-white";
-    default:
-      return "bg-gray-200 text-gray-800";
-  }
+
+const allLevels = allKnownRecordLevels;
+
+const formatTimestamp = (value: string) => {
+  return String(value).replace("T", " ").replace(/Z$/, "");
 };
 
-export const columns: ColumnDef<Record>[] = [
-  // {
-  //   id: "select",
-  //   header: ({ table }) => (
-  //     <Checkbox
-  //       checked={
-  //         table.getIsAllPageRowsSelected() ||
-  //         (table.getIsSomePageRowsSelected() && "indeterminate")
-  //       }
-  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-  //       aria-label="Select all"
-  //     />
-  //   ),
-  //   cell: ({ row }) => (
-  //     <Checkbox
-  //       checked={row.getIsSelected()}
-  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
-  //       aria-label="Select row"
-  //     />
-  //   ),
-  //   enableSorting: false,
-  //   enableHiding: false,
-  // },
+const columnWidths = {
+  level: 60,
+  timestamp: 130,
+  traceId: 210,
+  message: 320,
+  content: 360,
+  actions: 72,
+} as const;
+
+export const columns: ColumnDef<LogRecord>[] = [
   {
     accessorKey: "level",
     header: "Level",
+    size: 80,
+    minSize: 80,
     cell: ({ row }) => (
       <Badge
-        className={`capitalize ${getCorBadge(
-          row.original.level
-        )} min-w-[40px] flex items-center justify-center`}
+        className={`min-w-[76px] justify-center ${getLogLevelBadgeClass(row.original.level)}`}
       >
-        {RecordLevel[row.original.level]}
+        {getLogLevelLabel(row.original.level)}
       </Badge>
-    ),
-  },
-
-  {
-    accessorKey: "traceId",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Trace ID
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="lowercase">{row.original.traceId}</div>
     ),
   },
   {
     accessorKey: "timestamp",
     header: () => <div className="text-left">Timestamp</div>,
-    cell: ({ row }) => {
-      const timestamp = String(row.original.timestamp); // Garantir que seja string
-  
-      // Separar data e microssegundos
-      const [datePart, microPart = "000000"] = timestamp.split(".");
-  
-      // Criar um objeto Date
-      const formattedDate = format(new Date(datePart), "yyyy/MM/dd HH:mm:ss");
-  
-      // Garantir que sempre tenha 6 casas decimais
-      const fixedMicro = microPart.padEnd(6, "0");
-  
-      return <div className="text-left">{`${formattedDate}.${fixedMicro}`}</div>;
-    },
+    size: 80,
+    minSize: 80,
+    cell: ({ row }) => (
+      <div className="text-left font-mono text-xs sm:text-sm">
+        {formatTimestamp(row.original.timestamp)}
+      </div>
+    ),
   },
-  
-  
+  {
+    accessorKey: "traceId",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Trace ID
+      </Button>
+    ),
+    size: 100,
+    minSize: 100,
+    cell: ({ row }) => (
+      <div className="truncate lowercase">
+        {row.original.traceId || "-"}
+      </div>
+    ),
+  },
   {
     accessorKey: "message",
     header: () => <div className="text-left">Message</div>,
-    cell: ({ row }) => {
-      return <div className="text-left">{row.original.message}</div>;
-    },
+    size: columnWidths.message,
+    minSize: 150,
+    cell: ({ row }) => (
+      <div className="whitespace-pre-wrap break-words text-left">
+        {row.original.message}
+      </div>
+    ),
   },
   {
     accessorKey: "content",
     header: () => <div className="text-left">Content</div>,
+    size: columnWidths.content,
+    minSize: 250,
     cell: ({ row }) => {
-      // Converter o objeto `content` para uma string JSON formatada
-      const content = row.original.content;
+      const { content } = row.original;
+
       if (typeof content === "string") {
         return (
-          <div className="text-left" style={{ whiteSpace: "pre-wrap" }}>
-            {content.substring(0, 230) + (content.length > 230 ? "..." : "")}
+          <div className="whitespace-pre-wrap break-words text-left">
+            {content.substring(0, 230)}
+            {content.length > 230 ? "..." : ""}
           </div>
         );
       }
 
-      const jsonStr = JSON.stringify(content);
+      const json = JSON.stringify(content);
 
       return (
-        <div className="text-left" style={{ whiteSpace: "pre-wrap" }}>
-          {jsonStr.substring(0, 230) + (jsonStr.length > 230 ? "..." : "")}
+        <div className="whitespace-pre-wrap break-words text-left">
+          {json?.substring(0, 230)}
+          {json && json.length > 230 ? "..." : ""}
         </div>
-      );
-    },
-  },
-
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const dados = row.original;
-      const [abrirModal, setAbrirModal] = React.useState(false);
-
-      const copiarId = () => {
-        navigator.clipboard.writeText(dados.id.toString());
-        toast("ID copiado com sucesso!");
-      };
-
-      const abrirDetalhes = () => {
-        setAbrirModal(true);
-        console.log(abrirModal);
-      };
-
-      const fecharDetalhes = () => {
-        setAbrirModal(false);
-        document.body.style.pointerEvents = "";
-      };
-      const location = useLocation();
-      const { tabela } = location.state || {
-        tabela: new URLSearchParams(location.search).get("tabela"),
-      };
-
-      React.useEffect(() => {
-        // Cleanup ao desmontar ou quando o modal fechar
-        return () => {
-          document.body.style.pointerEvents = "";
-        };
-      }, [abrirModal]);
-
-      return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={copiarId}>Copy ID</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => abrirDetalhes()}>
-                Details
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* ModalObject renderizado com base no estado */}
-          {abrirModal && (
-            <ModalObject
-              id={dados.id.toString()}
-              tableName={tabela}
-              isOpen={abrirModal}
-              onOpenChange={fecharDetalhes}
-            />
-          )}
-        </>
       );
     },
   },
 ];
 
-
+function LogActionsCell({
+  record,
+  onOpenDetails,
+}: {
+  record: LogRecord;
+  onOpenDetails: (id: string) => void;
+}) {
+  return (
+    <>
+      <Button variant="outline" size="icon" aria-label="Submit" onClick={() => onOpenDetails(record.id)}>
+        <Eye />
+      </Button>
+      {/* <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4"  />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => {
+              navigator.clipboard.writeText(record.id);
+              toast("ID copied successfully!");
+            }}
+          >
+            Copy ID
+          </DropdownMenuItem>
+          
+        </DropdownMenuContent>
+      </DropdownMenu> */}
+    </>
+  );
+}
 
 export function TableLogs() {
-  const location = useLocation();
   const navigate = useNavigate();
-  const { tabela } = location.state || {
-    tabela: new URLSearchParams(location.search).get("tabela"),
-  };
-  const [data, setData] = React.useState([]);
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const tabela =
+    (location.state as { tabela?: string } | null)?.tabela ?? params.get("tabela");
+  const { timezone } = useTimezone();
 
-  
+  const [data, setData] = React.useState<LogRecord[]>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({
+    content: false,
+  });
+  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
+  const [dateFrom, setDateFrom] = React.useState<DatePickerValue>(() => {
+    const datetime = params.get("datetime1");
+    if (datetime) {
+      return { mode: "absolute", date: new Date(datetime) };
+    }
+
+    return { mode: "relative", amount: 1, unit: "hours" };
+  });
+  const [dateTo, setDateTo] = React.useState<DatePickerValue>(() => {
+    const datetime = params.get("datetime2");
+    if (datetime) {
+      return { mode: "absolute", date: new Date(datetime) };
+    }
+
+    return { mode: "now" };
+  });
+  const [searchTerm, setSearchTerm] = React.useState(params.get("search") || "");
+  const [includeContent, setIncludeContent] = React.useState(
+    params.get("bring_content") === "true"
+  );
+  const [selectedRecordId, setSelectedRecordId] = React.useState<string | null>(null);
+  const [selectedLevels, setSelectedLevels] = React.useState<number[]>(allLevels);
+  const [liveNowTick, setLiveNowTick] = React.useState(new Date());
+  const resolvedDateFrom = React.useMemo(
+    () => resolveDatePickerValue(dateFrom, liveNowTick),
+    [dateFrom, liveNowTick]
+  );
+  const resolvedDateTo = React.useMemo(
+    () => resolveDatePickerValue(dateTo, liveNowTick),
+    [dateTo, liveNowTick]
+  );
+  const visibleData = React.useMemo(
+    () => data.filter((record) => selectedLevels.includes(record.level)),
+    [data, selectedLevels]
+  );
+
   const table = useReactTable({
-    data,
-    columns,
+    data: visibleData,
+    columns: React.useMemo<ColumnDef<LogRecord>[]>(
+      () => [
+        ...columns,
+        {
+          id: "actions",
+          enableHiding: false,
+          size: columnWidths.actions,
+          minSize: 72,
+          cell: ({ row }) => (
+            <LogActionsCell
+              record={row.original}
+              onOpenDetails={setSelectedRecordId}
+            />
+          ),
+        },
+      ],
+      []
+    ),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onColumnSizingChange: setColumnSizing,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
+    enableColumnResizing: true,
+    columnResizeMode: "onChange",
     state: {
       sorting,
       columnFilters,
       columnVisibility,
-      rowSelection,
+      columnSizing,
     },
   });
+  const tableRows = table.getRowModel().rows;
+  const modalRecordIds = tableRows.map((row) => row.original.id);
+  const selectedIndex =
+    selectedRecordId !== null ? modalRecordIds.indexOf(selectedRecordId) : -1;
+  const previousRecordId = selectedIndex > 0 ? modalRecordIds[selectedIndex - 1] : null;
+  const nextRecordId =
+    selectedIndex >= 0 && selectedIndex < modalRecordIds.length - 1
+      ? modalRecordIds[selectedIndex + 1]
+      : null;
 
   const search = async () => {
-    try {
-      const from = `${dateFrom.getFullYear()}-${padZero(dateFrom.getMonth() + 1)}-${padZero(dateFrom.getDate())} ${padZero(dateFrom.getHours())}:${padZero(dateFrom.getMinutes())}:${padZero(dateFrom.getSeconds())}`;
-      const to = `${dateTo.getFullYear()}-${padZero(dateTo.getMonth() + 1)}-${padZero(dateTo.getDate())} ${padZero(dateTo.getHours())}:${padZero(dateTo.getMinutes())}:${padZero(dateTo.getSeconds())}`;
-      const queryParams = `tabela=${tabela}&take=5000&datetime1=${from}&datetime2=${to}${
-        searchTerm ? `&search=${searchTerm}` : ""
-      }`;
-      
+    if (!tabela) {
+      setData([]);
+      return;
+    }
 
-      function padZero(number: number) {
-        return (number < 10 ? "0" : "") + number;
+    try {
+      const fromDate = resolveDatePickerValue(dateFrom);
+      const toDate = resolveDatePickerValue(dateTo);
+
+      if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+        toast.error("Invalid date range");
+        return;
       }
 
-
-      const response = await api.get(`/${tabela}?${queryParams}`, {
-        headers: {
-          Timezone: timezone, // Adicione o valor correto aqui
-        },
+      const searchParams = new URLSearchParams({
+        tabela,
+        take: "5000",
+        datetime1: format(fromDate, "yyyy-MM-dd HH:mm:ss"),
+        datetime2: format(toDate, "yyyy-MM-dd HH:mm:ss"),
+        timezone,
+        bring_content: String(includeContent),
       });
 
-      const data = response.data
-        ? response.data.map((item: any) => ({
-            ...item,
-            id: item.id, // Certifique-se de que `snowflakeId` seja o campo correto
-          }))
-        : [];
+      if (searchTerm) {
+        searchParams.set("search", searchTerm);
+      }
 
-        //Organiza os logs em ordem decrescente da real execução
-        setData(data);
-        
-        
-        
-        
+      const response = await api.get<LogRecord[]>(`/${tabela}?${searchParams.toString()}`);
 
-      // Update the URL query parameters
+      const nextData = Array.isArray(response.data) ? response.data : [];
+      setData(nextData);
+
       const url = new URL(window.location.href);
-      url.search = queryParams;
+      url.search = searchParams.toString();
       window.history.replaceState({}, "", url.toString());
     } catch (error) {
       console.log(error);
@@ -354,222 +337,85 @@ export function TableLogs() {
     }
   };
 
+  const searchRef = React.useRef(search);
+  searchRef.current = search;
+
   React.useEffect(() => {
-    search();
-  }, []);
+    void searchRef.current();
+  }, [tabela, timezone]);
 
-  const goToChart = (data) => {
-    navigate("/charts", { state: { data } });
-  };
-
-
-  const [lastID, setLastID] = React.useState();
-  const [atualizarHorario, setAtualizarHorario] = React.useState<Date>();
   React.useEffect(() => {
-    const interval = setInterval(loadLastID, 3000);
+    setColumnVisibility((current) => ({
+      ...current,
+      content: includeContent,
+    }));
+  }, [includeContent]);
+
+  React.useEffect(() => {
+    if (dateTo.mode !== "now") {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setLiveNowTick(new Date());
+    }, 3000);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [dateTo.mode]);
 
   React.useEffect(() => {
-    if(dateTo >= new Date()){
-      const newDateTo = new Date();
-      newDateTo.setMinutes(newDateTo.getMinutes() + 2);
-      setDateTo(atualizarHorario);
+    if (!selectedRecordId) {
+      return;
     }
-  }, [atualizarHorario]);
 
-  const loadLastID = async () => { //busca o lastID da tabela para ver deve-se atualizar
-    try {
-      const response = await api.get(`/${tabela}/Last`, {
-        headers: {
-          Timezone: timezone, // Adicione o valor correto aqui
-        },
-      });
-      //console.log("Agora: "+ new Date())     
-      //if(dateTo >= new Date()){ //atualiza o horario to , se ele foi colocado para o horario atual ou maior.
-        const newDateTo = new Date();
-        newDateTo.setMinutes(newDateTo.getMinutes() + 2);
-        await setAtualizarHorario(newDateTo);
-        //console.log("atualizarHorario: "+atualizarHorario)
-      //}
-      
-
-
-      if(lastID != response.data){ //se o lastID for diferente, recebeu uma atualização, então buscar atualização
-        setLastID(response.data);
-      }
-    } catch (error) {
-      //toast.error("Erro ao carregar LastID");
-      console.log("Erro ao carregar LastID");
+    if (!modalRecordIds.includes(selectedRecordId)) {
+      setSelectedRecordId(null);
     }
-  };
-  React.useEffect(() => { //nova busca no backend caso o lastID seja modificado
-    search();
-  }, [lastID]);
-
-
-
-  const params = new URLSearchParams(location.search);
-
-  const timezoneParam = params.getAll("timezone");
-  const [timezone, setTimezone] = React.useState(
-    timezoneParam.length > 0 && timezoneParam[0] !== ""
-      ? timezoneParam[0]
-      : Intl.DateTimeFormat().resolvedOptions().timeZone
-  );
-  const handleTimeZone = (tz: React.ChangeEvent<HTMLSelectElement>) => {
-    const before = timezone;
-    const after = tz;
-    setTimezone(tz);
-
-    const now = new Date();
-    const dateInBeforeTZ = new Date(
-      now.toLocaleString("en-US", { timeZone: before })
-    );
-    const dateInAfterTZ = new Date(
-      now.toLocaleString("en-US", { timeZone: after })
-    );
-    const offset = dateInAfterTZ.getTime() - dateInBeforeTZ.getTime();
-
-    setDateFrom(new Date(dateFrom.getTime() + offset));
-    setDateTo(new Date(dateTo.getTime() + offset));
-  };
-
-  const [dateFrom, setDateFrom] = React.useState<Date>(() => {
-    const datetime = params.getAll("datetime1")?.[0];
-    const now = new Date();
-    now.setHours(now.getHours() - 1);
-
-
-    return datetime ? new Date(datetime) : now;
-  });
-  const handleDateFrom = (date: Date) => {
-    if (date > dateTo) {
-      const newDate = new Date(date.getTime() + 3600000); // date + 1 hour
-      setDateTo(newDate);
-    }
-    setDateFrom(date);
-  };
-
-  const [dateTo, setDateTo] = React.useState<Date>(() => {
-    const datetime = params.getAll("datetime2")?.[0];
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 2);
-    
-    return datetime ? new Date(datetime) : now;
-  });
-  const handleDateTo = (date: Date) => {
-    if (date < dateFrom) {
-      const newDate = new Date(date.getTime() + 3600000); // date + 1 hour
-      setDateFrom(newDate);
-    }
-    setDateTo(date);
-  };
-
-  const [searchTerm, setSearchTerm] = React.useState<string>(
-    params.getAll("search")?.[0]
-  );
+  }, [modalRecordIds, selectedRecordId]);
 
   return (
     <>
       <HeaderBar />
       <EnsureLogin />
-      <h1 className="py-5 mb-4 font-bold text-center">Logs from {tabela}</h1>
+      <main className="mx-auto flex w-full max-w-none flex-col gap-4 px-4 py-5 lg:px-6">
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label="Back to tables"
+            onClick={() => navigate("/tables")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="space-y-1">
+            <h1 className="text-3xl font-semibold tracking-tight">Logs from {tabela}</h1>
+          </div>
+        </div>
 
-      
-      
-      {/* <div className="flex" style={{ margin: "5px" }}>
-        <div className="w-1/2 px-2" >
-          <LogLineCharts rawData={data} dateFrom={dateFrom} dateTo={dateTo} />
-        </div>
-        <div className="w-1/2 px-2" >
-          <LogPieCharts rawData={data} />
-        </div>
-      </div>
-      <div className="flex" style={{ margin: "5px" }}>
-        <div className="w-1/2 px-2" >
-          <LogLineCharts rawData={data} dateFrom={dateFrom} dateTo={dateTo} />
-        </div>
-        <div className="w-1/2 px-2" >
-          <LogBarCharts rawData={data} dateFrom={dateFrom} dateTo={dateTo} />
-        </div>
-      </div> */}
+        <LogTimelineChart rawData={visibleData} dateFrom={resolvedDateFrom} dateTo={resolvedDateTo} />
 
-      <div className="w-full">
-        <div className="flex items-center py-4">
-          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
-            <Input
-              placeholder="Search"
-              value={searchTerm}
-              className="max-w-sm"
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  search();
-                }
-              }}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
-          </div>
-          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
-            <Input
-              placeholder="Filter table"
-              value={
-                (table.getColumn("traceId")?.getFilterValue() as string) ??
-                ""
-              }
-              onChange={(event) =>
-                table
-                  .getColumn("traceId")
-                  ?.setFilterValue(event.target.value)
-              }
-              className="max-w-sm"
-            />
-          </div>
-          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
-            <DateTimePicker
-              func="from"
-              date={dateFrom}
-              setDate={
-                handleDateFrom as React.Dispatch<
-                  React.SetStateAction<Date | undefined>
-                >
-              }
-            />
-          </div>
-          <div className="max-w-xs">
-            <DateTimePicker
-              func="to"
-              date={dateTo}
-              setDate={
-                handleDateTo as React.Dispatch<
-                  React.SetStateAction<Date | undefined>
-                >
-              }
-            />
-          </div>
-          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
-            <TimeZoneSelect
-              value={timezone}
-              setValue={(tz) => handleTimeZone(tz)}
-            />
-          </div>
-          <div className="max-w-xs" style={{ padding: "0 0.5em" }}>
-            <Button onClick={search}>Search</Button>
-          </div>
-          <div className=" flex ml-auto gap-2 ">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto">
-                  Visible Columns <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent align="end">
-                {table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => {
-                    return (
+    
+        <div className="w-full rounded-xl border bg-card p-4 shadow-sm">
+          <div className="mb-3 flex justify-end gap-2">
+              <label className="flex h-10 items-center gap-2 rounded-md border px-3 text-sm text-muted-foreground">
+              <Checkbox
+                checked={includeContent}
+                onCheckedChange={(checked) => setIncludeContent(checked === true)}
+              />
+              <span>Include payloads</span>
+            </label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    Visible Columns <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => (
                       <DropdownMenuCheckboxItem
                         key={column.id}
                         className="capitalize"
@@ -580,90 +426,162 @@ export function TableLogs() {
                       >
                         {column.id}
                       </DropdownMenuCheckboxItem>
-                    );
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                    ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    Levels <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {allLevels.map((level) => (
+                    <DropdownMenuCheckboxItem
+                      key={level}
+                      className="capitalize"
+                      checked={selectedLevels.includes(level)}
+                      onCheckedChange={(checked) => {
+                        setSelectedLevels((current) => {
+                          if (checked) {
+                            return current.includes(level) ? current : [...current, level].sort((a, b) => a - b);
+                          }
+
+                          const next = current.filter((item) => item !== level);
+                          return next.length > 0 ? next : current;
+                        });
+                      }}
+                    >
+                      {getLogLevelLabel(level)}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
           </div>
-        </div>
-        <div className="mt-4" />
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
+          <div className="flex flex-wrap items-start gap-3 py-1">
+            <div className="min-w-0 flex-1 basis-[220px]">
+              <Input
+                placeholder="Search"
+                value={searchTerm}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    void search();
+                  }
+                }}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+            </div>
+            <div className="min-w-0 flex-1 basis-[320px]">
+              <Input
+                placeholder="Filter trace ID"
+                value={(table.getColumn("traceId")?.getFilterValue() as string) ?? ""}
+                onChange={(event) =>
+                  table.getColumn("traceId")?.setFilterValue(event.target.value)
+                }
+              />
+            </div>
+            
+            <div className="flex min-w-0 flex-[1.5] basis-[430px] gap-2">
+              <div className="min-w-0 flex-1">
+                <DateTimePicker
+                  value={dateFrom}
+                  onChange={setDateFrom}
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <DateTimePicker
+                  value={dateTo}
+                  onChange={setDateTo}
+                  allowNow
+                />
+              </div>
+            </div>
+            
+            <Button type="button" onClick={() => void search()}>
+              Search
+            </Button>
+            
+          </div>
+          
+          <div className="flex items-center justify-end gap-2 py-4">
+            <div className="mr-auto text-sm text-muted-foreground">
+              Showing {table.getRowModel().rows.length} of {visibleData.length} logs
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-md border">
+            <Table className="table-fixed">
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead
+                        key={header.id}
+                        className="relative select-none"
+                        style={{ width: header.getSize() }}
+                      >
+                        {header.isPlaceholder ? null : (
+                          <>
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            <div
+                              onDoubleClick={() => header.column.resetSize()}
+                              onMouseDown={header.getResizeHandler()}
+                              onTouchStart={header.getResizeHandler()}
+                              className={`absolute right-0 top-0 h-full w-2 cursor-col-resize select-none touch-none ${
+                                header.column.getIsResizing() ? "bg-primary/40" : "bg-transparent hover:bg-border"
+                              }`}
+                            />
+                          </>
                         )}
-                      </TableCell>
+                      </TableHead>
                     ))}
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    Sem Resultados.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <div className="flex-1 text-sm text-muted-foreground p-2">
-            Linhas Selecionadas -{" "}
-            {table.getFilteredSelectedRowModel().rows.length} de{" "}
-            {table.getFilteredRowModel().rows.length}
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.length > 0 ? (
+                  tableRows.map((row) => (
+                    <TableRow key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          style={{ width: cell.column.getSize() }}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length + 1} className="h-24 text-center">
+                      No results found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
-          <div className="space-x-2 p-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Próximo
-            </Button>
-          </div>
+
+          
         </div>
-      </div>
+      </main>
+      {selectedRecordId && tabela ? (
+        <ModalObject
+          id={selectedRecordId}
+          tableName={tabela}
+          isOpen={selectedRecordId !== null}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setSelectedRecordId(null);
+            }
+          }}
+          onPrevious={previousRecordId ? () => setSelectedRecordId(previousRecordId) : undefined}
+          onNext={nextRecordId ? () => setSelectedRecordId(nextRecordId) : undefined}
+          hasPrevious={previousRecordId !== null}
+          hasNext={nextRecordId !== null}
+        />
+      ) : null}
     </>
   );
 }
-

@@ -1,35 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/services/api";
+import { clearStoredToken, getStoredToken } from "@/lib/auth-storage";
 
 export default function EnsureLogin() {
 	const navigate = useNavigate();
 
-
 	useEffect(() => {
 		const checkLogin = async () => {
-			if (!sessionStorage.getItem("token")) {
+			if (!getStoredToken()) {
 				navigate("/login");
 				return;
 			}
 
 			try {
-				console.log("Aqui 1")
-				const response = await api.post("/logoff", {});
-
-			} catch (error) {
-				if(error.status === 401){
-					console.log("Aqui 2")
-					navigate("/login");
-					sessionStorage.removeItem("token");
-				}
+				await api.get("/CheckToken");
+			} catch {
+				navigate("/login");
+				clearStoredToken();
 			}
 		};
 
-	}, []);
-
-
+		void checkLogin();
+	}, [navigate]);
 
 	return <></>;
 }
-

@@ -4,38 +4,31 @@ using LogCenter.RequestInterceptor;
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
-
-
-
-
-
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
-InterceptorOptions options = new InterceptorOptions(){
-    url = "http://localhost:9200",                                  // LogCenter's URL
-    table = "example_interceptor",                                  // Table name 
-    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW5AYWRtaW4uY29tIiwibmFtZSI6ImV4YW1wbGVfaW50ZXJjZXB0b3IiLCJ0YWJsZXMiOiJleGFtcGxlX2ludGVyY2VwdG9yIiwiZXhwIjoyMDU3NTI4NjM5LCJpc3MiOiJTZXVJc3N1ZXIiLCJhdWQiOiJTZXVBdWRpZW5jZSJ9.h7HW5m4FIxM7tanZmjWxCMHIfUSz-1MVFYOCv1k69UI",
-    FormatType = InterceptorOptions.SaveFormatType.HTTPText,        // Save in HTTP Text or JSON?
-    HideResponseExceptions = false,                                 // Hide Exceptions when 500 Internal server error (body) is returned to the user? Default is false, but it is recommended able it.   
-    LogGetRequest = false,                                           // Log GET requests?
-    TraceIdReponseHeader = "X-Trace-Id",                             // TraceId header name OPTIONAL. Default is X-Trace-Id
+// Configure LogCenter e o interceptor HTTP usando a mesma configuração base.
+var logCenterOptions = new InterceptorOptions
+{
+    Url = "http://localhost:9200",
+    Table = "example_console",
+    Token = "eyJhbGciOiJIUzI1NiIs...",
+    FormatType = InterceptorOptions.SaveFormatType.Json,
+    LogGetRequest = true
 };
-builder.Services.AddSingleton<LogCenterOptions, InterceptorOptions>(op => options);
-builder.Services.AddScoped<LogCenterLogger>();
+
+
+builder.Services.AddSingleton<LogCenterOptions>(logCenterOptions);
+
+// Remove default logging (console, debug, etc)
+builder.Logging.ClearProviders();
+
+// Add only LogCenter provider, to use as ILogger in the controllers and other services. It will send logs to the configured LogCenter URL.
+builder.Logging.AddLogCenter(logCenterOptions);
 
 var app = builder.Build();
-
-
-app.UseRequestInterceptor();
-
-
-
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -44,11 +37,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseRequestInterceptor();
+
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 
 app.Run();

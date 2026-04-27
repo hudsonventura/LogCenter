@@ -1,0 +1,38 @@
+info:
+  name: HttpRequest Test
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{url}}/:table"
+  params:
+    - name: table
+      value: example_console2
+      type: path
+  body:
+    type: json
+    data: |-
+      {"table":"example_console2",
+       //"timestamp":"2026-04-24T15:11:17.3616018+00:00",
+       "level": 200,
+       "traceId":"00-15d2d90036117188371bf1fcfcdeb5a0-a940f4ba6565e294-00",
+       "message":"HTTP request received",
+       "exception":null,
+       "applicationName":null,
+       "Content":{
+         "type":"Request",
+         "headers":{"Accept":"text/html,application/xhtml\u002Bxml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7","Connection":"keep-alive","Host":"localhost:5000","User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36","Accept-Encoding":"gzip, deflate, br, zstd","Accept-Language":"en-US,en;q=0.9,pt-BR;q=0.8,pt;q=0.7","Cache-Control":"max-age=0","Cookie":"__next_hmr_refresh_hash__=98","Upgrade-Insecure-Requests":"1","sec-ch-ua":"\u0022Chromium\u0022;v=\u0022146\u0022, \u0022Not-A.Brand\u0022;v=\u002224\u0022, \u0022Google Chrome\u0022;v=\u0022146\u0022","sec-ch-ua-mobile":"?0","sec-ch-ua-platform":"\u0022Linux\u0022","DNT":"1","Sec-Fetch-Site":"none","Sec-Fetch-Mode":"navigate","Sec-Fetch-User":"?1","Sec-Fetch-Dest":"document"},
+         "host":"localhost:5000",
+         "path":"/WeatherForecast",
+         "query":{},"parameters":[],"completeURL":"http://localhost:5000/WeatherForecast",
+         "body": {"teste": 123},
+         "receivedFromAddress":"127.0.0.1","method":"GET"},
+       }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

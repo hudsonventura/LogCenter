@@ -20,7 +20,7 @@ public class UnitTest1
         _output = output;
         client.DefaultRequestHeaders.Add("Authorization", "Bearer xB70Valquiredb2c884bb1b01b4dd884fghrtnnrnc5ea57");
 
-        client.BaseAddress = new Uri("https://logcenter.hudsonventura.ddnsgeek.com");
+        //client.BaseAddress = new Uri("");
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public class UnitTest1
         var request = new HttpRequestMessage(HttpMethod.Post, $"/{table}/_doc") {
             Content = new StringContent(json, Encoding.UTF8, "application/json")
         };
-        request.Headers.Add("Level", Level.Debug.ToString());
+        request.Headers.Add("Level", LogLevel.Debug.ToString());
         
         var response = await client.SendAsync(request);
         string responseBody = await response.Content.ReadAsStringAsync();
@@ -146,7 +146,7 @@ public class UnitTest1
 
 
             int number = random.Next(1, 6);
-            Level level = (Level)number;
+            LogLevel level = (LogLevel)number;
 
             
             var request = new HttpRequestMessage(HttpMethod.Post, $"/{table}/_doc") {

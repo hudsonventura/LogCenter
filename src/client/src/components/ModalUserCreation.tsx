@@ -47,7 +47,7 @@ export function ModalUserCreation() {
 	}
 
 	return (
-		<Popover>
+		<Popover open={isOpen} onOpenChange={setIsOpen}>
 			<PopoverTrigger asChild>
 				<span style={{ cursor: "pointer" }}>Create User</span>
 			</PopoverTrigger>
@@ -111,4 +111,3 @@ export function ModalUserCreation() {
 		</Popover>
 	)
 }
-

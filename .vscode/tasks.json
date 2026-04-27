@@ -1,12 +1,188 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "dotnet",
-			"task": "build",
-			"group": "build",
-			"problemMatcher": [],
-			"label": "dotnet: build"
-		}
-	]
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "npm run dev",
+            "type": "shell",
+            "command": "npm run dev",
+            "isBackground": true,
+            "options": {
+                "cwd": "${workspaceFolder}/src/client"
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated"
+            },
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^$",
+                    "file": 1,
+                    "line": 2,
+                    "message": 3
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "VITE",
+                    "endsPattern": "ready in"
+                }
+            }
+        },
+        {
+            "label": "docker compose up",
+            "type": "shell",
+            "command": "docker compose -f docker-compose-dev.yml up -d",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "docker compose down",
+            "type": "shell",
+            "command": "docker compose -f docker-compose-dev.yml down",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "stop npm dev",
+            "type": "shell",
+            "command": "kill $(lsof -ti:5173) 2>/dev/null; echo 'npm dev stopped'",
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "dotnet: build Logger",
+            "type": "shell",
+            "command": "dotnet",
+            "args": ["build", "src/libs/nuget/Logger/Logger.csproj", "-c", "Debug"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "dotnet: build RequestLogger",
+            "type": "shell",
+            "command": "dotnet",
+            "args": ["build", "src/libs/nuget/RequestLogger/RequestLogger.csproj", "-c", "Debug"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": ["dotnet: build Logger"]
+        },
+        {
+            "label": "dotnet: build all libraries",
+            "dependsOn": [
+                "dotnet: build Logger",
+                "dotnet: build RequestLogger"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "dotnet: build Example aspnet",
+            "type": "shell",
+            "command": "dotnet",
+            "args": ["build", "examples/aspnet/aspnet_example.csproj", "-c", "Debug"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": ["dotnet: build all libraries"]
+        },
+        {
+            "label": "dotnet: build Example dotnet",
+            "type": "shell",
+            "command": "dotnet",
+            "args": ["build", "examples/dotnet/dotnet_example.csproj", "-c", "Debug"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": ["dotnet: build all libraries"]
+        },
+        {
+            "label": "dotnet: build Server",
+            "type": "shell",
+            "command": "dotnet",
+            "args": ["build", "src/server/server.csproj", "-c", "Debug"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": ["dotnet: build all libraries"]
+        },
+        {
+            "label": "dotnet: build Tests",
+            "type": "shell",
+            "command": "dotnet",
+            "args": ["build", "tests/tests.csproj", "-c", "Debug"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            },
+            "problemMatcher": "$msCompile",
+            "dependsOn": ["dotnet: build all libraries"]
+        },
+        {
+            "label": "dotnet: build all projects",
+            "dependsOn": [
+                "dotnet: build all libraries",
+                "dotnet: build Example aspnet",
+                "dotnet: build Example dotnet",
+                "dotnet: build Server",
+                "dotnet: build Tests"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "Prepare Debug",
+            "dependsOn": [
+				"dotnet: build all projects",
+				"docker compose up",
+                "npm run dev"
+            ],
+            "dependsOrder": "parallel"
+        },
+        {
+            "label": "Cleanup Debug",
+            "dependsOn": [
+                "stop npm dev",
+                "docker compose down"
+            ]
+        }
+    ]
 }

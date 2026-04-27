@@ -45,7 +45,7 @@ class InterceptorMiddleware(BaseHTTPMiddleware, LogCenterLogger):
 
         # Send request if its not a GET or if LogGetRequest is True
         if(request.method != 'GET' or (request.method == 'GET' and self.options.LogGetRequest)):
-            asyncio.create_task(self.send_log(request_data, self.logger.trace_id, type="Request"))
+            asyncio.create_task(self.send_log(request_data, self.logger.trace_id, type="Request", category=3))
         
         
 
@@ -87,12 +87,12 @@ class InterceptorMiddleware(BaseHTTPMiddleware, LogCenterLogger):
 
         # Send response if its not a GET or if LogGetRequest is True
         if(request.method != 'GET' or (request.method == 'GET' and self.options.LogGetRequest)):
-            asyncio.create_task(self.send_log(data=response_data, trace_id=self.logger.trace_id, type="Response", log_level=log_level))
+            asyncio.create_task(self.send_log(data=response_data, trace_id=self.logger.trace_id, type="Response", log_level=log_level, category=4))
 
 
         return new_response
 
-    async def send_log(self, data:any, trace_id:str, type:str, log_level:LogLevel = LogLevel.INFO):
+    async def send_log(self, data:any, trace_id:str, type:str, log_level:LogLevel = LogLevel.INFO, category:int|None=None):
         """Log request or response in background"""
         #logging.info(f"{type}:\n" + json.dumps(data, indent=4))
         body = ""
@@ -101,7 +101,7 @@ class InterceptorMiddleware(BaseHTTPMiddleware, LogCenterLogger):
         except:
           body = ""
           
-        self.logger.LogAsync(level=log_level, message=type, data=body, traceId=trace_id)
+        self.logger.LogAsync(level=log_level, message=type, data=body, traceId=trace_id, category=category)
 
 
 

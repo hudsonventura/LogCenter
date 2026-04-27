@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Title>Lib to abstract communication with LogCenter</Title>
-		<Description>Send the request and response to LogCenter. Handles logging and message exchange efficiently.</Description>
+		<Description>Send the request, response and logs to LogCenter. Handles logging and message exchange efficiently.</Description>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <PackageTags>Log;Logs;LogCenter;</PackageTags>
+    <PackageTags>Log;Logs;LogCenter;ILogger</PackageTags>
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
 		<EnableNETAnalyzers>True</EnableNETAnalyzers>
 		<AnalysisLevel>latest-all</AnalysisLevel>
-		<VersionPrefix>0.1.3</VersionPrefix>
+		<VersionPrefix>1.0.0</VersionPrefix>
     <PackageId>LogCenter.RequestLogger</PackageId>
     <Version>$(VersionPrefix)</Version>
 		<!--Version>$(VersionPrefix).$(VersionSuffix)</Version-->

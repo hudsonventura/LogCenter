@@ -1,0 +1,6 @@
+name: dev
+variables:
+  - name: url
+    value: http://localhost:9200
+  - name: token
+    value: eyJhbGciOiJIUzI1NiIs...
