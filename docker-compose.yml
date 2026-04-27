@@ -14,9 +14,9 @@ services:
       - ./data/db/:/var/lib/postgresql/data/
 
   server:
-    build: ./src/server
     container_name: logcenter_server
-    #image:
+    #build: ./src/server
+    image: hudsonventura/logcenter_server:latest
     restart: always
     environment:
       DB_HOST: db
@@ -34,11 +34,9 @@ services:
 
   client:
     container_name: logcenter_client
-    #image:
+    #build: ./src/client
+    image: hudsonventura/logcenter_client:latest
     restart: always
-    build:
-      context: ./src/client
-      dockerfile: Dockerfile
     ports:
       - ${LOGCENTER_INTERFACE_PORT}:5173
     depends_on:

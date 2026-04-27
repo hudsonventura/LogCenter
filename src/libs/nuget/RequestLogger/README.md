@@ -218,3 +218,13 @@ Response:
   "SentToAddress": "::1"
 }
 ```
+
+
+
+### Build
+
+To build the NuGet package locally:
+
+```bash
+dotnet pack src/libs/nuget/RequestLogger/RequestLogger.csproj -c Release
+```

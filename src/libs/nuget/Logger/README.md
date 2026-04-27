@@ -111,3 +111,12 @@ That makes the data readable in LogCenter and also searchable as JSON.
 - Logs are sent over HTTP to LogCenter.
 - Structured objects are serialized and stored in a JSON-friendly way.
 - This package is a good fit for console apps, workers, background services, and other non-ASP.NET processes.
+
+
+### Build
+
+To build the NuGet package locally:
+
+```bash
+dotnet pack src/libs/nuget/Logger/Logger.csproj -c Release
+```

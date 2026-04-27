@@ -14,7 +14,10 @@ In `Details` you can see whole object that you sent.
 
 # Getting Started
 
-## How can I start LogCenter?
+Download the `docker-compose.yml` and `.env` file with command:
+```bash
+wget https://raw.githubusercontent.com/hudsonventura/LogCenter/refs/heads/main/docker-compose.yml && wget https://raw.githubusercontent.com/hudsonventura/LogCenter/refs/heads/main/.env
+```
 
 Edit the `.env` file as your reality:
 
@@ -121,21 +124,3 @@ The response is a simples string with the id of the created object
 # Table Configuration
 
 
-# TODO 
-
- ~~- TODO: Create a way to configure dates for each table in the RecyclingRecords service~~
-
- ~~- BUG: In the cloud test, table Lucas id 7246184241443110912, it was possible to add a base64 without the drop work~~
-
- ~~- TODO: Create a way to set a timezone to show on frontend. Backend was implemented with header timezone.~~
-
- ~~- TODO: Do VACUUM and/or VACUUM FULL ANALYSE.~~
-
- - TODO: Compatibility with XML -> https://github.com/alissonmbr/react-xml-viewer
-
- - ~~TODO: Change API port to 9200, like ElasticSearch default~~
-
- - BUG: favicon int backend
- - TODO: Normalize backend return
- - TODO: Retrieve more than 100 itens on frontend.
- - TODO: Write the owner of the token to identify the who (person) sent the log.
