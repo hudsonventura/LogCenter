@@ -124,3 +124,17 @@ The response is a simples string with the id of the created object
 # Table Configuration
 
 
+## Docker Image Building
+
+```bash
+VERSION=1.2 && \
+sudo docker tag hudsonventura/logcenter-client:latest hudsonventura/logcenter-client:latest && \
+sudo docker tag hudsonventura/logcenter-server:latest hudsonventura/logcenter-server:latest && \
+sudo docker tag hudsonventura/logcenter-client:latest hudsonventura/logcenter-client:${VERSION} && \
+sudo docker tag hudsonventura/logcenter-server:latest hudsonventura/logcenter-server:${VERSION} && \
+sudo docker push hudsonventura/logcenter-client:latest
+sudo docker push hudsonventura/logcenter-server:latest
+sudo docker push hudsonventura/logcenter-client:${VERSION} && \
+sudo docker push hudsonventura/logcenter-server:${VERSION} 
+
+```

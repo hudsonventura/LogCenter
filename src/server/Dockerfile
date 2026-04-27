@@ -25,11 +25,8 @@ WORKDIR /app
 # Copie os arquivos compilados do estágio de build para o diretório de trabalho
 COPY --from=build /app/out .
 
-# Defina a variável de ambiente para a porta 5000
-ENV ASPNETCORE_URLS=http://+:5000
-
-# Exponha a porta 80 para acessar o aplicativo
-EXPOSE 5000
+# Porta padrao usada pelo Program.cs quando ASPNETCORE_LISTEN nao for informado
+EXPOSE 9200
 
 # Defina o comando de entrada para executar o aplicativo
 ENTRYPOINT ["dotnet", "server.dll"]

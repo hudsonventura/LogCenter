@@ -20,7 +20,12 @@ TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, utcZone);
 
 
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    EnvironmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+        ?? Environments.Production
+});
 Env.Load();
 
 
@@ -64,7 +69,7 @@ builder.Services.AddDbContext<UserContext>();
 builder.Services.AddOpenApi("v1");
 builder.Services.AddControllers();
 
-string listen = Environment.GetEnvironmentVariable("ASPNETCORE_LISTEN") ?? "http://localhost:9200";
+string listen = Environment.GetEnvironmentVariable("ASPNETCORE_LISTEN") ?? "http://0.0.0.0:9200";
 builder.WebHost.UseUrls(listen);
 
 
