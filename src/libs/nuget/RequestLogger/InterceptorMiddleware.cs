@@ -96,6 +96,7 @@ public sealed class InterceptorMiddleware
     {
         ArgumentNullException.ThrowIfNull(context);
         var requestStartedAt = DateTimeOffset.UtcNow;
+        var stopwatch = Stopwatch.StartNew();
 
         Request request = await Request.Convert(context);
         string traceId = Activity.Current?.Id ?? context.TraceIdentifier;
@@ -112,6 +113,7 @@ public sealed class InterceptorMiddleware
 
         await using var memstream = new MemoryStream();
         context.Response.Body = memstream;
+        
 
         try
         {
@@ -128,7 +130,9 @@ public sealed class InterceptorMiddleware
 
             if (_options.LogGetRequest || !HttpMethods.IsGet(request.Method))
             {
-                QueueSendResponse(response, traceId, responseCompletedAt);
+                stopwatch.Stop();
+                var duration = stopwatch.ElapsedMilliseconds;
+                QueueSendResponse(response, traceId, responseCompletedAt, duration);
             }
         }
         catch (Exception e)
@@ -142,7 +146,10 @@ public sealed class InterceptorMiddleware
             context.Response.StatusCode = 500;
 
             Response response = await Response.Convert(context, e);
-            QueueSendResponse(response, traceId, responseCompletedAt);
+
+            stopwatch.Stop();
+            var duration = stopwatch.ElapsedMilliseconds;
+            QueueSendResponse(response, traceId, responseCompletedAt, duration);
 
             //I don't remeber for what reason I added this HideResponseExceptions option
             //if (!_options.HideResponseExceptions)
@@ -171,7 +178,7 @@ public sealed class InterceptorMiddleware
         });
     }
 
-    public Task OnSendResponseAsync(Response response, string traceId, DateTimeOffset timestamp)
+    public Task OnSendResponseAsync(Response response, string traceId, DateTimeOffset timestamp, long duration = 0)
     {
         object payload = _options.FormatType switch
         {
@@ -181,7 +188,7 @@ public sealed class InterceptorMiddleware
 
         return SendAsync(new RequestRecord
         {
-            Message = "HTTP response sent",
+            Message = "HTTP response sent with duration " + duration + " ms",
             Timestamp = timestamp.UtcDateTime,
             Level = response.StatusCode,
             TraceId = traceId,
@@ -220,11 +227,11 @@ public sealed class InterceptorMiddleware
         });
     }
 
-    private void QueueSendResponse(Response response, string traceId, DateTimeOffset timestamp)
+    private void QueueSendResponse(Response response, string traceId, DateTimeOffset timestamp, long duration = 0)
     {
         _ = Task.Run(async () =>
         {
-            await OnSendResponseAsync(response, traceId, timestamp).ConfigureAwait(false);
+            await OnSendResponseAsync(response, traceId, timestamp, duration).ConfigureAwait(false);
         });
     }
 

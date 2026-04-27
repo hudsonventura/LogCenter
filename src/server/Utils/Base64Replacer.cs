@@ -56,7 +56,10 @@ public class Base64Replacer
                 }
                 else
                 {
-                    jsonObject[property.Name] = $"{value.Substring(0, 950)} ... Large content was droped (more than 1024KB)";
+                    if (property.Name.ToLower() == "stacktrace")
+                        jsonObject[property.Name] = value;
+                    else
+                        jsonObject[property.Name] = $"{value.Substring(0, 2048)} ... Large content was droped (more than 2048KB)";
                 }
             }
             else if (property.Value.ValueKind == JsonValueKind.Object)

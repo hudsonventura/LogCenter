@@ -48,9 +48,17 @@ internal sealed class LogCenterLogger : ILogger
         Exception? exception,
         Func<TState, Exception?, string> formatter)
     {
+        if(CheckBannedEventId(eventId))
+            return;
+
+        
+
         var now = TryExtractTimestamp(state) ?? DateTimeOffset.UtcNow;
         var message = formatter(state, exception);
         var messageTemplate = TryExtractMessageTemplate(state);
+
+        if(CheckBannedMessage(messageTemplate))
+            return;
 
         var structured = LogCenterStructuredState.TryBuildStructuredProperties(
             state,
@@ -64,7 +72,7 @@ internal sealed class LogCenterLogger : ILogger
 
         var payload = new RequestRecord
         {
-            Message = message,
+            Message = eventId.Name+messageTemplate ?? message?? string.Empty,
             Timestamp = now.UtcDateTime,
             Level = logLevel,
             TraceId = TryExtractTraceId(structured) ?? Activity.Current?.Id,
@@ -75,6 +83,31 @@ internal sealed class LogCenterLogger : ILogger
         QueueSend(payload);
 
         ShowConsole(logLevel, message);
+    }
+
+    private bool CheckBannedEventId(EventId eventId)
+    {
+        
+        return eventId.Name switch
+        {
+            "ExecutingEndpoint" => true,
+            "ControllerActionExecuting" => true,
+            "ActionExecuted" => true,
+            "ExecutingEndpointExecuting" => true,
+            "ExecutedEndpoint" => true,
+            _ => false
+        };
+    }
+
+    private bool CheckBannedMessage(string message)
+    {
+        
+        return message switch
+        {
+            "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms" => true,
+            "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}" => true,
+            _ => false
+        };
     }
 
     private void QueueSend(RequestRecord payload)
@@ -298,7 +331,7 @@ internal sealed class LogCenterLogger : ILogger
     private static string? TryExtractMessageTemplate<TState>(TState state)
     {
         if (state is not IEnumerable<KeyValuePair<string, object?>> pairs)
-            return null;
+            return string.Empty;
 
         foreach (var kv in pairs)
         {
@@ -309,7 +342,7 @@ internal sealed class LogCenterLogger : ILogger
             }
         }
 
-        return null;
+        return string.Empty;
     }
 
 }
