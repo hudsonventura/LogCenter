@@ -30,6 +30,17 @@ type LogDetails = {
   traceId?: string;
 };
 
+type RequestPayload = {
+  method?: string;
+  Method?: string;
+  headers?: Record<string, unknown>;
+  Headers?: Record<string, unknown>;
+  completeURL?: string;
+  CompleteURL?: string;
+  body?: unknown;
+  Body?: unknown;
+};
+
 
 
 const formatTimestamp = (value?: string) => {
@@ -37,6 +48,93 @@ const formatTimestamp = (value?: string) => {
     return "-";
   }
   return String(value).replace("T", " ").replace(/Z$/, "");
+};
+
+const shellQuote = (value: string) => `'${value.replace(/'/g, "'\\''")}'`;
+
+const ignoredCurlHeaders = new Set([
+  "connection",
+  "content-length",
+  "host",
+  "transfer-encoding",
+]);
+
+const normalizeObject = (value: unknown): Record<string, unknown> | null => {
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+};
+
+const getRequestPayload = (content: unknown): RequestPayload | null => {
+  const payload = normalizeObject(content) as RequestPayload | null;
+
+  if (!payload) {
+    return null;
+  }
+
+  const method = payload.method ?? payload.Method;
+  const completeURL = payload.completeURL ?? payload.CompleteURL;
+
+  if (typeof method !== "string" || typeof completeURL !== "string") {
+    return null;
+  }
+
+  return payload;
+};
+
+const stringifyBody = (body: unknown): string | null => {
+  if (body === undefined || body === null || body === "null") {
+    return null;
+  }
+
+  if (typeof body === "string") {
+    return body.length > 0 ? body : null;
+  }
+
+  return JSON.stringify(body);
+};
+
+const generateCurlCommand = (request: RequestPayload) => {
+  const method = String(request.method ?? request.Method).toUpperCase();
+  const completeURL = String(request.completeURL ?? request.CompleteURL);
+  const headers = request.headers ?? request.Headers ?? {};
+  const body = stringifyBody(request.body ?? request.Body);
+  const hasContentType = Object.keys(headers).some(
+    (key) => key.toLowerCase() === "content-type"
+  );
+
+  const lines = [`curl --request ${shellQuote(method)} ${shellQuote(completeURL)}`];
+
+  Object.entries(headers).forEach(([key, value]) => {
+    if (ignoredCurlHeaders.has(key.toLowerCase()) || value === undefined || value === null) {
+      return;
+    }
+
+    lines.push(`  --header ${shellQuote(`${key}: ${String(value)}`)}`);
+  });
+
+  if (body !== null && !hasContentType) {
+    lines.push(`  --header ${shellQuote("Content-Type: application/json")}`);
+  }
+
+  if (body !== null) {
+    lines.push(`  --data-raw ${shellQuote(body)}`);
+  }
+
+  return lines.join(" \\\n");
 };
 
 export function ModalObject({
@@ -59,6 +157,7 @@ export function ModalObject({
   hasNext?: boolean;
 }) {
   const [data, setData] = useState<LogDetails>({});
+  const [isCurlModalOpen, setIsCurlModalOpen] = useState(false);
   const { timezone } = useTimezone();
   const { resolvedTheme = "light" } = useTheme();
   const isDark = resolvedTheme === "dark";
@@ -83,6 +182,22 @@ export function ModalObject({
 
       toast("Copied!", {
         description: "The content was copied to clipboar",
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const requestPayload =
+    data.level === 99 ? getRequestPayload(data.content) : null;
+  const curlCommand = requestPayload ? generateCurlCommand(requestPayload) : "";
+
+  const handleCopyCurl = async () => {
+    try {
+      await navigator.clipboard.writeText(curlCommand);
+
+      toast("Copied!", {
+        description: "The curl command was copied to clipboard",
       });
     } catch (error) {
       console.log(error);
@@ -212,6 +327,11 @@ export function ModalObject({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
+          {requestPayload ? (
+            <Button variant="outline" onClick={() => setIsCurlModalOpen(true)}>
+              Generate curl
+            </Button>
+          ) : null}
           <Button variant="outline" onClick={handleCopy}>
             Copy Content
           </Button>
@@ -222,6 +342,29 @@ export function ModalObject({
           </DialogClose>
         </DialogFooter>
       </DialogContent>
+      <Dialog open={isCurlModalOpen} onOpenChange={setIsCurlModalOpen}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-[900px]">
+          <DialogHeader>
+            <DialogTitle>Generated curl</DialogTitle>
+            <DialogDescription>
+              Copy this command to replay the captured HTTP request.
+            </DialogDescription>
+          </DialogHeader>
+          <pre className="max-h-[420px] overflow-auto rounded-md border border-border/70 bg-slate-950 p-4 text-sm leading-6 text-slate-50">
+            {curlCommand}
+          </pre>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCopyCurl}>
+              Copy curl
+            </Button>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
