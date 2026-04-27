@@ -16,7 +16,7 @@ services:
   server:
     container_name: logcenter_server
     build: ./src/server
-    image: hudsonventura/logcenter_server:latest
+    image: hudsonventura/logcenter-server:latest
     restart: always
     environment:
       DB_HOST: db
@@ -35,7 +35,7 @@ services:
   client:
     container_name: logcenter_client
     build: ./src/client
-    image: hudsonventura/logcenter_client:latest
+    image: hudsonventura/logcenter-client:latest
     restart: always
     ports:
       - ${LOGCENTER_INTERFACE_PORT}:80
