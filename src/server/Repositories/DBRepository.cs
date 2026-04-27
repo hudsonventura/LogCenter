@@ -176,7 +176,7 @@ public class DBRepository : IDisposable
         string selectedContent = query.bring_content ? "content" : "NULL::jsonb as content";
         
         string sql = @$"
-            SELECT id, level, category, timestamp AT TIME ZONE 'UTC' as timestamp, traceid, message, {selectedContent}
+            SELECT id, level, timestamp AT TIME ZONE 'UTC' as timestamp, traceid, message, {selectedContent}
             FROM log_{table} 
             WHERE timestamp AT TIME ZONE 'UTC' BETWEEN @datetime1 AND @datetime2
             AND (content::text ILIKE @search OR traceid::text ILIKE @search OR message::text ILIKE @search)
