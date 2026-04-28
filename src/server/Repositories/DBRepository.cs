@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Npgsql;
 using server.Domain;
+using server.Utils;
 
 
 using Dapper;
@@ -173,10 +174,8 @@ public class DBRepository : IDisposable
 
     internal List<Record> Search(string table, SearchObject query)
     {
-        string selectedContent = query.bring_content ? "content" : "NULL::jsonb as content";
-        
         string sql = @$"
-            SELECT id, level, timestamp AT TIME ZONE 'UTC' as timestamp, traceid, message, {selectedContent}
+            SELECT id, level, timestamp AT TIME ZONE 'UTC' as timestamp, traceid, message, content
             FROM log_{table} 
             WHERE timestamp AT TIME ZONE 'UTC' BETWEEN @datetime1 AND @datetime2
             AND (content::text ILIKE @search OR traceid::text ILIKE @search OR message::text ILIKE @search)
@@ -202,6 +201,12 @@ public class DBRepository : IDisposable
         foreach (var record in results)
         {
             record.Timestamp = record.Timestamp.Add(_tz.GetUtcOffset(record.Timestamp));
+            var renderResult = MessageTemplateRenderer.RenderWithMetadata(record.Message, record.Content);
+            record.Message = renderResult.Message;
+            record.HideContentWhenMessageIsRendered = renderResult.AllContentParametersMatched;
+
+            if (!query.bring_content)
+                record.Content = null;
         }
 
         // Retorna a lista de resultados
@@ -235,6 +240,9 @@ public class DBRepository : IDisposable
 
         if (result != null && !string.IsNullOrEmpty(result.Content))
         {
+            var renderResult = MessageTemplateRenderer.RenderWithMetadata(result.Message, result.Content);
+            result.Message = renderResult.Message;
+            result.HideContentWhenMessageIsRendered = renderResult.AllContentParametersMatched;
             result.Content = System.Text.Json.JsonSerializer.Deserialize<dynamic>(result.Content);
         }
 

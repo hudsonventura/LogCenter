@@ -1,6 +1,7 @@
 //import "./App.css";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { TableLogs } from "./components/pages/TableLogs";
+import { LogTerminalView } from "./components/pages/LogTerminalView";
 import { Toaster } from "@/components/ui/sonner";
 import { Tables } from "./components/pages/Tables";
 import { TableConfigs } from "./components/pages/TableConfigs";
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} /> {/* Página de logs */}
           <Route path="/tables" element={<Tables />} /> {/* Página inicial */}
           <Route path="/table-logs" element={<TableLogs />} /> {/* Página de logs */}
+          <Route path="/log-terminal" element={<LogTerminalView />} /> {/* Visualização terminal */}
           <Route path="/table-configs/:tableId" element={<TableConfigs />} /> {/* Página de logs */}
           <Route path="/logoff" element={<Logoff />} /> {/* Página de logs */}
         </Routes>

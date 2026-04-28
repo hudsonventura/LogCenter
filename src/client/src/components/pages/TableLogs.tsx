@@ -60,6 +60,7 @@ export type LogRecord = {
   message: string;
   content: unknown;
   timestamp: string;
+  hideContentWhenMessageIsRendered?: boolean;
 };
 
 
@@ -268,6 +269,7 @@ export function TableLogs() {
   const [includeContent, setIncludeContent] = React.useState(
     params.get("bring_content") === "true"
   );
+  const [lastSearchParams, setLastSearchParams] = React.useState<URLSearchParams | null>(null);
   const [selectedRecordId, setSelectedRecordId] = React.useState<string | null>(null);
   const [selectedLevels, setSelectedLevels] = React.useState<number[]>(allLevels);
   const [liveNowTick, setLiveNowTick] = React.useState(new Date());
@@ -344,6 +346,7 @@ export function TableLogs() {
   const search = async () => {
     if (!tabela) {
       setData([]);
+      setLastSearchParams(null);
       return;
     }
 
@@ -373,6 +376,7 @@ export function TableLogs() {
 
       const nextData = Array.isArray(response.data) ? response.data : [];
       setData(nextData);
+      setLastSearchParams(new URLSearchParams(searchParams));
       setPagination((current) => ({ ...current, pageIndex: 0 }));
 
       const url = new URL(window.location.href);
@@ -381,8 +385,20 @@ export function TableLogs() {
     } catch (error) {
       console.log(error);
       setData([]);
+      setLastSearchParams(null);
       toast.error("Error on load data from table");
     }
+  };
+
+  const openTerminalView = () => {
+    if (!lastSearchParams) {
+      return;
+    }
+
+    const terminalParams = new URLSearchParams(lastSearchParams);
+    terminalParams.set("bring_content", "true");
+
+    navigate(`/log-terminal?${terminalParams.toString()}`);
   };
 
   const searchRef = React.useRef(search);
@@ -547,6 +563,14 @@ export function TableLogs() {
             
             <Button type="button" onClick={() => void search()}>
               Search
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={openTerminalView}
+              disabled={!lastSearchParams}
+            >
+              Terminal view
             </Button>
             
           </div>

@@ -38,5 +38,9 @@ public class Record
     /// </summary>
     public dynamic Content { get; set; }
 
+    /// <summary>
+    /// Indicates that the content was fully represented in the rendered message.
+    /// </summary>
+    public bool HideContentWhenMessageIsRendered { get; set; }
 
 }
