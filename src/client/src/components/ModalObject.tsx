@@ -35,8 +35,14 @@ type RequestPayload = {
   Method?: string;
   headers?: Record<string, unknown>;
   Headers?: Record<string, unknown>;
+  host?: string;
+  Host?: string;
+  path?: string;
+  Path?: string;
   completeURL?: string;
   CompleteURL?: string;
+  query?: Record<string, unknown>;
+  Query?: Record<string, unknown>;
   body?: unknown;
   Body?: unknown;
 };
@@ -53,6 +59,13 @@ const formatTimestamp = (value?: string) => {
 const shellQuote = (value: string) => `'${value.replace(/'/g, "'\\''")}'`;
 
 const ignoredCurlHeaders = new Set([
+  "connection",
+  "content-length",
+  "host",
+  "transfer-encoding",
+]);
+
+const ignoredGeneratedHttpHeaders = new Set([
   "connection",
   "content-length",
   "host",
@@ -107,6 +120,59 @@ const stringifyBody = (body: unknown): string | null => {
   return JSON.stringify(body);
 };
 
+const getHeaderValue = (headers: Record<string, unknown>, headerName: string) => {
+  const entry = Object.entries(headers).find(
+    ([key]) => key.toLowerCase() === headerName.toLowerCase()
+  );
+
+  return entry?.[1];
+};
+
+const resolveRequestTarget = (request: RequestPayload) => {
+  const path = request.path ?? request.Path;
+  const query = request.query ?? request.Query;
+
+  if (typeof path === "string" && path.length > 0) {
+    const params = new URLSearchParams();
+
+    if (query && typeof query === "object") {
+      Object.entries(query).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && String(value).length > 0) {
+          params.set(key, String(value));
+        }
+      });
+    }
+
+    const queryString = params.toString();
+    return queryString ? `${path}?${queryString}` : path;
+  }
+
+  const completeURL = String(request.completeURL ?? request.CompleteURL);
+
+  try {
+    const url = new URL(completeURL);
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return completeURL;
+  }
+};
+
+const resolveHost = (request: RequestPayload) => {
+  const host = request.host ?? request.Host;
+
+  if (typeof host === "string" && host.length > 0) {
+    return host;
+  }
+
+  const completeURL = String(request.completeURL ?? request.CompleteURL);
+
+  try {
+    return new URL(completeURL).host;
+  } catch {
+    return "";
+  }
+};
+
 const generateCurlCommand = (request: RequestPayload) => {
   const method = String(request.method ?? request.Method).toUpperCase();
   const completeURL = String(request.completeURL ?? request.CompleteURL);
@@ -137,6 +203,44 @@ const generateCurlCommand = (request: RequestPayload) => {
   return lines.join(" \\\n");
 };
 
+const generateHttpRequest = (request: RequestPayload) => {
+  const method = String(request.method ?? request.Method).toUpperCase();
+  const headers = request.headers ?? request.Headers ?? {};
+  const body = stringifyBody(request.body ?? request.Body);
+  const requestTarget = resolveRequestTarget(request);
+  const host = resolveHost(request);
+  const contentType = getHeaderValue(headers, "content-type");
+  const lines = [`${method} ${requestTarget} HTTP/1.1`];
+
+  if (host) {
+    lines.push(`Host: ${host}`);
+  }
+
+  Object.entries(headers).forEach(([key, value]) => {
+    if (
+      ignoredGeneratedHttpHeaders.has(key.toLowerCase()) ||
+      value === undefined ||
+      value === null
+    ) {
+      return;
+    }
+
+    lines.push(`${key}: ${String(value)}`);
+  });
+
+  if (body !== null && !contentType) {
+    lines.push("Content-Type: application/json");
+  }
+
+  if (body !== null) {
+    lines.push(`Content-Length: ${new TextEncoder().encode(body).length}`);
+    lines.push("");
+    lines.push(body);
+  }
+
+  return lines.join("\r\n");
+};
+
 export function ModalObject({
   id,
   tableName,
@@ -158,6 +262,7 @@ export function ModalObject({
 }) {
   const [data, setData] = useState<LogDetails>({});
   const [isCurlModalOpen, setIsCurlModalOpen] = useState(false);
+  const [isHttpRequestModalOpen, setIsHttpRequestModalOpen] = useState(false);
   const { timezone } = useTimezone();
   const { resolvedTheme = "light" } = useTheme();
   const isDark = resolvedTheme === "dark";
@@ -191,6 +296,7 @@ export function ModalObject({
   const requestPayload =
     data.level === 99 ? getRequestPayload(data.content) : null;
   const curlCommand = requestPayload ? generateCurlCommand(requestPayload) : "";
+  const httpRequest = requestPayload ? generateHttpRequest(requestPayload) : "";
 
   const handleCopyCurl = async () => {
     try {
@@ -198,6 +304,18 @@ export function ModalObject({
 
       toast("Copied!", {
         description: "The curl command was copied to clipboard",
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleCopyHttpRequest = async () => {
+    try {
+      await navigator.clipboard.writeText(httpRequest);
+
+      toast("Copied!", {
+        description: "The HTTP request was copied to clipboard",
       });
     } catch (error) {
       console.log(error);
@@ -328,9 +446,14 @@ export function ModalObject({
         </DialogHeader>
         <DialogFooter>
           {requestPayload ? (
-            <Button variant="outline" onClick={() => setIsCurlModalOpen(true)}>
-              Generate curl
-            </Button>
+            <>
+              <Button variant="outline" onClick={() => setIsCurlModalOpen(true)}>
+                Generate curl
+              </Button>
+              <Button variant="outline" onClick={() => setIsHttpRequestModalOpen(true)}>
+                Generate HTTP request
+              </Button>
+            </>
           ) : null}
           <Button variant="outline" onClick={handleCopy}>
             Copy Content
@@ -356,6 +479,29 @@ export function ModalObject({
           <DialogFooter>
             <Button variant="outline" onClick={handleCopyCurl}>
               Copy curl
+            </Button>
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isHttpRequestModalOpen} onOpenChange={setIsHttpRequestModalOpen}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-[900px]">
+          <DialogHeader>
+            <DialogTitle>Generated HTTP request</DialogTitle>
+            <DialogDescription>
+              Copy this raw HTTP/1.1 request to replay the captured request over a socket.
+            </DialogDescription>
+          </DialogHeader>
+          <pre className="max-h-[420px] overflow-auto rounded-md border border-border/70 bg-slate-950 p-4 text-sm leading-6 text-slate-50">
+            {httpRequest}
+          </pre>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCopyHttpRequest}>
+              Copy HTTP request
             </Button>
             <DialogClose asChild>
               <Button type="button" variant="secondary">

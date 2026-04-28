@@ -199,7 +199,7 @@ public class RecordController : ControllerBase
     /// <param name="query"></param>
     /// <returns></returns>
     [HttpGet("/{table}")]
-    public ActionResult<List<Record>> Search(string table, [FromQuery] SearchObject query, [FromHeader] string timezone){
+    public ActionResult<List<Record>> Search(string table, [FromQuery] SearchObject query, [FromHeader] string timezone = "UTC"){
         _db.SetTimezone(timezone); 
         var response = _db.Search(table, query);
         if(response.Count() == 0){
