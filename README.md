@@ -14,13 +14,12 @@ In `Details` you can see whole object that you sent.
 
 # Getting Started
 
-Download the `docker-compose.yml` and `.env` file with command:
+Download the `start.sh` script and `.env` file with command:
 ```bash
-wget https://raw.githubusercontent.com/hudsonventura/LogCenter/refs/heads/main/docker-compose.yml && wget https://raw.githubusercontent.com/hudsonventura/LogCenter/refs/heads/main/.env
+wget hhttps://raw.githubusercontent.com/hudsonventura/LogCenter/refs/heads/main/start.sh && wget https://raw.githubusercontent.com/hudsonventura/LogCenter/refs/heads/main/.env
 ```
 
-Edit the `.env` file as your reality:
-
+Edit the `.env` file as you want. You can keep it is, it will work that way.
 ```
 LOGCENTER_API_PORT=9200
 LOGCENTER_INTERFACE_PORT=5173
@@ -35,8 +34,15 @@ JWT_KEY=MyS3cr3tP@ssw0rdF0rJWTT0k3nGener4tion   # GENERATE A NEW KEY TO JWT ENCO
 
 After:
 ``` bash
-sudo docker compose up
+sudo chmod +x start.sh && sudo ./start.sh
 ```
+
+# Restart or Update
+
+Just execute the `start.sh` file. It will stop the containers, delete the old images and docker-compose file, download the new images and docker-compose again, and start the containers.  
+```bash
+sudo ./start.sh
+``` 
 
 
 
