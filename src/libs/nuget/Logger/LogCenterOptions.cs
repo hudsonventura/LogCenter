@@ -43,4 +43,19 @@ public class LogCenterOptions
     /// Timeout for HTTP requests, in seconds. Default is 5 seconds (5000 ms).
     /// </summary>    
     public int Timeout { get; set; } = 5000;
+
+    /// <summary>
+    /// Event ids that should be ignored by the logger provider.
+    /// </summary>
+    public List<int> BannedEventIds { get; set; } = new();
+
+    /// <summary>
+    /// Event names that should be ignored by the logger provider.
+    /// </summary>
+    public List<string> BannedEventNames { get; set; } = new();
+
+    /// <summary>
+    /// Message templates or messages that should be ignored by the logger provider.
+    /// </summary>
+    public List<string> BannedMessages { get; set; } = new();
 }

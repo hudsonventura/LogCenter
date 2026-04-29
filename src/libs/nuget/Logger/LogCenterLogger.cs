@@ -22,6 +22,9 @@ internal sealed class LogCenterLogger : ILogger
     private readonly HttpClient _httpClient;
     private readonly LogCenterOptions _options;
     private readonly LogCenterPendingSendTracker _pendingSendTracker;
+    private readonly HashSet<int> _bannedEventIds;
+    private readonly HashSet<string> _bannedEventNames;
+    private readonly HashSet<string> _bannedMessages;
 
     public LogCenterLogger(
         string categoryName,
@@ -33,6 +36,9 @@ internal sealed class LogCenterLogger : ILogger
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _pendingSendTracker = pendingSendTracker ?? throw new ArgumentNullException(nameof(pendingSendTracker));
+        _bannedEventIds = new HashSet<int>(_options.BannedEventIds);
+        _bannedEventNames = new HashSet<string>(_options.BannedEventNames, StringComparer.Ordinal);
+        _bannedMessages = new HashSet<string>(_options.BannedMessages, StringComparer.Ordinal);
     }
 
     public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
@@ -57,7 +63,7 @@ internal sealed class LogCenterLogger : ILogger
         var message = formatter(state, exception);
         var messageTemplate = TryExtractMessageTemplate(state);
 
-        if(CheckBannedMessage(messageTemplate))
+        if(CheckBannedMessage(messageTemplate ?? message ?? string.Empty))
             return;
 
         var structured = LogCenterStructuredState.TryBuildStructuredProperties(
@@ -82,34 +88,18 @@ internal sealed class LogCenterLogger : ILogger
 
         QueueSend(payload);
 
-        ShowConsole(logLevel, message);
+        ShowConsole(logLevel, message ?? string.Empty);
     }
 
     private bool CheckBannedEventId(EventId eventId)
     {
-        
-        return eventId.Name switch
-        {
-            "ExecutingEndpoint" => true,
-            "ControllerActionExecuting" => true,
-            "ActionExecuted" => true,
-            "ExecutingEndpointExecuting" => true,
-            "ExecutedEndpoint" => true,
-            "ObjectResultExecuting" => true,
-            "PolicySuccess" => true,
-            _ => false
-        };
+        return _bannedEventIds.Contains(eventId.Id)
+            || (!string.IsNullOrWhiteSpace(eventId.Name) && _bannedEventNames.Contains(eventId.Name));
     }
 
     private bool CheckBannedMessage(string message)
     {
-        
-        return message switch
-        {
-            "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms" => true,
-            "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}" => true,
-            _ => false
-        };
+        return !string.IsNullOrWhiteSpace(message) && _bannedMessages.Contains(message);
     }
 
     private void QueueSend(RequestRecord payload)
