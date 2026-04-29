@@ -48,6 +48,7 @@ using (DBRepository db = new DBRepository(new NpgsqlConnection(connectionString)
 {
     db.CreateExtensions();
     db.CreateConfigTable();
+    db.CreateMaintenanceLogTable();
 }
 
 

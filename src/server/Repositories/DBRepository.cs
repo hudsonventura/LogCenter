@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Text.Json;
 using Npgsql;
 using server.Domain;
 using server.Utils;
@@ -214,13 +215,13 @@ public class DBRepository : IDisposable
     }
 
 
-    public void DeleteRecords(string table, DateTime before_date)
+    public int DeleteRecords(string table, DateTime before_date)
     {
         Console.WriteLine($"It will remove records added before {before_date.ToString("yyyy/MM/dd")} from table {table}. If you don't like that, you can edit the configuration. See the session 'Table Recycling' on https://github.com/hudsonventura/LogCenter");
         // Prepara o comando de deletar
         using var command = new NpgsqlCommand(@$"
             DELETE FROM log_{table} 
-            WHERE created_at < @before_date;", _conn);
+            WHERE timestamp < @before_date;", _conn);
 
         // Define o parâmetro 'cutdate' como 'TIMESTAMP WITH TIME ZONE'
         command.Parameters.Add(new NpgsqlParameter("before_date", NpgsqlTypes.NpgsqlDbType.TimestampTz)
@@ -231,6 +232,7 @@ public class DBRepository : IDisposable
 
         int effected = command.ExecuteNonQuery();
         Console.WriteLine($"Removed {effected} records from table log_{table}");
+        return effected;
     }
 
     internal Record GetByID(string table, Guid id)
@@ -303,6 +305,40 @@ public class DBRepository : IDisposable
         command.ExecuteNonQuery();
     }
 
+    internal void CreateMaintenanceLogTable()
+    {
+        using var createTableCommand = new NpgsqlCommand(@"
+            CREATE TABLE IF NOT EXISTS log_logcenter_maintenance (
+                id UUID PRIMARY KEY,
+                level smallserial,
+                timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                message VARCHAR(255) NOT NULL,
+                traceid VARCHAR(100) NULL,
+                content JSONB NULL
+            );", _conn);
+        createTableCommand.ExecuteNonQuery();
+
+        using var traceIdIndexCommand = new NpgsqlCommand(@"
+            CREATE INDEX IF NOT EXISTS idx_logcenter_maintenance_traceid
+            ON log_logcenter_maintenance USING GIN (traceid gin_trgm_ops);", _conn);
+        traceIdIndexCommand.ExecuteNonQuery();
+
+        using var messageIndexCommand = new NpgsqlCommand(@"
+            CREATE INDEX IF NOT EXISTS idx_logcenter_maintenance_message
+            ON log_logcenter_maintenance USING GIN (message gin_trgm_ops);", _conn);
+        messageIndexCommand.ExecuteNonQuery();
+
+        using var jsonbIndexCommand = new NpgsqlCommand(@"
+            CREATE INDEX IF NOT EXISTS idx_logcenter_maintenance_content
+            ON log_logcenter_maintenance USING GIN (content jsonb_ops);", _conn);
+        jsonbIndexCommand.ExecuteNonQuery();
+
+        using var dateTimeIndexCommand = new NpgsqlCommand(@"
+            CREATE INDEX IF NOT EXISTS idx_logcenter_maintenance_timestamp
+            ON log_logcenter_maintenance (timestamp);", _conn);
+        dateTimeIndexCommand.ExecuteNonQuery();
+    }
+
 
 
     internal List<ConfigTableObject> GetConfiguredTables()
@@ -350,5 +386,29 @@ public class DBRepository : IDisposable
     {
         var result = GetConfigTables();
         return result.FirstOrDefault(x => x.table_name == table);
+    }
+
+    internal long GetTableSizeBytes(string table)
+    {
+        string query = "SELECT pg_total_relation_size(@table_name)";
+        return _conn.ExecuteScalar<long>(query, new { table_name = $"log_{table}" });
+    }
+
+    internal Guid InsertMaintenanceLog(
+        RecordLevel level,
+        string message,
+        object? content,
+        string? traceId = null,
+        DateTime? timestamp = null)
+    {
+        CreateMaintenanceLogTable();
+        string? json = content == null ? null : JsonSerializer.Serialize(content);
+        return Insert(
+            "logcenter_maintenance",
+            level,
+            traceId,
+            message,
+            json,
+            timestamp ?? DateTime.UtcNow);
     }
 }

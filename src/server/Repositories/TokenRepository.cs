@@ -46,6 +46,10 @@ public class TokenRepository
 
     public bool CheckTableAccess(ClaimsPrincipal User, string table){
         var tables = GetAccess(User);
+        if (tables.Contains("interface"))
+        {
+            return true;
+        }
         if(tables.Contains(table)){
             return true;
         }
@@ -67,4 +71,3 @@ public class TokenRepository
         return DateTime.MinValue;
     }
 }
-

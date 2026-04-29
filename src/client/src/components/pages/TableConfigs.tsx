@@ -166,8 +166,11 @@ export function TableConfigs() {
 			}
 		}).then((res) => {
 			if (res.status === 200) {
+				const rowsAffected = (res.data as { rows_affected?: number } | undefined)?.rows_affected;
 				toast("Deleted!", {
-					description: `Table ${tableName.toUpperCase()} deleted`,
+					description: rowsAffected !== undefined
+						? `${rowsAffected} rows deleted from ${tableName.toUpperCase()}`
+						: `Table ${tableName.toUpperCase()} deleted`,
 				});
 			} else {
 				toast("Error!", {

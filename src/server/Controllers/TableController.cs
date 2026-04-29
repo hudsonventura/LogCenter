@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using server.Domain;
 using server.Repositories;
 
@@ -91,7 +92,20 @@ public class TableController : Controller
         }
         table = table.Replace(" ", "_").ToLower();
         _db.TableExists(table);
+        var previousConfigs = _db.GetConfigTable(table);
         _db.UpsertConfig(table, configs);
+        _db.InsertMaintenanceLog(
+            RecordLevel.Information,
+            $"Maintenance configuration saved for table '{table}'",
+            new
+            {
+                action = "config_saved",
+                origin = "manual",
+                table,
+                previous = previousConfigs,
+                current = configs
+            },
+            traceId: Guid.NewGuid().ToString("N"));
         return Ok(configs);
     }
 
@@ -131,6 +145,7 @@ public class TableController : Controller
     [HttpPost("/Vacuum/{table}")]
     public ActionResult<string> Vaccum(string table)
     {
+        string executionId = Guid.NewGuid().ToString("N");
         try
         {
             table = table.Replace(" ", "_").ToLower();
@@ -140,10 +155,59 @@ public class TableController : Controller
         {
             return BadRequest(error.Message);
         }
-        
-        _db.VacuumFullTable(table);
 
-        return Ok($"The table '{table}' vacuumed");
+        long sizeBefore = _db.GetTableSizeBytes(table);
+        _db.InsertMaintenanceLog(
+            RecordLevel.Information,
+            $"Manual VACUUM started for table '{table}'",
+            new
+            {
+                action = "vacuum_started",
+                origin = "manual",
+                mode = "vacuum",
+                table,
+                size_before_bytes = sizeBefore
+            },
+            executionId);
+
+        try
+        {
+            _db.VacuumTable(table);
+            long sizeAfter = _db.GetTableSizeBytes(table);
+            _db.InsertMaintenanceLog(
+                RecordLevel.Information,
+                $"Manual VACUUM finished for table '{table}'",
+                new
+                {
+                    action = "vacuum_finished",
+                    origin = "manual",
+                    mode = "vacuum",
+                    table,
+                    size_before_bytes = sizeBefore,
+                    size_after_bytes = sizeAfter,
+                    free_space_bytes = sizeBefore - sizeAfter
+                },
+                executionId);
+
+            return Ok($"The table '{table}' vacuumed");
+        }
+        catch (System.Exception error)
+        {
+            _db.InsertMaintenanceLog(
+                RecordLevel.Error,
+                $"Manual VACUUM failed for table '{table}'",
+                new
+                {
+                    action = "vacuum_failed",
+                    origin = "manual",
+                    mode = "vacuum",
+                    table,
+                    size_before_bytes = sizeBefore,
+                    error = error.Message
+                },
+                executionId);
+            return StatusCode(500, error.Message);
+        }
     }
 
     /// <summary>
@@ -154,6 +218,7 @@ public class TableController : Controller
     [HttpPost("/VacuumFull/{table}")]
     public ActionResult<string> VaccumFull(string table)
     {
+        string executionId = Guid.NewGuid().ToString("N");
         try
         {
             table = table.Replace(" ", "_").ToLower();
@@ -163,9 +228,58 @@ public class TableController : Controller
         {
             return BadRequest(error.Message);
         }
-        
-        _db.VacuumFullTable(table);
 
-        return Ok($"The table '{table}' was fully vacuumed");
+        long sizeBefore = _db.GetTableSizeBytes(table);
+        _db.InsertMaintenanceLog(
+            RecordLevel.Information,
+            $"Manual VACUUM FULL started for table '{table}'",
+            new
+            {
+                action = "vacuum_started",
+                origin = "manual",
+                mode = "vacuum_full",
+                table,
+                size_before_bytes = sizeBefore
+            },
+            executionId);
+
+        try
+        {
+            _db.VacuumFullTable(table);
+            long sizeAfter = _db.GetTableSizeBytes(table);
+            _db.InsertMaintenanceLog(
+                RecordLevel.Information,
+                $"Manual VACUUM FULL finished for table '{table}'",
+                new
+                {
+                    action = "vacuum_finished",
+                    origin = "manual",
+                    mode = "vacuum_full",
+                    table,
+                    size_before_bytes = sizeBefore,
+                    size_after_bytes = sizeAfter,
+                    free_space_bytes = sizeBefore - sizeAfter
+                },
+                executionId);
+
+            return Ok($"The table '{table}' was fully vacuumed");
+        }
+        catch (System.Exception error)
+        {
+            _db.InsertMaintenanceLog(
+                RecordLevel.Error,
+                $"Manual VACUUM FULL failed for table '{table}'",
+                new
+                {
+                    action = "vacuum_failed",
+                    origin = "manual",
+                    mode = "vacuum_full",
+                    table,
+                    size_before_bytes = sizeBefore,
+                    error = error.Message
+                },
+                executionId);
+            return StatusCode(500, error.Message);
+        }
     }
 }

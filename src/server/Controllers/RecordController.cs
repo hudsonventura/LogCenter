@@ -162,8 +162,9 @@ public class RecordController : ControllerBase
     [HttpDelete("/{table}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public ActionResult Delete(string table, [FromQuery] DateTime before_date)
+    public ActionResult<object> Delete(string table, [FromQuery] DateTime before_date)
     {
+        string executionId = Guid.NewGuid().ToString("N");
         try
         {
             table = table.Replace(" ", "_").ToLower();
@@ -180,11 +181,51 @@ public class RecordController : ControllerBase
         
         try
         {
-            _db.DeleteRecords(table, before_date);
-            return Ok();
+            _db.InsertMaintenanceLog(
+                RecordLevel.Information,
+                $"Manual delete started for table '{table}'",
+                new
+                {
+                    action = "delete_started",
+                    origin = "manual",
+                    table,
+                    before_date
+                },
+                executionId);
+
+            int rowsAffected = _db.DeleteRecords(table, before_date);
+
+            _db.InsertMaintenanceLog(
+                RecordLevel.Information,
+                $"Manual delete finished for table '{table}' affecting {rowsAffected} rows",
+                new
+                {
+                    action = "delete_finished",
+                    origin = "manual",
+                    table,
+                    before_date,
+                    rows_affected = rowsAffected
+                },
+                executionId);
+            return Ok(new
+            {
+                rows_affected = rowsAffected
+            });
         }
         catch (System.Exception error)
         {
+            _db.InsertMaintenanceLog(
+                RecordLevel.Error,
+                $"Manual delete failed for table '{table}'",
+                new
+                {
+                    action = "delete_failed",
+                    origin = "manual",
+                    table,
+                    before_date,
+                    error = error.Message
+                },
+                executionId);
             return StatusCode(500, error.Message);
         }
     }
