@@ -95,6 +95,8 @@ internal sealed class LogCenterLogger : ILogger
             "ActionExecuted" => true,
             "ExecutingEndpointExecuting" => true,
             "ExecutedEndpoint" => true,
+            "ObjectResultExecuting" => true,
+            "PolicySuccess" => true,
             _ => false
         };
     }

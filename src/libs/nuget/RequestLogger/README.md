@@ -25,13 +25,13 @@ using LogCenter.RequestInterceptor;
 //Set your configs
 InterceptorOptions options = new InterceptorOptions(){
     // LogCenter's URL
-    url = "http://localhost:9200",
+    Url = "http://localhost:9200",
 
     // Table name 
-    table = "example_interceptor",
+    Table = "example_interceptor",
 
     // Generate this on LogCenter inteface, on you profile photo.
-    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    Token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     
     // Save in HTTP Text or JSON? Default is JSON
     //FormatType = InterceptorOptions.SaveFormatType.HTTPText,
@@ -43,6 +43,8 @@ InterceptorOptions options = new InterceptorOptions(){
     //TraceIdReponseHeader = "X-Trace-Id",
 };
 
+
+
 // Remove default logging (ILogger, console, debug, etc)
 builder.Logging.ClearProviders();
 
@@ -53,8 +55,18 @@ builder.Logging.AddLogCenter(options);
 var app = builder.Build();
 ...
 
-// Use the interceptor to log request and response
+// Use the interceptor to log request and response to LogCenter
 app.UseRequestInterceptor();
+
+
+
+//To use as a common logger here on Program.cs //OPTIONAL
+using var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder.ClearProviders();
+    builder.AddLogCenter(options);
+});
+logger.LogInformation("Starting web application");
 ```
 
 On your controller, you can use ILogger as usually:

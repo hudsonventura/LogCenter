@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
 	Form,
 	FormControl,
+	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -20,7 +21,7 @@ import {
 import { QuestionMarkCircledIcon } from "@radix-ui/react-icons";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "@/services/api";
 import EnsureLogin from "../EnsureLogin";
@@ -37,11 +38,38 @@ import {
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { format } from "date-fns";
+import { ArrowLeft } from "lucide-react";
+import cronstrue from "cronstrue";
+
+function getCronFeedback(expression: string) {
+	const trimmedExpression = expression.trim();
+
+	if (!trimmedExpression) {
+		return {
+			isValid: false,
+			message: "Type a cron expression with 5 parts, like 0 0 * * *.",
+		};
+	}
+
+	try {
+		return {
+			isValid: true,
+			message: cronstrue.toString(trimmedExpression, {
+				throwExceptionOnParseError: true,
+			}),
+		};
+	} catch (error) {
+		return {
+			isValid: false,
+			message: error instanceof Error ? error.message : "Invalid cron expression.",
+		};
+	}
+}
 
 
 const FormSchema = z.object({
 	delete: z.boolean().default(false),
-	delete_input: z.string().min(1, {
+	delete_input: z.coerce.number().int().min(0, {
 		message: "Must be a number",
 	}),
 
@@ -54,11 +82,23 @@ const FormSchema = z.object({
 	vacuum_full_input: z.string().min(1, {
 		message: "Must be a cron expression",
 	}),
+}).superRefine((data, ctx) => {
+	if (data.delete && data.delete_input <= 0) {
+		ctx.addIssue({
+			code: z.ZodIssueCode.custom,
+			path: ["delete_input"],
+			message: "Inform the number of days",
+		});
+	}
 });
 
 export function TableConfigs() {
 	const [tableName, setTableName] = useState("");
+	const [isDropConfirmOpen, setIsDropConfirmOpen] = useState(false);
+	const [isDropSecondConfirmOpen, setIsDropSecondConfirmOpen] = useState(false);
+	const [isDropFinalConfirmOpen, setIsDropFinalConfirmOpen] = useState(false);
 	const location = useLocation();
+	const navigate = useNavigate();
 	const { pathname } = location;
 
 	useEffect(() => {
@@ -73,7 +113,20 @@ export function TableConfigs() {
 
 	const form = useForm<z.infer<typeof FormSchema>>({
 		resolver: zodResolver(FormSchema),
+		defaultValues: {
+			delete: false,
+			delete_input: 0,
+			vacuum: false,
+			vacuum_input: "0 0 1 1 *",
+			vacuum_full: false,
+			vacuum_full_input: "0 0 1 1 *",
+		},
 	});
+	const deleteEnabled = form.watch("delete");
+	const vacuumEnabled = form.watch("vacuum");
+	const vacuumFullEnabled = form.watch("vacuum_full");
+	const vacuumCronFeedback = getCronFeedback(form.watch("vacuum_input"));
+	const vacuumFullCronFeedback = getCronFeedback(form.watch("vacuum_full_input"));
 
 	function onSubmit(data: z.infer<typeof FormSchema>) {
 		const updateTable = async () => {
@@ -177,23 +230,34 @@ export function TableConfigs() {
 
 			<EnsureLogin />
 			<HeaderBar />
-			<h1 className="text-3xl font-bold mb-4 text-center mt-5">
-				Table {tableName.toUpperCase()} Configs{" "}
-			</h1>
+			<div className="mt-5 mb-4 flex items-center justify-center gap-3">
+				<Button
+					type="button"
+					variant="outline"
+					size="icon"
+					aria-label="Back to tables"
+					onClick={() => navigate("/tables")}
+				>
+					<ArrowLeft className="h-4 w-4" />
+				</Button>
+				<h1 className="text-3xl font-bold text-center">
+					Table {tableName.toUpperCase()} Configs
+				</h1>
+			</div>
 
 			<form
 				onSubmit={form.handleSubmit(onSubmit)}
 				className="flex flex-col flex-grow justify-center items-center"
 			>
-				<div className="flex flex-wrap justify-center gap-4 p-5">
-					<div className="flex p-1 w-[300px]">
+				<div className="flex flex-wrap justify-center gap-5 p-5">
+					<div className="flex p-1 w-[320px]">
 						<FormField
 							control={form.control}
 							name="delete"
 							render={({ field }) => (
-								<FormItem className="flex flex-col justify-between rounded-lg border p-4 shadow-sm h-full">
-									<div className="flex flex-col">
-										<div className="flex items-center justify-between">
+								<FormItem className="flex h-full w-full flex-col justify-between rounded-lg border px-4 py-5 shadow-sm">
+									<div className="flex flex-1 flex-col">
+										<div className="mb-5 flex items-center justify-between">
 											<FormControl>
 												<Switch id="delete" onCheckedChange={field.onChange} checked={field.value} />
 											</FormControl>
@@ -225,13 +289,13 @@ export function TableConfigs() {
 												</TooltipProvider>
 											</FormLabel>
 										</div>
-										<FormControl className="mb-5 mt-5">
-											<Label htmlFor="delete">
+										<FormControl className="mb-4 min-h-24">
+											<Label htmlFor="delete" className="text-sm leading-5">
 												Remove rows older than days
 											</Label>
 										</FormControl>
 
-										<div className="flex justify-between items-center">
+										<div className="flex items-center gap-3">
 											<FormField
 												control={form.control}
 												name="delete_input"
@@ -239,14 +303,18 @@ export function TableConfigs() {
 													<Input
 														type="number"
 														placeholder="Num. of days"
+														disabled={!deleteEnabled}
+														className="flex-1"
 														{...field}
+														value={field.value ?? ""}
+														onChange={(event) => field.onChange(event.target.value)}
 													/>
 												)}
 											/>
-											<FormLabel className="p-2">days</FormLabel>
+											<FormLabel className="w-10 shrink-0 text-sm text-muted-foreground">days</FormLabel>
 										</div>
 									</div>
-									<p className="text-sm text-muted-foreground mb-2 text-center">
+									<p className="mt-4 text-center text-sm text-muted-foreground">
 										(runs every midnight)
 									</p>
 
@@ -274,14 +342,14 @@ export function TableConfigs() {
 						/>
 					</div>
 
-					<div className="flex p-1 w-[300px]">
+					<div className="flex p-1 w-[320px]">
 						<FormField
 							control={form.control}
 							name="vacuum"
 							render={({ field }) => (
-								<FormItem className="flex flex-col justify-between rounded-lg border p-4 shadow-sm h-full">
-									<div className="flex flex-col">
-										<div className="flex items-center justify-between">
+								<FormItem className="flex h-full w-full flex-col justify-between rounded-lg border px-4 py-5 shadow-sm">
+									<div className="flex flex-1 flex-col">
+										<div className="mb-5 flex items-center justify-between">
 											<FormControl>
 												<Switch id="vacuum" onCheckedChange={field.onChange} checked={field.value} />
 											</FormControl>
@@ -304,8 +372,8 @@ export function TableConfigs() {
 												</TooltipProvider>
 											</FormLabel>
 										</div>
-										<FormControl className="mt-5 mb-2">
-											<Label htmlFor="vacuum">
+										<FormControl className="mb-4 min-h-24">
+											<Label htmlFor="vacuum" className="text-sm leading-5">
 												VACUUM cleans dead rows,freeing up space for reuse and improving performance
 											</Label>
 										</FormControl>
@@ -313,22 +381,30 @@ export function TableConfigs() {
 											control={form.control}
 											name="vacuum_input"
 											render={({ field: { onChange, ...field } }) => (
-												<Input
-													type="text"
-													placeholder="0 0 * * *"
-													{...field}
-													onChange={(e) => {
-														const value = e.target.value.toUpperCase();
-														const cronPattern =
-															/^(\d|\*)\s(\d|\*)\s(\d|\*)\s(\d|\*)\s(\d|\*)$/;
-														if (value.match(cronPattern)) {
-															onChange(e);
+												<div className="space-y-2">
+													<Input
+														type="text"
+														placeholder="0 0 * * *"
+														disabled={!vacuumEnabled}
+														className="w-full"
+														{...field}
+														onChange={(e) => {
+															onChange(e.target.value.toUpperCase());
+														}}
+													/>
+													<FormDescription
+														className={
+															vacuumCronFeedback.isValid
+																? "text-emerald-600"
+																: "text-destructive"
 														}
-													}}
-												/>
+															>
+																{vacuumCronFeedback.message}
+															</FormDescription>
+												</div>
 											)}
 										/>
-										<p className="text-sm text-muted-foreground text-center mt-2">
+										<p className="mt-1 text-center text-sm text-muted-foreground">
 											(cron schedule, consider +0UTC)
 										</p>
 									</div>
@@ -356,14 +432,14 @@ export function TableConfigs() {
 						/>
 					</div>
 
-					<div className="flex p-1 w-[300px]">
+					<div className="flex p-1 w-[320px]">
 						<FormField
 							control={form.control}
 							name="vacuum_full"
 							render={({ field }) => (
-								<FormItem className="flex flex-col justify-between rounded-lg border p-4 shadow-sm h-full">
-									<div className="flex flex-col">
-										<div className="flex items-center justify-between align-center">
+								<FormItem className="flex h-full w-full flex-col justify-between rounded-lg border px-4 py-5 shadow-sm">
+									<div className="flex flex-1 flex-col">
+										<div className="mb-5 flex items-center justify-between align-center">
 											<FormControl>
 												<Switch
 													id="vacuum_full"
@@ -412,11 +488,11 @@ export function TableConfigs() {
 												</TooltipProvider>
 											</FormLabel>
 										</div>
-										<FormControl className="mb-2 mt-2">
-											<Label htmlFor="vacuum_full">
+										<FormControl className="mb-4 min-h-24">
+											<Label htmlFor="vacuum_full" className="text-sm leading-5">
 												Compacts the table, reclaiming disk space, but requires
 												exclusive access. 
-												<p className="text-destructive">
+												<p className="mt-1 text-destructive">
 													It is going to LOCK THE TABLE and no data can be
 													written or read until finished
 												</p>
@@ -426,22 +502,30 @@ export function TableConfigs() {
 											control={form.control}
 											name="vacuum_full_input"
 											render={({ field: { onChange, ...field } }) => (
-												<Input
-													type="text"
-													placeholder="0 0 * * *"
-													{...field}
-													onChange={(e) => {
-														const value = e.target.value.toUpperCase();
-														const cronPattern =
-															/^(\d|\*)\s(\d|\*)\s(\d|\*)\s(\d|\*)\s(\d|\*)$/;
-														if (value.match(cronPattern)) {
-															onChange(e);
+												<div className="space-y-2">
+													<Input
+														type="text"
+														placeholder="0 0 * * *"
+														disabled={!vacuumFullEnabled}
+														className="w-full"
+														{...field}
+														onChange={(e) => {
+															onChange(e.target.value.toUpperCase());
+														}}
+													/>
+													<FormDescription
+														className={
+															vacuumFullCronFeedback.isValid
+																? "text-emerald-600"
+																: "text-destructive"
 														}
-													}}
-												/>
+															>
+																{vacuumFullCronFeedback.message}
+															</FormDescription>
+												</div>
 											)}
 										/>
-										<p className="text-sm text-muted-foreground text-center mt-2">
+										<p className="mt-1 text-center text-sm text-muted-foreground">
 											(cron schedule, consider +0UTC)
 										</p>
 									</div>
@@ -478,27 +562,83 @@ export function TableConfigs() {
 
 				{/* Botões no final da página */}
 				<div className="flex items-center justify-center mt-5 gap-5 mb-5">
-						<AlertDialog>
-							<AlertDialogTrigger>
-								<Button type="button" className="text-destructive">
-									DROP TABLE
-								</Button>
-							</AlertDialogTrigger>
-							<AlertDialogContent>
-								<AlertDialogHeader>
-									<AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-									<AlertDialogDescription>
-										<p className="text-red-500">
-											This action will DROP the table. It will delete whole the table and no data could be recovered. PLEASE, PAY ATTENTION!
-										</p>
-									</AlertDialogDescription>
-								</AlertDialogHeader>
-								<AlertDialogFooter>
-									<AlertDialogCancel>Cancel</AlertDialogCancel>
-									<AlertDialogAction className="text-red-500" onClick={() => runDropTable()}>I got it and go ahead!</AlertDialogAction>
-								</AlertDialogFooter>
-							</AlertDialogContent>
-						</AlertDialog>
+					<AlertDialog open={isDropConfirmOpen} onOpenChange={setIsDropConfirmOpen}>
+						<AlertDialogTrigger asChild>
+							<Button type="button" className="text-destructive">
+								DROP TABLE
+							</Button>
+						</AlertDialogTrigger>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogTitle>Whoa there, chaos engineer.</AlertDialogTitle>
+								<AlertDialogDescription>
+									<p className="text-red-500">
+										You are one click away from sending this table to the great database in the sky. If this was just a dramatic misclick, now is a beautiful time to stop.
+									</p>
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							<AlertDialogFooter>
+								<AlertDialogCancel>Cancel</AlertDialogCancel>
+								<AlertDialogAction
+									className="text-red-500"
+									onClick={() => {
+										setIsDropConfirmOpen(false);
+										setIsDropSecondConfirmOpen(true);
+									}}
+								>
+									Yes, keep the drama going
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
+					<AlertDialog open={isDropSecondConfirmOpen} onOpenChange={setIsDropSecondConfirmOpen}>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogTitle>Second checkpoint</AlertDialogTitle>
+								<AlertDialogDescription>
+									<p className="text-red-500">
+										This action will drop the entire table and all of its data. There is no undo and no recovery path here.
+									</p>
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							<AlertDialogFooter>
+								<AlertDialogCancel>Cancel</AlertDialogCancel>
+								<AlertDialogAction
+									className="text-red-500"
+									onClick={() => {
+										setIsDropSecondConfirmOpen(false);
+										setIsDropFinalConfirmOpen(true);
+									}}
+								>
+									I still want to continue
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
+					<AlertDialog open={isDropFinalConfirmOpen} onOpenChange={setIsDropFinalConfirmOpen}>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogTitle>Final confirmation</AlertDialogTitle>
+								<AlertDialogDescription>
+									<p className="text-red-500">
+										Last check: the table <strong>{tableName.toUpperCase()}</strong> will be permanently removed right now.
+									</p>
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							<AlertDialogFooter>
+								<AlertDialogCancel>Cancel</AlertDialogCancel>
+								<AlertDialogAction
+									className="text-red-500"
+									onClick={() => {
+										setIsDropFinalConfirmOpen(false);
+										runDropTable();
+									}}
+								>
+									Drop it for real
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
 					<Button type="button" onClick={() => window.history.back()}>
 						Voltar
 					</Button>
