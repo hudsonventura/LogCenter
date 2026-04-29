@@ -127,7 +127,7 @@ The response is a simples string with the id of the created object
 ## Docker Image Building
 
 ```bash
-VERSION=1.6 && \
+VERSION=1.7 && \
 sudo docker tag hudsonventura/logcenter-client:latest hudsonventura/logcenter-client:latest && \
 sudo docker tag hudsonventura/logcenter-server:latest hudsonventura/logcenter-server:latest && \
 sudo docker tag hudsonventura/logcenter-client:latest hudsonventura/logcenter-client:${VERSION} && \

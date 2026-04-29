@@ -14,9 +14,24 @@ var logCenterOptions = new InterceptorOptions
 {
     Url = "http://localhost:9200",
     Table = "example_console",
-    Token = "eyJhbGciOiJIUzI1NiIs...",
-    FormatType = InterceptorOptions.SaveFormatType.Json,
-    LogGetRequest = true
+    Token = "eyJhbGciOiJIUzI1NiIsI...",
+    LogGetRequest = true,
+    BannedEventNames =
+    {
+        "ExecutingEndpoint",
+        "ControllerActionExecuting",
+        "ActionExecuted",
+        "ExecutingEndpointExecuting",
+        "ExecutedEndpoint",
+        "ObjectResultExecuting",
+        "PolicySuccess",
+        "Microsoft.EntityFrameworkCore.Database.Command.CommandExecutedExecuted"
+    },
+    BannedMessages =
+    {
+        "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+        "Request starting {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {ContentType} {ContentLength}"
+    }
 };
 
 

@@ -78,7 +78,7 @@ internal sealed class LogCenterLogger : ILogger
 
         var payload = new RequestRecord
         {
-            Message = eventId.Name+messageTemplate ?? message?? string.Empty,
+            Message = $"{eventId.Name} {messageTemplate}" ?? message?? string.Empty,
             Timestamp = now.UtcDateTime,
             Level = logLevel,
             TraceId = TryExtractTraceId(structured) ?? Activity.Current?.Id,

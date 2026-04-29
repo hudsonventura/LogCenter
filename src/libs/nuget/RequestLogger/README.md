@@ -32,15 +32,23 @@ InterceptorOptions options = new InterceptorOptions(){
 
     // Generate this on LogCenter inteface, on you profile photo.
     Token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    
-    // Save in HTTP Text or JSON? Default is JSON
-    //FormatType = InterceptorOptions.SaveFormatType.HTTPText,
 
     // Log GET requests? Default is true
     //LogGetRequest = true,
 
     // TraceId will be sent on which header? OPTIONAL. Default is X-Trace-Id
     //TraceIdReponseHeader = "X-Trace-Id",
+
+    //Some type of logs from your app by Microsoft or libs you dont have control to block. Here you can!
+    BannedEventNames =
+    {
+        "ExecutingEndpoint",
+        "Microsoft.EntityFrameworkCore.Database.Command.CommandExecutedExecuted"
+    },
+    BannedMessages =
+    {
+        "Request finished {Protocol} {Method} {Scheme}://{Host}{PathBase}{Path}{QueryString} - {StatusCode} {ContentLength} {ContentType} {ElapsedMilliseconds}ms",
+    }
 };
 
 
