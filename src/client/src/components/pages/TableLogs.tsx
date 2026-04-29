@@ -50,6 +50,7 @@ import {
   allKnownRecordLevels,
   getLogLevelBadgeClass,
   getLogLevelLabel,
+  levelFilterOptions,
 } from "@/lib/log-levels";
 import { Eye } from "lucide-react"
 
@@ -500,25 +501,29 @@ export function TableLogs() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {allLevels.map((level) => (
+                  {levelFilterOptions.map((option) => {
+                    const optionLevels = option.levels as readonly number[];
+
+                    return (
                     <DropdownMenuCheckboxItem
-                      key={level}
+                      key={option.id}
                       className="capitalize"
-                      checked={selectedLevels.includes(level)}
+                      checked={optionLevels.every((level) => selectedLevels.includes(level))}
                       onCheckedChange={(checked) => {
                         setSelectedLevels((current) => {
                           if (checked) {
-                            return current.includes(level) ? current : [...current, level].sort((a, b) => a - b);
+                            return Array.from(new Set([...current, ...optionLevels])).sort((a, b) => a - b);
                           }
 
-                          const next = current.filter((item) => item !== level);
+                          const next = current.filter((item) => !optionLevels.includes(item));
                           return next.length > 0 ? next : current;
                         });
                       }}
                     >
-                      {getLogLevelLabel(level)}
+                      {option.label}
                     </DropdownMenuCheckboxItem>
-                  ))}
+                    );
+                  })}
                 </DropdownMenuContent>
               </DropdownMenu>
           </div>

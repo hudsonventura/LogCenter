@@ -27,6 +27,53 @@ export const httpRecordLevels = [
 
 export const allKnownRecordLevels = [...baseRecordLevels, ...httpRecordLevels];
 
+export const httpResponse200Levels = httpRecordLevels.filter(
+  (level) => level >= 200 && level < 300
+);
+
+export const httpResponse300Levels = httpRecordLevels.filter(
+  (level) => level >= 300 && level < 400
+);
+
+export const httpResponse400Levels = httpRecordLevels.filter(
+  (level) => level >= 400 && level < 500
+);
+
+export const httpResponse500Levels = httpRecordLevels.filter(
+  (level) => level >= 500 && level < 600
+);
+
+export const levelFilterOptions = [
+  { id: "trace", label: "Trace", levels: [0] },
+  { id: "debug", label: "Debug", levels: [1] },
+  { id: "info", label: "Info", levels: [2] },
+  { id: "warning", label: "Warning", levels: [3] },
+  { id: "error", label: "Error", levels: [4] },
+  { id: "critical", label: "Critical", levels: [5] },
+  { id: "none", label: "None", levels: [6] },
+  { id: "http_request", label: "HttpRequest", levels: [99] },
+  {
+    id: "http_response_200",
+    label: "HttpResponse200",
+    levels: httpResponse200Levels,
+  },
+  {
+    id: "http_response_300",
+    label: "HttpResponse300",
+    levels: httpResponse300Levels,
+  },
+  {
+    id: "http_response_400",
+    label: "HttpResponse400",
+    levels: httpResponse400Levels,
+  },
+  {
+    id: "http_response_500",
+    label: "HttpResponse500",
+    levels: httpResponse500Levels,
+  },
+] as const;
+
 const baseLevelLabels: Record<number, string> = {
   0: "Trace",
   1: "Debug",
