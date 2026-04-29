@@ -645,7 +645,7 @@ export function TableConfigs() {
 					<Button type="button" onClick={() => window.history.back()}>
 						Voltar
 					</Button>
-					<Button type="submit">Salvar</Button>
+					<Button type="submit">Save</Button>
 				</div>
 			</form>
 		</Form>
