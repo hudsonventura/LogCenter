@@ -107,9 +107,6 @@ export function LogTerminalView() {
             <h1 className="text-3xl font-semibold tracking-tight">
               Terminal view {tableName ? `from ${tableName}` : ""}
             </h1>
-            <p className="text-sm text-muted-foreground">
-              Older records at the top, newer records at the bottom.
-            </p>
           </div>
         </div>
 

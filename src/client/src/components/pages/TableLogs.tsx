@@ -509,6 +509,7 @@ export function TableLogs() {
                       key={option.id}
                       className="capitalize"
                       checked={optionLevels.every((level) => selectedLevels.includes(level))}
+                      onSelect={(event) => event.preventDefault()}
                       onCheckedChange={(checked) => {
                         setSelectedLevels((current) => {
                           if (checked) {
