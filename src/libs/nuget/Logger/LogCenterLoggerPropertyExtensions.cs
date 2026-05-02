@@ -56,6 +56,17 @@ public static class LogCenterLoggerPropertyExtensions
         object? value,
         [CallerArgumentExpression("value")] string? valueExpression = null)
     {
+        if (TryResolveExplicitTraceId(valueExpression, out var explicitTraceId))
+        {
+            Log(
+                logger,
+                LogLevel.Information,
+                message,
+                CreateProperty(value, valueExpression: null),
+                ("TraceId", explicitTraceId));
+            return;
+        }
+
         if (ShouldUseMicrosoftTemplateLogging(message))
         {
             LoggerExtensions.LogInformation(logger, message, value);
@@ -63,6 +74,31 @@ public static class LogCenterLoggerPropertyExtensions
         }
 
         Log(logger, LogLevel.Information, message, CreateProperty(value, valueExpression));
+    }
+
+    /// <summary>
+    /// Registra uma mensagem com um argumento extra e um trace id explícito.
+    /// Se a mensagem não tiver placeholders, ambos são enviados como propriedades estruturadas.
+    /// </summary>
+    public static void LogInformation(
+        this ILogger logger,
+        string? message,
+        object? value,
+        string traceId,
+        [CallerArgumentExpression("value")] string? valueExpression = null)
+    {
+        if (ShouldUseMicrosoftTemplateLogging(message))
+        {
+            LoggerExtensions.LogInformation(logger, message, value, traceId);
+            return;
+        }
+
+        Log(
+            logger,
+            LogLevel.Information,
+            message,
+            CreateProperty(value, valueExpression),
+            ("TraceId", traceId));
     }
 
     /// <summary>
@@ -75,6 +111,17 @@ public static class LogCenterLoggerPropertyExtensions
         object? value,
         [CallerArgumentExpression("value")] string? valueExpression = null)
     {
+        if (TryResolveExplicitTraceId(valueExpression, out var explicitTraceId))
+        {
+            Log(
+                logger,
+                LogLevel.Warning,
+                message,
+                CreateProperty(value, valueExpression: null),
+                ("TraceId", explicitTraceId));
+            return;
+        }
+
         if (ShouldUseMicrosoftTemplateLogging(message))
         {
             LoggerExtensions.LogWarning(logger, message, value);
@@ -82,6 +129,31 @@ public static class LogCenterLoggerPropertyExtensions
         }
 
         Log(logger, LogLevel.Warning, message, CreateProperty(value, valueExpression));
+    }
+
+    /// <summary>
+    /// Registra uma mensagem com um argumento extra e um trace id explícito.
+    /// Se a mensagem não tiver placeholders, ambos são enviados como propriedades estruturadas.
+    /// </summary>
+    public static void LogWarning(
+        this ILogger logger,
+        string? message,
+        object? value,
+        string traceId,
+        [CallerArgumentExpression("value")] string? valueExpression = null)
+    {
+        if (ShouldUseMicrosoftTemplateLogging(message))
+        {
+            LoggerExtensions.LogWarning(logger, message, value, traceId);
+            return;
+        }
+
+        Log(
+            logger,
+            LogLevel.Warning,
+            message,
+            CreateProperty(value, valueExpression),
+            ("TraceId", traceId));
     }
 
     /// <summary>
@@ -120,6 +192,17 @@ public static class LogCenterLoggerPropertyExtensions
         object? value,
         [CallerArgumentExpression("value")] string? valueExpression = null)
     {
+        if (TryResolveExplicitTraceId(valueExpression, out var explicitTraceId))
+        {
+            Log(
+                logger,
+                LogLevel.Error,
+                message,
+                CreateProperty(value, valueExpression: null),
+                ("TraceId", explicitTraceId));
+            return;
+        }
+
         if (ShouldUseMicrosoftTemplateLogging(message))
         {
             LoggerExtensions.LogError(logger, message, value);
@@ -127,6 +210,31 @@ public static class LogCenterLoggerPropertyExtensions
         }
 
         Log(logger, LogLevel.Error, message, CreateProperty(value, valueExpression));
+    }
+
+    /// <summary>
+    /// Registra uma mensagem com um argumento extra e um trace id explícito.
+    /// Se a mensagem não tiver placeholders, ambos são enviados como propriedades estruturadas.
+    /// </summary>
+    public static void LogError(
+        this ILogger logger,
+        string? message,
+        object? value,
+        string traceId,
+        [CallerArgumentExpression("value")] string? valueExpression = null)
+    {
+        if (ShouldUseMicrosoftTemplateLogging(message))
+        {
+            LoggerExtensions.LogError(logger, message, value, traceId);
+            return;
+        }
+
+        Log(
+            logger,
+            LogLevel.Error,
+            message,
+            CreateProperty(value, valueExpression),
+            ("TraceId", traceId));
     }
 
     /// <summary>
@@ -176,6 +284,17 @@ public static class LogCenterLoggerPropertyExtensions
         object? value,
         [CallerArgumentExpression("value")] string? valueExpression = null)
     {
+        if (TryResolveExplicitTraceId(valueExpression, out var explicitTraceId))
+        {
+            Log(
+                logger,
+                LogLevel.Critical,
+                message,
+                CreateProperty(value, valueExpression: null),
+                ("TraceId", explicitTraceId));
+            return;
+        }
+
         if (ShouldUseMicrosoftTemplateLogging(message))
         {
             LoggerExtensions.LogCritical(logger, message, value);
@@ -183,6 +302,31 @@ public static class LogCenterLoggerPropertyExtensions
         }
 
         Log(logger, LogLevel.Critical, message, CreateProperty(value, valueExpression));
+    }
+
+    /// <summary>
+    /// Registra uma mensagem com um argumento extra e um trace id explícito.
+    /// Se a mensagem não tiver placeholders, ambos são enviados como propriedades estruturadas.
+    /// </summary>
+    public static void LogCritical(
+        this ILogger logger,
+        string? message,
+        object? value,
+        string traceId,
+        [CallerArgumentExpression("value")] string? valueExpression = null)
+    {
+        if (ShouldUseMicrosoftTemplateLogging(message))
+        {
+            LoggerExtensions.LogCritical(logger, message, value, traceId);
+            return;
+        }
+
+        Log(
+            logger,
+            LogLevel.Critical,
+            message,
+            CreateProperty(value, valueExpression),
+            ("TraceId", traceId));
     }
 
     /// <summary>
@@ -221,6 +365,17 @@ public static class LogCenterLoggerPropertyExtensions
         object? value,
         [CallerArgumentExpression("value")] string? valueExpression = null)
     {
+        if (TryResolveExplicitTraceId(valueExpression, out var explicitTraceId))
+        {
+            Log(
+                logger,
+                LogLevel.Debug,
+                message,
+                CreateProperty(value, valueExpression: null),
+                ("TraceId", explicitTraceId));
+            return;
+        }
+
         if (ShouldUseMicrosoftTemplateLogging(message))
         {
             LoggerExtensions.LogDebug(logger, message, value);
@@ -228,6 +383,31 @@ public static class LogCenterLoggerPropertyExtensions
         }
 
         Log(logger, LogLevel.Debug, message, CreateProperty(value, valueExpression));
+    }
+
+    /// <summary>
+    /// Registra uma mensagem com um argumento extra e um trace id explícito.
+    /// Se a mensagem não tiver placeholders, ambos são enviados como propriedades estruturadas.
+    /// </summary>
+    public static void LogDebug(
+        this ILogger logger,
+        string? message,
+        object? value,
+        string traceId,
+        [CallerArgumentExpression("value")] string? valueExpression = null)
+    {
+        if (ShouldUseMicrosoftTemplateLogging(message))
+        {
+            LoggerExtensions.LogDebug(logger, message, value, traceId);
+            return;
+        }
+
+        Log(
+            logger,
+            LogLevel.Debug,
+            message,
+            CreateProperty(value, valueExpression),
+            ("TraceId", traceId));
     }
 
     /// <summary>
@@ -266,6 +446,17 @@ public static class LogCenterLoggerPropertyExtensions
         object? value,
         [CallerArgumentExpression("value")] string? valueExpression = null)
     {
+        if (TryResolveExplicitTraceId(valueExpression, out var explicitTraceId))
+        {
+            Log(
+                logger,
+                LogLevel.Trace,
+                message,
+                CreateProperty(value, valueExpression: null),
+                ("TraceId", explicitTraceId));
+            return;
+        }
+
         if (ShouldUseMicrosoftTemplateLogging(message))
         {
             LoggerExtensions.LogTrace(logger, message, value);
@@ -273,6 +464,31 @@ public static class LogCenterLoggerPropertyExtensions
         }
 
         Log(logger, LogLevel.Trace, message, CreateProperty(value, valueExpression));
+    }
+
+    /// <summary>
+    /// Registra uma mensagem com um argumento extra e um trace id explícito.
+    /// Se a mensagem não tiver placeholders, ambos são enviados como propriedades estruturadas.
+    /// </summary>
+    public static void LogTrace(
+        this ILogger logger,
+        string? message,
+        object? value,
+        string traceId,
+        [CallerArgumentExpression("value")] string? valueExpression = null)
+    {
+        if (ShouldUseMicrosoftTemplateLogging(message))
+        {
+            LoggerExtensions.LogTrace(logger, message, value, traceId);
+            return;
+        }
+
+        Log(
+            logger,
+            LogLevel.Trace,
+            message,
+            CreateProperty(value, valueExpression),
+            ("TraceId", traceId));
     }
 
     /// <summary>
@@ -305,6 +521,45 @@ public static class LogCenterLoggerPropertyExtensions
         !string.IsNullOrEmpty(message)
         && message.IndexOf('{') >= 0
         && message.IndexOf('}') > message.IndexOf('{');
+
+    private static bool TryResolveExplicitTraceId(string? candidate, out string traceId)
+    {
+        traceId = string.Empty;
+        if (string.IsNullOrWhiteSpace(candidate))
+            return false;
+
+        var trimmed = candidate.Trim();
+        if (LooksLikeCallerExpression(trimmed))
+            return false;
+
+        traceId = trimmed;
+        return true;
+    }
+
+    private static bool LooksLikeCallerExpression(string candidate)
+    {
+        if (IsSimpleIdentifier(candidate))
+            return true;
+
+        if (candidate.StartsWith("new", StringComparison.Ordinal))
+            return true;
+
+        foreach (var ch in candidate)
+        {
+            if (char.IsWhiteSpace(ch))
+                return true;
+
+            if (!(char.IsLetterOrDigit(ch)
+                || ch is '_' or '.' or '?' or '!' or '[' or ']' or '(' or ')' or ',' or '"'))
+            {
+                return false;
+            }
+        }
+
+        return candidate.Contains('.', StringComparison.Ordinal)
+            || candidate.Contains('[', StringComparison.Ordinal)
+            || candidate.Contains('(', StringComparison.Ordinal);
+    }
 
     private static (string Key, object? Value) CreateProperty(object? value, string? valueExpression)
     {
