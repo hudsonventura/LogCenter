@@ -9,7 +9,7 @@ namespace LogCenter;
 public class LogCenterOptions
 {
     /// <summary>Nível mínimo registrado por este provider.</summary>
-    public LogLevel MinimumLevel { get; set; } = LogLevel.Trace;
+    public LogLevel MinimumLevel { get; set; } = LogLevel.Information;
 
 
     /// <summary>Nome da aplicação incluído no corpo JSON (opcional).</summary>
