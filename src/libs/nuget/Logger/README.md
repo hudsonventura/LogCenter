@@ -91,8 +91,25 @@ var user = new
     email = "john.doe.jr@example.com"
 };
 
-logger.LogInformation("Dados do usuário {@user}", user);
+logger.LogInformation("User data {@user}", user);
 ```
+
+
+### Tags
+
+`LogCenter.Logger` supports tags. Use:
+
+Example:
+
+```csharp
+var tags = new string[] {"tag 1", "tag 2", "whatever"}
+//or
+var tags = new List<string> {"tag 1", "tag 2", "whatever"}
+
+//MUST BE "_tags_"
+logger.LogInformation("User data {@user} {@_tags_}", user, tags);
+```
+
 
 This sends:
 

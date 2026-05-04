@@ -144,7 +144,7 @@ internal sealed class LogCenterLogger : ILogger
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[LogCenter] Fail sending log: {ex.Message}");
+            ShowConsole(LogLevel.Error, $"[LogCenter] Fail sending log: {ex.Message}");
         }
     }
 
@@ -273,20 +273,20 @@ internal sealed class LogCenterLogger : ILogger
     }
 
 
-    private void ShowConsole(LogLevel level, string message){
-        var default_foreground_color = Console.ForegroundColor;
-        var default_background_color = Console.BackgroundColor;
+    private static readonly object _consoleLock = new object();
 
-        Console.ForegroundColor = SwitchColor(level, default_foreground_color);
-        Console.BackgroundColor = ConsoleColor.Black;
-
-        var formattedLevel = FormatLevel(level.ToString());
-        Console.Write(formattedLevel + " ");
-
-        Console.ForegroundColor = default_foreground_color;
-        Console.BackgroundColor = default_background_color;
-
-        Console.WriteLine(message);
+    private void ShowConsole(LogLevel level, string message) {
+        lock (_consoleLock) {
+            var defaultForeground = Console.ForegroundColor;
+            
+            // Configura e escreve o Level
+            Console.ForegroundColor = SwitchColor(level, defaultForeground);
+            Console.Write(FormatLevel(level.ToString()) + " ");
+            
+            // Restaura e escreve a mensagem
+            Console.ForegroundColor = defaultForeground;
+            Console.WriteLine(message);
+        }
     }
 
     private string FormatLevel(string level)

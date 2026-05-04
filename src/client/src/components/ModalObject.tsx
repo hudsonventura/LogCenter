@@ -28,6 +28,7 @@ type LogDetails = {
   level?: number;
   content?: unknown;
   traceId?: string;
+  tags?: string[] | null;
 };
 
 type RequestPayload = {
@@ -297,6 +298,9 @@ export function ModalObject({
     data.level === 99 ? getRequestPayload(data.content) : null;
   const curlCommand = requestPayload ? generateCurlCommand(requestPayload) : "";
   const httpRequest = requestPayload ? generateHttpRequest(requestPayload) : "";
+  const tags = Array.isArray(data.tags)
+    ? data.tags.filter((tag): tag is string => typeof tag === "string" && tag.trim().length > 0)
+    : [];
 
   const handleCopyCurl = async () => {
     try {
@@ -442,6 +446,24 @@ export function ModalObject({
                 />
               )}
             </div>
+            {tags.length > 0 ? (
+              <div className="mt-4">
+                <div className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Tags
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="secondary"
+                      className="rounded-full px-3 py-1 text-xs font-medium"
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

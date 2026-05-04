@@ -82,7 +82,8 @@ public class DBRepository : IDisposable
                                 timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                 message VARCHAR(255) NOT NULL,
                                 traceid VARCHAR(100) NULL,
-                                content JSONB NULL
+                                content JSONB NULL,
+                                tags TEXT[] NULL
                             );";
         using var command = new NpgsqlCommand(txt_command, _conn);
         command.ExecuteNonQuery();
@@ -146,7 +147,8 @@ public class DBRepository : IDisposable
         string TraceId, 
         string message, 
         string json, 
-        DateTime timestamp
+        DateTime timestamp,
+        string[]? tags = null
         )
     {
         ValidateTable(table);
@@ -155,7 +157,7 @@ public class DBRepository : IDisposable
         Guid id = SnowflakeGuid.NewGuid();
 
         // Cria o comando de inserção
-        using var command = new NpgsqlCommand($"INSERT INTO log_{table} (id, level, traceid, message, timestamp, content) VALUES (@id, @level, @traceid, @message, @timestamp, @value::jsonb)", _conn);
+        using var command = new NpgsqlCommand($"INSERT INTO log_{table} (id, level, traceid, message, timestamp, content, tags) VALUES (@id, @level, @traceid, @message, @timestamp, @value::jsonb, @tags)", _conn);
 
         // Define o parâmetro 'id' explicitamente como BIGINT
         command.Parameters.Add(new NpgsqlParameter("id", NpgsqlTypes.NpgsqlDbType.Uuid) { Value = id });
@@ -165,6 +167,7 @@ public class DBRepository : IDisposable
         command.Parameters.Add(new NpgsqlParameter("timestamp", NpgsqlTypes.NpgsqlDbType.TimestampTz) { Value = timestamp.ToUniversalTime() });
         // Adiciona o parâmetro 'value' com o JSON
         command.Parameters.Add(new NpgsqlParameter("value", NpgsqlTypes.NpgsqlDbType.Jsonb) { Value = json != null ? json : DBNull.Value });
+        command.Parameters.Add(new NpgsqlParameter("tags", NpgsqlTypes.NpgsqlDbType.Array | NpgsqlTypes.NpgsqlDbType.Text) { Value = tags is { Length: > 0 } ? tags : DBNull.Value });
 
         // Executa o comando
         command.ExecuteNonQuery();
@@ -175,11 +178,18 @@ public class DBRepository : IDisposable
 
     internal List<Record> Search(string table, SearchObject query)
     {
+        var selectedTags = query.tags?
+            .Where(tag => !string.IsNullOrWhiteSpace(tag))
+            .Select(tag => tag.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray() ?? [];
+
         string sql = @$"
-            SELECT id, level, timestamp AT TIME ZONE 'UTC' as timestamp, traceid, message, content
+            SELECT id, level, timestamp AT TIME ZONE 'UTC' as timestamp, traceid, message, content, tags
             FROM log_{table} 
             WHERE timestamp AT TIME ZONE 'UTC' BETWEEN @datetime1 AND @datetime2
-            AND (content::text ILIKE @search OR traceid::text ILIKE @search OR message::text ILIKE @search)
+            AND (content::text ILIKE @search OR traceid::text ILIKE @search OR message::text ILIKE @search OR tags::text ILIKE @search)
+            AND (@apply_tags = false OR tags @> @tags)
             ORDER BY id DESC
             LIMIT @take 
             OFFSET @skip";
@@ -192,6 +202,8 @@ public class DBRepository : IDisposable
             datetime1 = DateTime.SpecifyKind(datetime1, DateTimeKind.Utc),
             datetime2 = DateTime.SpecifyKind(datetime2, DateTimeKind.Utc),
             search = $"%{query.search}%",
+            apply_tags = selectedTags.Length > 0,
+            tags = selectedTags,
             take = query.take,
             skip = query.skip
         };
@@ -212,6 +224,33 @@ public class DBRepository : IDisposable
 
         // Retorna a lista de resultados
         return results.OrderByDescending(x => x.Id).ToList();
+    }
+
+    internal List<string> GetTags(string table, SearchObject query)
+    {
+        string sql = @$"
+            SELECT DISTINCT tag
+            FROM (
+                SELECT unnest(tags) AS tag
+                FROM log_{table}
+                WHERE tags IS NOT NULL
+                AND timestamp AT TIME ZONE 'UTC' BETWEEN @datetime1 AND @datetime2
+                AND (content::text ILIKE @search OR traceid::text ILIKE @search OR message::text ILIKE @search OR tags::text ILIKE @search)
+            ) AS available_tags
+            WHERE tag IS NOT NULL AND btrim(tag) <> ''
+            ORDER BY tag;";
+
+        DateTime datetime1 = (query.datetime1 == DateTime.MinValue) ? DateTime.UtcNow.AddHours(-1) : datetime1 = query.datetime1.Add(-_tz.GetUtcOffset(query.datetime1));
+        DateTime datetime2 = (query.datetime2 == DateTime.MinValue) ? DateTime.UtcNow : query.datetime2.Add(-_tz.GetUtcOffset(query.datetime2));
+
+        var parameters = new
+        {
+            datetime1 = DateTime.SpecifyKind(datetime1, DateTimeKind.Utc),
+            datetime2 = DateTime.SpecifyKind(datetime2, DateTimeKind.Utc),
+            search = $"%{query.search}%"
+        };
+
+        return _conn.Query<string>(sql, parameters).ToList();
     }
 
 
@@ -314,7 +353,8 @@ public class DBRepository : IDisposable
                 timestamp TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 message VARCHAR(255) NOT NULL,
                 traceid VARCHAR(100) NULL,
-                content JSONB NULL
+                content JSONB NULL,
+                tags TEXT[] NULL
             );", _conn);
         createTableCommand.ExecuteNonQuery();
 

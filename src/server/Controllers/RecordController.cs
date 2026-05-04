@@ -16,6 +16,7 @@ namespace server.Controllers;
 [ApiController]
 public class RecordController : ControllerBase
 {
+    private const string TagsPropertyName = "_tags_";
 
     private readonly DBRepository _db;
     private readonly LastRecordIDRepository _lastID;
@@ -88,6 +89,8 @@ public class RecordController : ControllerBase
             }
         }
 
+        var tags = ExtractTags(json);
+
         if(obj.TraceId != null){
             obj.TraceId = (obj.TraceId?.Length >= 100) ? obj.TraceId.Substring(0, 100) : obj.TraceId;
         }
@@ -99,7 +102,7 @@ public class RecordController : ControllerBase
         {
             //tenta salvar na tabela do meu index.
             //se der certo, 200
-            id = _db.Insert(table, obj.Level, obj.TraceId, obj.Message, json, obj.Timestamp);
+            id = _db.Insert(table, obj.Level, obj.TraceId, obj.Message, json, obj.Timestamp, tags);
             return Created(id.ToString(), id);
         }
         catch (System.Exception error1)
@@ -128,7 +131,7 @@ public class RecordController : ControllerBase
                 _db.CreateDateTimeIndex(table);
                 Console.Write("OK! ... ");
 
-                id = _db.Insert(table, obj.Level, obj.TraceId, obj.Message, json, obj.Timestamp);
+                id = _db.Insert(table, obj.Level, obj.TraceId, obj.Message, json, obj.Timestamp, tags);
                 return Created($"/{table}/{id}", $"/{table}/{id}");
             }
             catch (System.Exception error2)
@@ -249,6 +252,14 @@ public class RecordController : ControllerBase
         return Ok(response.OrderByDescending(x => x.Timestamp).ToList());
     }
 
+    [HttpGet("/{table}/tags")]
+    public ActionResult<List<string>> GetTags(string table, [FromQuery] SearchObject query, [FromHeader] string timezone = "UTC")
+    {
+        _db.SetTimezone(timezone);
+        var response = _db.GetTags(table, query);
+        return Ok(response);
+    }
+
 
     /// <summary>
     /// Get a record by ID. Returns a record
@@ -290,5 +301,75 @@ public class RecordController : ControllerBase
             return BadRequest(error.Message);
         }
         
+    }
+
+    private static string[]? ExtractTags(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return null;
+
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            if (document.RootElement.ValueKind != JsonValueKind.Object ||
+                !TryGetProperty(document.RootElement, TagsPropertyName, out var tagsElement))
+            {
+                return null;
+            }
+
+            var tags = new List<string>();
+
+            if (tagsElement.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in tagsElement.EnumerateArray())
+                {
+                    var value = ConvertTagValue(item);
+                    if (!string.IsNullOrWhiteSpace(value))
+                        tags.Add(value);
+                }
+            }
+            else
+            {
+                var value = ConvertTagValue(tagsElement);
+                if (!string.IsNullOrWhiteSpace(value))
+                    tags.Add(value);
+            }
+
+            return tags.Count > 0 ? tags.Distinct(StringComparer.OrdinalIgnoreCase).ToArray() : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static bool TryGetProperty(JsonElement root, string propertyName, out JsonElement value)
+    {
+        if (root.TryGetProperty(propertyName, out value))
+            return true;
+
+        foreach (var property in root.EnumerateObject())
+        {
+            if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                value = property.Value;
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
+    }
+
+    private static string? ConvertTagValue(JsonElement value)
+    {
+        return value.ValueKind switch
+        {
+            JsonValueKind.String => value.GetString(),
+            JsonValueKind.Number => value.GetRawText(),
+            JsonValueKind.True => bool.TrueString.ToLowerInvariant(),
+            JsonValueKind.False => bool.FalseString.ToLowerInvariant(),
+            _ => null
+        };
     }
 }

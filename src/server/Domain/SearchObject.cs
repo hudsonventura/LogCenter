@@ -31,6 +31,11 @@ public class SearchObject
     /// Include content payload in search results
     /// </summary>
     public bool bring_content { get; set; } = false;
+
+    /// <summary>
+    /// Optional tag filters. When informed, only records containing all selected tags are returned.
+    /// </summary>
+    public string[]? tags { get; set; }
     
     /// <summary>
     /// Read only. Represents how many itens the paginations must skip during DB select

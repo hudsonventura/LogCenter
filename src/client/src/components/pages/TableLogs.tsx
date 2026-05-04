@@ -43,6 +43,7 @@ import { toast } from "sonner";
 
 import api from "@/services/api";
 import { ModalObject } from "../ModalObject";
+import { TagMultiCombobox } from "../TagMultiCombobox";
 import { DatePickerValue, DateTimePicker, resolveDatePickerValue } from "../DateTimePicker";
 import { useTimezone } from "../timezone-provider";
 import LogTimelineChart from "../charts/LogTimelineChart";
@@ -60,6 +61,7 @@ export type LogRecord = {
   traceId: string | null;
   message: string;
   content: unknown;
+  tags?: string[] | null;
   timestamp: string;
   hideContentWhenMessageIsRendered?: boolean;
 };
@@ -273,6 +275,11 @@ export function TableLogs() {
   const [lastSearchParams, setLastSearchParams] = React.useState<URLSearchParams | null>(null);
   const [selectedRecordId, setSelectedRecordId] = React.useState<string | null>(null);
   const [selectedLevels, setSelectedLevels] = React.useState<number[]>(allLevels);
+  const [availableTags, setAvailableTags] = React.useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = React.useState<string[]>(
+    () => params.getAll("tags").filter((tag) => tag.trim().length > 0)
+  );
+  const [isTagFilterLoading, setIsTagFilterLoading] = React.useState(false);
   const [liveNowTick, setLiveNowTick] = React.useState(new Date());
   const resolvedDateFrom = React.useMemo(
     () => resolveDatePickerValue(dateFrom, liveNowTick),
@@ -344,24 +351,13 @@ export function TableLogs() {
       ? modalRecordIds[selectedIndex + 1]
       : null;
 
-  const search = async () => {
-    if (!tabela) {
-      setData([]);
-      setLastSearchParams(null);
-      return;
-    }
-
-    try {
+  const buildSearchParams = React.useCallback(
+    (includeSelectedTags: boolean) => {
       const fromDate = resolveDatePickerValue(dateFrom);
       const toDate = resolveDatePickerValue(dateTo);
 
-      if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
-        toast.error("Invalid date range");
-        return;
-      }
-
       const searchParams = new URLSearchParams({
-        tabela,
+        tabela: tabela ?? "",
         take: "5000",
         datetime1: format(fromDate, "yyyy-MM-dd HH:mm:ss"),
         datetime2: format(toDate, "yyyy-MM-dd HH:mm:ss"),
@@ -373,10 +369,50 @@ export function TableLogs() {
         searchParams.set("search", searchTerm);
       }
 
-      const response = await api.get<LogRecord[]>(`/${tabela}?${searchParams.toString()}`);
+      if (includeSelectedTags) {
+        selectedTags.forEach((tag) => searchParams.append("tags", tag));
+      }
+
+      return { searchParams, fromDate, toDate };
+    },
+    [dateFrom, dateTo, includeContent, searchTerm, selectedTags, tabela, timezone]
+  );
+
+  const search = async () => {
+    if (!tabela) {
+      setData([]);
+      setAvailableTags([]);
+      setLastSearchParams(null);
+      return;
+    }
+
+    try {
+      const { searchParams, fromDate, toDate } = buildSearchParams(true);
+      const { searchParams: tagsSearchParams } = buildSearchParams(false);
+
+      if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+        toast.error("Invalid date range");
+        return;
+      }
+
+      setIsTagFilterLoading(true);
+
+      const [response, tagsResponse] = await Promise.all([
+        api.get<LogRecord[]>(`/${tabela}?${searchParams.toString()}`),
+        api.get<string[]>(`/${tabela}/tags?${tagsSearchParams.toString()}`).catch((error) => {
+          console.log(error);
+          return null;
+        }),
+      ]);
 
       const nextData = Array.isArray(response.data) ? response.data : [];
+      const nextTags =
+        tagsResponse && Array.isArray(tagsResponse.data)
+          ? tagsResponse.data.filter((tag): tag is string => typeof tag === "string" && tag.trim().length > 0)
+          : [];
+
       setData(nextData);
+      setAvailableTags(nextTags);
       setLastSearchParams(new URLSearchParams(searchParams));
       setPagination((current) => ({ ...current, pageIndex: 0 }));
 
@@ -386,8 +422,11 @@ export function TableLogs() {
     } catch (error) {
       console.log(error);
       setData([]);
-      setLastSearchParams(null);
+      setAvailableTags([]);
+      setLastSearchParams(new URLSearchParams(buildSearchParams(true).searchParams));
       toast.error("Error on load data from table");
+    } finally {
+      setIsTagFilterLoading(false);
     }
   };
 
@@ -527,6 +566,14 @@ export function TableLogs() {
                   })}
                 </DropdownMenuContent>
               </DropdownMenu>
+              <TagMultiCombobox
+                options={availableTags}
+                value={selectedTags}
+                onValueChange={setSelectedTags}
+                loading={isTagFilterLoading}
+                disabled={!tabela}
+                placeholder="Filter tags"
+              />
           </div>
           <div className="flex flex-wrap items-start gap-3 py-1">
             <div className="min-w-0 flex-1 basis-[220px]">
