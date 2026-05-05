@@ -5,6 +5,12 @@ namespace server.Utils;
 
 internal static partial class MessageTemplateRenderer
 {
+    private static readonly HashSet<string> HiddenPropertyNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "TraceId",
+        "_tags_"
+    };
+
     public sealed record RenderResult(string Message, bool AllContentParametersMatched);
 
     public static string Render(string message, object? content)
@@ -26,6 +32,9 @@ internal static partial class MessageTemplateRenderer
         var renderedMessage = TemplateTokenRegex().Replace(message, match =>
         {
             var name = match.Groups["name"].Value;
+
+            if (ShouldHideProperty(name))
+                return string.Empty;
 
             if (!TryGetProperty(document.RootElement, name, out var value))
                 return match.Value;
@@ -135,6 +144,9 @@ internal static partial class MessageTemplateRenderer
 
         foreach (var property in root.EnumerateObject())
         {
+            if (ShouldHideProperty(property.Name))
+                continue;
+
             propertyCount++;
 
             if (!matchedProperties.Contains(property.Name) ||
@@ -147,6 +159,12 @@ internal static partial class MessageTemplateRenderer
         return propertyCount > 0;
     }
 
-    [GeneratedRegex(@"\{(?<name>[A-Za-z_][A-Za-z0-9_.-]*)\}")]
+    private static bool ShouldHideProperty(string name)
+    {
+        var normalizedName = name.StartsWith('@') ? name[1..] : name;
+        return HiddenPropertyNames.Contains(normalizedName);
+    }
+
+    [GeneratedRegex(@"\{(?<name>@?[A-Za-z_][A-Za-z0-9_.-]*)\}")]
     private static partial Regex TemplateTokenRegex();
 }

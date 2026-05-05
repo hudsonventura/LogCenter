@@ -118,6 +118,7 @@ const createContentPreview = (content: unknown) => {
 
 const columnWidths = {
   level: 60,
+  tags: 180,
   timestamp: 130,
   traceId: 210,
   message: 320,
@@ -138,6 +139,37 @@ export const columns: ColumnDef<LogRecord>[] = [
         {getLogLevelLabel(row.original.level)}
       </Badge>
     ),
+  },
+  {
+    accessorKey: "tags",
+    header: () => <div className="text-left">Tags</div>,
+    size: columnWidths.tags,
+    minSize: 140,
+    cell: ({ row }) => {
+      const tags = Array.isArray(row.original.tags)
+        ? row.original.tags.filter(
+            (tag): tag is string => typeof tag === "string" && tag.trim().length > 0
+          )
+        : [];
+
+      if (tags.length === 0) {
+        return <div className="text-left text-muted-foreground">-</div>;
+      }
+
+      return (
+        <div className="flex flex-wrap gap-1.5">
+          {tags.map((tag) => (
+            <Badge
+              key={tag}
+              variant="secondary"
+              className="rounded-full px-2 py-0.5 text-xs font-medium"
+            >
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "timestamp",
